@@ -2,8 +2,9 @@
 import type { RequestConfig } from '@umijs/max';
 import { getIntl } from '@umijs/max';
 import { message, notification } from 'antd';
+import { logoutHandler } from '@/handler/applicationHandler';
 
-// 错误处理方案： 错误类型
+// 错误处理方案： 错误类型ni
 enum ErrorShowType {
   SILENT = 0,
   WARN_MESSAGE = 1,
@@ -30,44 +31,49 @@ export const errorConfig: RequestConfig = {
   errorConfig: {
     // 错误抛出
     errorThrower: (res) => {
-      const { success, data, errorCode, errorMessage, showType } =
-        res as unknown as ResponseStructure;
+      const { success, data, code, message } =
+        res as unknown as Common.JsonResult;
       if (!success) {
-        const error: any = new Error(errorMessage);
-        error.name = 'BizError';
-        error.info = { errorCode, errorMessage, showType, data };
+        const error: any = new Error(message);
+        error.name = 'BusinessError';
+        error.info = { code, message, data };
         throw error; // 抛出自制的错误
       }
     },
     // 错误接收及处理
     errorHandler: (error: any, opts: any) => {
-      if (opts?.skipErrorHandler) throw error;
+      if (opts?.skipErrorHandler) {
+        throw error;
+      }
       // 我们的 errorThrower 抛出的错误。
-      if (error.name === 'BizError') {
-        const errorInfo: ResponseStructure | undefined = error.info;
+      if (error.name === 'BusinessError') {
+        const errorInfo: Common.JsonResult | undefined = error.info;
         if (errorInfo) {
-          const { errorMessage, errorCode } = errorInfo;
+          // 401 执行退出登录处理
+          if (errorInfo?.code === 401) {
+            logoutHandler();
+          }
           switch (errorInfo.showType) {
             case ErrorShowType.SILENT:
               // do nothing
               break;
             case ErrorShowType.WARN_MESSAGE:
-              message.warning(errorMessage);
+              message.warning(errorInfo.message);
               break;
             case ErrorShowType.ERROR_MESSAGE:
-              message.error(errorMessage);
+              message.error(errorInfo.message);
               break;
             case ErrorShowType.NOTIFICATION:
               notification.open({
-                title: errorCode,
-                description: errorMessage,
+                title: errorInfo.code,
+                description: errorInfo.message,
               });
               break;
             case ErrorShowType.REDIRECT:
               window.location.href = '/user/login';
               break;
             default:
-              message.error(errorMessage);
+              message.error(errorInfo.message);
           }
         }
       } else if (error.response) {

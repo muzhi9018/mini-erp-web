@@ -23,8 +23,9 @@ import { Alert, App, Button, Tabs } from 'antd';
 import { createStyles } from 'antd-style';
 import React, { startTransition, useState } from 'react';
 import { Footer } from '@/components';
-import { login } from '@/services/ant-design-pro/api';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
+// import { login } from '@/services/ant-design-pro/api';
+import { login } from '@/services/auth/auth';
 import Settings from '../../../../config/defaultSettings';
 
 /**
@@ -148,14 +149,16 @@ const Login: React.FC = () => {
   };
 
   const handleSubmit = async (values: API.LoginParams) => {
+    localStorage.clear();
     try {
       // 登录
-      const msg = await login({ ...values, type });
-      if (msg.status === 'ok') {
+      const user = await login({ ...values });
+      if (user && user.enabled) {
         const defaultLoginSuccessMessage = intl.formatMessage({
           id: 'pages.login.success',
           defaultMessage: '登录成功！',
         });
+        localStorage.setItem(LOCAL_TOKEN, JSON.stringify(user));
         message.success(defaultLoginSuccessMessage);
         await fetchUserInfo();
         const urlParams = new URL(window.location.href).searchParams;
@@ -163,6 +166,11 @@ const Login: React.FC = () => {
         window.location.href = redirectUrl;
         return;
       }
+      const msg: API.LoginResult = {
+        status: user.enabled ? 'ok' : 'error',
+        type: 'account',
+        currentAuthority: 'admin',
+      };
       // 如果失败去设置用户错误信息
       setUserLoginState(msg);
     } catch {

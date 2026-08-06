@@ -66,7 +66,7 @@ npm install                                                # Update dependencies
 
 | Command | Description |
 |---------|-------------|
-| `npm start` | Start dev server (UMI_ENV=dev, with Mock) |
+| `npm start` | Start dev server (UMI_ENV=dev, no Mock) |
 | `npm run dev` | Start dev server (UMI_ENV=dev, no Mock) |
 | `npm run start:no-mock` | Start without Mock |
 | `npm run start:pre` | Pre-production environment |

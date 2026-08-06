@@ -10,6 +10,7 @@ import React from 'react';
 // Initialize dayjs plugins globally
 dayjs.extend(relativeTime);
 
+import type { RequestOptions } from '@@/plugin-request/request';
 import {
   AvatarDropdown,
   DocLink,
@@ -19,29 +20,33 @@ import {
   OfflineBanner,
   VersionDropdown,
 } from '@/components';
-import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { currentUser } from '@/services/auth/auth';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 
+interface HttpError extends Error {
+  info?: any;
+}
+
 /**
  * @see https://umijs.org/docs/api/runtime-config#getinitialstate
  * */
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
-  currentUser?: API.CurrentUser;
+  currentUser?: Auth.CurrentUser;
   loading?: boolean;
-  fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
+  fetchUserInfo?: () => Promise<Auth.CurrentUser | undefined>;
   settingDrawerOpen?: boolean;
 }> {
   const fetchUserInfo = async () => {
     try {
-      const msg = await queryCurrentUser({
+      const user = await currentUser({
         skipErrorHandler: true,
       });
-      return msg.data;
+      return user;
     } catch (_error) {
       const { pathname, search, hash } = history.location;
       history.replace(
@@ -100,7 +105,8 @@ export const layout: RunTimeLayoutConfig = ({
       ].filter(Boolean);
     },
     avatarProps: {
-      src: initialState?.currentUser?.avatar,
+      // src: initialState?.currentUser?.avatar,
+      src: 'https://gips3.baidu.com/it/u=2049508365,3966261261&fm=3074&app=3074&f=PNG?w=2048&h=2048',
       title: 'ProUser',
       render: (_, avatarChildren) => (
         <AvatarDropdown>{avatarChildren}</AvatarDropdown>
@@ -190,8 +196,48 @@ export const layout: RunTimeLayoutConfig = ({
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const request: RequestConfig = {
-  baseURL: isDev ? '' : 'https://pro-api.ant-design-demo.workers.dev',
   ...errorConfig,
+  baseURL: isDev ? BASE_URL : 'https://pro-api.ant-design-demo.workers.dev',
+  // 请求拦截器
+  requestInterceptors: [
+    (config: RequestOptions) => {
+      // 拦截请求配置，进行个性化处理。
+      const localToken = localStorage.getItem(LOCAL_TOKEN);
+      const currentUser: Auth.CurrentUser = JSON.parse(localToken ?? '{}');
+      let headers = config.headers;
+      if (currentUser.accessToken && currentUser.tokenType) {
+        headers = {
+          ...headers,
+          Authorization: currentUser.tokenType.concat(
+            ' ',
+            currentUser.accessToken,
+          ),
+        };
+        const OssStorageId = localStorage.getItem(LOCAL_OSS_STORAGE_ID);
+        if (OssStorageId) {
+          headers['Oss-Storage'] = OssStorageId;
+        }
+      }
+      return {
+        ...config,
+        headers,
+      };
+    },
+  ],
+  // 响应拦截器
+  responseInterceptors: [
+    (response) => {
+      // 拦截响应数据，进行个性化处理
+      const { data } = response as unknown as Common.JsonResult;
+      if (data?.success === false) {
+        const error: HttpError = Error();
+        error.name = 'BusinessError';
+        error.info = { code: data.code, message: data.message };
+        return Promise.reject(error);
+      }
+      return data;
+    },
+  ],
 };
 
 export function rootContainer(container: React.ReactNode) {

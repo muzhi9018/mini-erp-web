@@ -66,7 +66,7 @@ npm install                                                # 更新依赖
 
 | 命令 | 说明 |
 |------|------|
-| `npm start` | 启动开发服务器（UMI_ENV=dev，带 Mock） |
+| `npm start` | 启动开发服务器（UMI_ENV=dev，无 Mock） |
 | `npm run dev` | 启动开发服务器（UMI_ENV=dev，无 Mock） |
 | `npm run start:no-mock` | 无 Mock 启动 |
 | `npm run start:pre` | 预发布环境启动 |
