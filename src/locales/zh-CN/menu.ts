@@ -50,4 +50,7 @@ export default {
   'menu.editor.mind': '脑图编辑器',
   'menu.editor.koni': '拓扑编辑器',
   'menu.chatbot': 'AI 助手',
+  'menu.system-manage': '系统管理',
+  'menu.system-manage.menu-manage': '菜单管理',
+  'menu.system-manage.role-manage': '角色管理',
 };

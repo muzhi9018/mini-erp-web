@@ -1,10 +1,16 @@
+// import { CONTEXT_PATH } from "./constants";
+
+// function icon(path: string) {
+//   return CONTEXT_PATH.concat('/icons', path);
+// }
+
 export default [
   {
     path: '/user',
     layout: false,
     routes: [
       {
-        name: '登录',
+        name: 'login',
         path: '/user/login',
         component: './user/login',
       },
@@ -12,32 +18,37 @@ export default [
   },
   {
     path: '/welcome',
-    name: '欢迎',
+    name: 'welcome',
     icon: 'smile',
     component: './Welcome',
   },
   {
-    path: '/admin',
-    name: '管理页',
-    icon: 'crown',
-    access: 'canAdmin',
+    // 系统管理
+    path: '/system-manage',
+    name: 'system-manage',
+    // icon: icon('/menu/settings.svg'),
+    icon: 'SettingOutlined',
+    // access: 'system-manage',
     routes: [
       {
-        path: '/admin',
-        redirect: '/admin/sub-page',
+        path: '/system-manage',
+        redirect: '/system-manage/menu-manage',
       },
       {
-        path: '/admin/sub-page',
-        name: '二级管理页',
-        component: './Admin',
+        // 菜单管理
+        path: '/system-manage/menu-manage',
+        name: 'menu-manage',
+        component: './system-manage/menu-manage',
+        // access: 'system-manage:menu-manage',
+      },
+      {
+        // 角色管理
+        path: '/system-manage/role-manage',
+        name: 'role-manage',
+        component: './system-manage/role-manage',
+        // access: 'system-manage:role-manage',
       },
     ],
-  },
-  {
-    name: '查询表格',
-    icon: 'table',
-    path: '/list',
-    component: './table-list',
   },
   {
     path: '/',

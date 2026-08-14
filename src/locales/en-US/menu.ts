@@ -50,4 +50,7 @@ export default {
   'menu.editor.mind': 'Mind Editor',
   'menu.editor.koni': 'Koni Editor',
   'menu.chatbot': 'AI Assistant',
+  'menu.system-manage': 'System Management',
+  'menu.system-manage.menu-manage': 'Menu Manager',
+  'menu.system-manage.role-manage': 'Role Manager',
 };
