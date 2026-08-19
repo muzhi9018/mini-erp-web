@@ -126,8 +126,17 @@
 }
 
 .product-detail-page__application-grid article {
+  border: 1px solid transparent;
   background: #fff;
   box-shadow: 0 8px 24px rgba(16, 44, 36, 0.06);
+  transition:
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.product-detail-page__application-grid article:hover {
+  border-color: var(--site-gold);
+  box-shadow: 0 12px 28px rgba(16, 44, 36, 0.1);
 }
 
 .product-detail-page__application-grid img {

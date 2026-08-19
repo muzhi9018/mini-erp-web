@@ -305,6 +305,7 @@
   overflow: hidden;
   border-radius: 10px;
   background: var(--site-deep);
+  transition: box-shadow 0.28s ease;
 }
 
 .case-card img {
@@ -316,6 +317,10 @@
 
 .case-card:hover img {
   transform: scale(1.07);
+}
+
+.case-card:hover {
+  box-shadow: 0 0 0 1px var(--site-gold);
 }
 
 .case-card::after {
@@ -380,6 +385,14 @@
   border-radius: 10px;
   background: #fff;
   text-align: center;
+  transition:
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.home-advantages__grid article:hover {
+  border-color: var(--site-gold);
+  box-shadow: 0 12px 28px rgba(22, 46, 39, 0.08);
 }
 
 .home-advantages__icon {
@@ -390,6 +403,14 @@
   border-radius: 50%;
   background: #f3f0e9;
   color: var(--site-deep);
+  transition:
+    background-color 0.28s ease,
+    color 0.28s ease;
+}
+
+.home-advantages__grid article:hover .home-advantages__icon {
+  background: #1c4435;
+  color: #fff;
 }
 
 .home-advantages__icon svg {
@@ -474,6 +495,14 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.035);
+  transition:
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.home-contact__details div:hover {
+  border-color: var(--site-gold);
+  box-shadow: 0 10px 24px rgba(8, 26, 19, 0.12);
 }
 
 .home-contact__icon {
