@@ -1,12 +1,35 @@
 import { Link, useParams } from '@umijs/max';
 import React from 'react';
-import ProductCard from '../../components/ProductCard';
-import SectionHeading from '../../components/SectionHeading';
 import SiteFooter from '../../components/SiteFooter';
 import SiteHeader from '../../components/SiteHeader';
-import { productMap, products, websiteImages } from '../../data';
+import {
+  productDetailImages,
+  productMap,
+  products,
+  projectCases,
+  websiteImages,
+} from '../../data';
 import '../../site.css';
 import './index.css';
+
+interface DetailSectionHeaderProps {
+  eyebrow: string;
+  title: string;
+  description: string;
+}
+
+const DetailSectionHeader: React.FC<DetailSectionHeaderProps> = ({
+  eyebrow,
+  title,
+  description,
+}) => (
+  <header className="product-detail-page__section-header">
+    <span>{eyebrow}</span>
+    <h2>{title}</h2>
+    <i aria-hidden="true" />
+    <p>{description}</p>
+  </header>
+);
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -28,75 +51,74 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const relatedProducts = products
-    .filter((item) => item.slug !== product.slug)
-    .slice(0, 3);
+  const detailImages = productDetailImages[product.slug];
+  const applicationImages =
+    detailImages?.applications ??
+    product.applications.map((_, index) =>
+      index % 2 === 0 ? product.image : websiteImages.application,
+    );
+  const galleryImages =
+    detailImages?.gallery ?? projectCases.map((item) => item.image);
+  const relatedProducts =
+    product.slug === 'wpc'
+      ? ['flexible-stone', 'pu-stone', 'aluminum', 'resin-stone'].map(
+          (relatedSlug) => productMap[relatedSlug],
+        )
+      : products.filter((item) => item.slug !== product.slug).slice(0, 4);
 
   return (
     <main className="zhulv-site product-detail-page">
       <SiteHeader />
-      <section className="page-hero product-detail-page__hero">
-        <img
-          alt={product.name}
-          className="page-hero__image"
-          src={product.image}
-        />
-        <div className="page-hero__content">
-          <div className="page-hero__crumbs">
+
+      <section className="product-detail-page__hero">
+        <div className="product-detail-page__hero-content">
+          <div className="product-detail-page__crumbs">
             <Link to="/">首页</Link>
             <span>/</span>
             <Link to="/products">产品中心</Link>
             <span>/</span>
             <span>{product.name}</span>
           </div>
-          <span className="page-hero__eyebrow">{product.englishName}</span>
           <h1>{product.name}</h1>
           <p>{product.tagline}</p>
         </div>
       </section>
 
-      <section className="product-detail-page__intro detail-section">
-        <div className="product-detail-page__intro-image">
-          <img alt={`${product.name}应用`} src={product.image} />
-        </div>
-        <div>
-          <SectionHeading
-            centered={false}
-            eyebrow="PRODUCT OVERVIEW"
-            title="为质感空间而生"
-          />
-          <p className="product-detail-page__intro-copy">{product.summary}</p>
-          <p className="product-detail-page__intro-copy">
-            筑绿以稳定可靠的产品品质和可落地的工艺细节，协助设计师与业主将理想的空间效果高质量呈现。
-          </p>
-          <a className="site-button" href="/#contact">
-            获取专属报价 <b aria-hidden="true">→</b>
-          </a>
-        </div>
-      </section>
-
-      <section className="product-detail-page__features detail-section detail-section--tint">
-        <SectionHeading
-          eyebrow="PRODUCT FEATURES"
-          title="产品特点与优势"
-          description="从材料本身到项目落地，以可靠品质支撑每一个设计细节。"
-        />
-        <div className="product-detail-page__feature-grid">
-          {product.features.map((feature, index) => (
-            <article key={feature.title}>
-              <span>0{index + 1}</span>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-            </article>
-          ))}
+      <section className="product-detail-page__features detail-section">
+        <div className="product-detail-page__feature-layout">
+          <div className="product-detail-page__feature-image">
+            <img
+              alt={`${product.name}效果展示`}
+              src={detailImages?.feature ?? product.image}
+            />
+          </div>
+          <div className="product-detail-page__feature-copy">
+            <span className="product-detail-page__eyebrow">
+              PRODUCT FEATURES
+            </span>
+            <h2>产品特点与优势</h2>
+            <i aria-hidden="true" />
+            <p>{product.featureIntroduction ?? product.summary}</p>
+            <div className="product-detail-page__feature-list">
+              {product.features.map((feature, index) => (
+                <article key={feature.title}>
+                  <span>0{index + 1}</span>
+                  <div>
+                    <h3>{feature.title}</h3>
+                    <p>{feature.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="product-detail-page__specifications detail-section">
-        <SectionHeading
+      <section className="product-detail-page__specifications detail-section detail-section--sand">
+        <DetailSectionHeader
+          description="严格的品质管控，每项指标均达到或超过国家标准"
           eyebrow="TECHNICAL SPECIFICATIONS"
           title="技术参数"
-          description="严谨把控每项产品指标，满足设计、施工与长期使用需求。"
         />
         <div className="product-detail-page__specification-table-wrap">
           <table>
@@ -112,11 +134,11 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="product-detail-page__applications detail-section detail-section--tint">
-        <SectionHeading
+      <section className="product-detail-page__applications detail-section">
+        <DetailSectionHeader
+          description="广泛应用于各类户外与室内空间，为设计师提供丰富的创作可能"
           eyebrow="APPLICATION SCENARIOS"
           title="应用场景"
-          description="适配多元空间需求，为设计师提供丰富的创作可能。"
         />
         <div className="product-detail-page__application-grid">
           {product.applications.map((application, index) => (
@@ -124,28 +146,61 @@ const ProductDetailPage: React.FC = () => {
               <img
                 alt={application}
                 loading="lazy"
-                src={
-                  index % 2 === 0 ? product.image : websiteImages.application
-                }
+                src={applicationImages[index]}
               />
-              <h3>{application}</h3>
+              <div className="product-detail-page__application-copy">
+                <span>0{index + 1}</span>
+                <h3>{application}</h3>
+              </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="product-detail-page__related detail-section">
-        <SectionHeading
-          eyebrow="RELATED PRODUCTS"
-          title="相关产品推荐"
-          description="探索更多优质装饰材料，为您的项目找到更完整的搭配。"
+      <section className="product-detail-page__gallery detail-section detail-section--sand">
+        <DetailSectionHeader
+          description="精选真实项目案例，见证塑木材料的多元应用与卓越表现"
+          eyebrow="PROJECT GALLERY"
+          title="案例展示"
         />
-        <div className="product-grid">
-          {relatedProducts.map((item) => (
-            <ProductCard key={item.slug} product={item} />
+        <div className="product-detail-page__gallery-grid">
+          {galleryImages.map((galleryImage, index) => (
+            <article key={galleryImage}>
+              <img
+                alt={`${product.name}案例 ${index + 1}`}
+                loading="lazy"
+                src={galleryImage}
+              />
+              <span aria-hidden="true">+</span>
+            </article>
           ))}
         </div>
       </section>
+
+      <section className="product-detail-page__related detail-section detail-section--sand">
+        <DetailSectionHeader
+          description="探索更多优质装饰材料，为您的项目找到最佳搭配"
+          eyebrow="RELATED PRODUCTS"
+          title="相关产品推荐"
+        />
+        <div className="product-detail-page__related-grid">
+          {relatedProducts.map((relatedProduct) => (
+            <Link
+              className="product-detail-page__related-card"
+              key={relatedProduct.slug}
+              to={`/products/${relatedProduct.slug}`}
+            >
+              <img alt={relatedProduct.name} src={relatedProduct.image} />
+              <div className="product-detail-page__related-card-copy">
+                <span>{relatedProduct.englishName}</span>
+                <h3>{relatedProduct.name}</h3>
+                <p>{relatedProduct.summary}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <SiteFooter />
     </main>
   );

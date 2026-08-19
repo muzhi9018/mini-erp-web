@@ -1,91 +1,190 @@
 .detail-section {
   width: min(1180px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 110px 0;
+  padding: 80px 0;
 }
 
-.detail-section--tint {
+.detail-section--sand {
+  box-sizing: border-box;
   width: 100%;
   padding-right: max(24px, calc((100% - 1180px) / 2));
   padding-left: max(24px, calc((100% - 1180px) / 2));
-  background: var(--site-sand);
+  background: #efece6;
 }
 
-.product-detail-page__intro {
+.product-detail-page__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
-  align-items: center;
-  gap: clamp(45px, 8vw, 120px);
+  min-height: 458px;
+  place-items: center;
+  padding: 92px 24px 76px;
+  background: #1f3a2e;
+  color: #fff;
+  text-align: center;
 }
 
-.product-detail-page__intro-image {
-  height: 440px;
+.product-detail-page__hero-content {
+  width: min(880px, 100%);
+}
+
+.product-detail-page__crumbs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 36px;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 13px;
+}
+
+.product-detail-page__crumbs a {
+  color: inherit;
+}
+
+.product-detail-page__hero h1 {
+  margin: 0;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: clamp(42px, 5vw, 66px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.product-detail-page__hero p {
+  max-width: 620px;
+  margin: 24px auto 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.product-detail-page__section-header {
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.product-detail-page__section-header > span,
+.product-detail-page__eyebrow {
+  display: block;
+  color: var(--site-gold);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.product-detail-page__section-header h2,
+.product-detail-page__feature-copy h2 {
+  margin: 16px 0 0;
+  color: var(--site-deep);
+  font-family: Georgia, "Songti SC", serif;
+  font-size: clamp(32px, 3.25vw, 43px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.product-detail-page__section-header i,
+.product-detail-page__feature-copy > i {
+  display: block;
+  width: 60px;
+  height: 2px;
+  margin: 20px auto;
+  background: var(--site-gold);
+}
+
+.product-detail-page__section-header p {
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--site-muted);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.product-detail-page__feature-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(48px, 6.8vw, 80px);
+}
+
+.product-detail-page__feature-image {
+  height: 426px;
   overflow: hidden;
+  border-radius: 16px;
   background: #d9dfdb;
 }
 
-.product-detail-page__intro-image img {
+.product-detail-page__feature-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.product-detail-page__intro .section-heading {
-  margin-bottom: 24px;
+.product-detail-page__feature-copy > i {
+  margin: 20px 0;
 }
 
-.product-detail-page__intro .section-heading h2 {
-  font-size: clamp(30px, 3vw, 41px);
-}
-
-.product-detail-page__intro-copy {
-  margin: 0 0 14px;
+.product-detail-page__feature-copy > p {
+  margin: 0;
   color: var(--site-muted);
   font-size: 14px;
-  line-height: 1.95;
+  line-height: 1.9;
 }
 
-.product-detail-page__intro .site-button {
-  margin-top: 15px;
-}
-
-.product-detail-page__feature-grid {
+.product-detail-page__feature-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: #dfe1da;
+  gap: 16px;
+  margin-top: 28px;
 }
 
-.product-detail-page__feature-grid article {
-  min-height: 255px;
-  padding: 29px 27px;
-  background: var(--site-sand);
+.product-detail-page__feature-list article {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-height: 106px;
+  padding: 21px 22px;
+  border: 1px solid #e8e4db;
+  border-radius: 8px;
+  background: #fff;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
-.product-detail-page__feature-grid span {
-  color: var(--site-gold);
+.product-detail-page__feature-list article:hover {
+  border-color: var(--site-gold);
+  box-shadow: 0 10px 22px rgba(16, 44, 36, 0.08);
+}
+
+.product-detail-page__feature-list > article > span {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--site-deep);
+  color: #fff;
   font-family: Georgia, serif;
-  font-size: 22px;
+  font-size: 13px;
 }
 
-.product-detail-page__feature-grid h3 {
-  margin: 33px 0 13px;
+.product-detail-page__feature-list h3 {
+  margin: 0 0 6px;
   color: var(--site-deep);
-  font-family: Georgia, "Songti SC", serif;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
 }
 
-.product-detail-page__feature-grid p {
+.product-detail-page__feature-list p {
   margin: 0;
   color: var(--site-muted);
   font-size: 13px;
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 .product-detail-page__specification-table-wrap {
+  max-width: 912px;
+  margin: 0 auto;
   overflow: hidden;
-  border: 1px solid #e2e3de;
+  border-radius: 8px;
+  background: #fff;
 }
 
 .product-detail-page__specification-table-wrap table {
@@ -96,9 +195,9 @@
 .product-detail-page__specification-table-wrap th,
 .product-detail-page__specification-table-wrap td {
   padding: 18px 24px;
-  border-bottom: 1px solid #e2e3de;
+  border-bottom: 1px solid #e8e4db;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
   text-align: left;
 }
 
@@ -108,9 +207,8 @@
 }
 
 .product-detail-page__specification-table-wrap th {
-  width: 29%;
-  border-right: 1px solid #e2e3de;
-  background: #faf9f6;
+  width: 30%;
+  border-right: 1px solid #e8e4db;
   color: var(--site-deep);
   font-weight: 700;
 }
@@ -121,41 +219,179 @@
 
 .product-detail-page__application-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .product-detail-page__application-grid article {
+  position: relative;
+  min-height: 280px;
+  overflow: hidden;
   border: 1px solid transparent;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(16, 44, 36, 0.06);
+  border-radius: 8px;
+  background: var(--site-deep);
   transition:
-    border-color 0.28s ease,
-    box-shadow 0.28s ease;
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
-.product-detail-page__application-grid article:hover {
+.product-detail-page__application-grid article:hover,
+.product-detail-page__gallery-grid article:hover,
+.product-detail-page__related-card:hover {
   border-color: var(--site-gold);
-  box-shadow: 0 12px 28px rgba(16, 44, 36, 0.1);
+  box-shadow: 0 12px 28px rgba(16, 44, 36, 0.13);
 }
 
 .product-detail-page__application-grid img {
   width: 100%;
-  height: 210px;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.product-detail-page__application-grid article:hover img,
+.product-detail-page__gallery-grid article:hover img {
+  transform: scale(1.045);
+}
+
+.product-detail-page__application-copy {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 58px 22px 20px;
+  background: linear-gradient(transparent, rgba(16, 44, 36, 0.92));
+}
+
+.product-detail-page__application-grid span {
+  color: #d5aa5d;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
 .product-detail-page__application-grid h3 {
-  margin: 0;
-  padding: 18px 18px 20px;
-  color: var(--site-deep);
+  margin: 7px 0 0;
+  color: #fff;
   font-family: Georgia, "Songti SC", serif;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
 }
 
+.product-detail-page__gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.product-detail-page__gallery-grid article {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--site-deep);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.product-detail-page__gallery-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.product-detail-page__gallery-grid span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(16, 44, 36, 0.86);
+  color: #fff;
+  font-size: 25px;
+  line-height: 1;
+  opacity: 0;
+  transform: translate(-50%, -42%);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.product-detail-page__gallery-grid article:hover span {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
 .product-detail-page__related {
-  padding-bottom: 120px;
+  padding-top: 0;
+  padding-bottom: 100px;
+}
+
+.product-detail-page__related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.product-detail-page__related-card {
+  overflow: hidden;
+  border: 1px solid #e8e4db;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.product-detail-page__related-card:hover {
+  transform: translateY(-4px);
+}
+
+.product-detail-page__related-card img {
+  display: block;
+  width: 100%;
+  height: 184px;
+  object-fit: cover;
+}
+
+.product-detail-page__related-card-copy {
+  min-height: 123px;
+  padding: 18px 20px 20px;
+}
+
+.product-detail-page__related-card span {
+  color: var(--site-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.product-detail-page__related-card h3 {
+  margin: 8px 0 0;
+  color: var(--site-deep);
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.product-detail-page__related-card p {
+  display: -webkit-box;
+  margin: 8px 0 0;
+  overflow: hidden;
+  color: var(--site-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .product-not-found {
@@ -193,59 +429,88 @@
 }
 
 @media (max-width: 960px) {
-  .product-detail-page__feature-grid,
-  .product-detail-page__application-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .product-detail-page__feature-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-page__feature-image {
+    height: 380px;
+  }
+
+  .product-detail-page__application-grid,
+  .product-detail-page__related-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 640px) {
   .detail-section {
     width: min(100% - 32px, 560px);
-    padding: 70px 0;
+    padding-top: 64px;
+    padding-bottom: 64px;
   }
 
-  .detail-section--tint {
+  .detail-section--sand {
     width: 100%;
     padding-right: 16px;
     padding-left: 16px;
   }
 
-  .product-detail-page__intro {
-    grid-template-columns: 1fr;
-    gap: 30px;
+  .product-detail-page__hero {
+    min-height: 380px;
+    padding-top: 80px;
   }
 
-  .product-detail-page__intro-image {
-    height: 285px;
+  .product-detail-page__crumbs {
+    margin-bottom: 28px;
+    font-size: 12px;
   }
 
-  .product-detail-page__feature-grid,
-  .product-detail-page__application-grid {
-    grid-template-columns: 1fr;
+  .product-detail-page__hero h1 {
+    letter-spacing: 0.04em;
   }
 
-  .product-detail-page__feature-grid article {
+  .product-detail-page__hero p {
+    font-size: 14px;
+  }
+
+  .product-detail-page__section-header {
+    margin-bottom: 32px;
+  }
+
+  .product-detail-page__section-header h2,
+  .product-detail-page__feature-copy h2 {
+    font-size: 29px;
+  }
+
+  .product-detail-page__feature-image {
+    height: 270px;
+    border-radius: 12px;
+  }
+
+  .product-detail-page__feature-list article {
     min-height: 0;
-    padding: 25px 22px;
-  }
-
-  .product-detail-page__feature-grid h3 {
-    margin-top: 19px;
-  }
-
-  .product-detail-page__application-grid img {
-    height: 230px;
+    padding: 18px;
   }
 
   .product-detail-page__specification-table-wrap th,
   .product-detail-page__specification-table-wrap td {
-    padding: 14px;
-    font-size: 13px;
+    padding: 13px 14px;
+    font-size: 12px;
   }
 
   .product-detail-page__specification-table-wrap th {
-    width: 35%;
+    width: 34%;
+  }
+
+  .product-detail-page__application-grid,
+  .product-detail-page__gallery-grid,
+  .product-detail-page__related-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-page__application-grid article {
+    min-height: 245px;
   }
 
   .product-detail-page__related {

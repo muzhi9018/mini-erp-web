@@ -12,6 +12,7 @@ export interface Product {
   category: ProductCategory;
   summary: string;
   tagline: string;
+  featureIntroduction?: string;
   image: string;
   features: Array<{ title: string; description: string }>;
   specifications: Array<[string, string]>;
@@ -59,21 +60,51 @@ export const products: Product[] = [
     englishName: 'WPC Material',
     category: 'outdoor',
     summary:
-      '环保木塑复合材料，兼具木质纹理与塑料耐用性，适合户外地板、围栏、廊架等场景。',
-    tagline: '自然木质肌理与耐候性能兼得，开启户外装饰新体验。',
+      '环保木塑复合材料，兼具天然木质纹理与塑料耐用性能，开启户外装饰新纪元。',
+    tagline:
+      '环保木塑复合材料，兼具天然木质纹理与塑料耐用性能，开启户外装饰新纪元。',
+    featureIntroduction:
+      '筑绿塑木材料以高密度木纤维与食品级树脂为原料，经高温高压挤出成型，完美融合木材的自然质感与塑料耐用性能。',
     image: image('product-wpc'),
-    features: standardFeatures('塑木材料', [
-      '防水防潮防腐',
-      '不吸水、不霉变、不易腐烂，适用于露台、庭院和泳池周边等潮湿户外环境。',
-      '免维护易清洁',
-      '表面稳定耐用，日常清水冲洗即可，无需频繁刷漆养护。',
-    ]),
+    features: [
+      {
+        title: '环保可持续',
+        description:
+          '采用回收木纤维与环保树脂，100%可回收再利用，零甲醛释放，符合绿色建筑标准。',
+      },
+      {
+        title: '防水防潮防腐',
+        description:
+          '不吸水、不霉变、不腐烂，适用于户外潮湿环境，使用寿命是普通木材的5-10倍。',
+      },
+      {
+        title: '免护理易清洁',
+        description:
+          '表面经特殊工艺处理，不开裂、不褪色，日常只需清水冲洗，无需定期刷漆保养。',
+      },
+      {
+        title: '安装便捷高效',
+        description:
+          '专用卡扣式安装系统，施工速度快，缝隙均匀美观，大幅缩短工期与人工成本。',
+      },
+    ],
     specifications: [
       ['产品名称', '木塑复合板材（WPC）'],
-      ['常规规格', '146×22mm、150×25mm，长度可定制'],
-      ['颜色系列', '深棕、咖啡、浅木、灰色、柚木等'],
+      [
+        '主要成分',
+        '高密度木纤维（55%）+ 食品级PE树脂（35%）+ 功能性添加剂（10%）',
+      ],
+      [
+        '常规规格',
+        '146×22mm、150×25mm、140×25mm 实心/空心；长度可定制（2.2m-5.8m）',
+      ],
+      ['颜色系列', '深棕色、咖啡色、浅木色、灰色、红檀木、柚木色等12种标准色'],
+      ['弯曲强度', '≥ 25 MPa'],
+      ['弹性模量', '≥ 2500 MPa'],
+      ['吸水率', '≤ 0.8%'],
       ['使用温度', '-40℃ ～ +60℃'],
       ['使用寿命', '户外正常使用 15-25 年'],
+      ['环保认证', 'ISO9001、ISO14001、SGS环保检测、CE认证'],
     ],
     applications: [
       '户外露台地板',
@@ -399,4 +430,31 @@ export const websiteImages = {
   aboutStone: image('case-pu-living'),
   aboutKitchen: image('about-kitchen'),
   application: image('application-scenario'),
+};
+
+export const productDetailImages: Record<
+  string,
+  {
+    feature: string;
+    applications: string[];
+    gallery: string[];
+  }
+> = {
+  wpc: {
+    feature: image('wpc-detail-feature'),
+    applications: [
+      image('wpc-application-deck'),
+      image('wpc-application-fence'),
+      image('wpc-application-pergola'),
+      image('wpc-application-pool'),
+    ],
+    gallery: [
+      image('wpc-detail-feature'),
+      image('wpc-application-fence'),
+      image('wpc-application-deck'),
+      image('wpc-application-pergola'),
+      image('wpc-application-pool'),
+      image('wpc-gallery-6'),
+    ],
+  },
 };
