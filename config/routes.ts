@@ -17,6 +17,21 @@ export default [
     ],
   },
   {
+    path: '/products/:slug',
+    component: './website/products/detail',
+    layout: false,
+  },
+  {
+    path: '/products',
+    component: './website/products',
+    layout: false,
+  },
+  {
+    path: '/',
+    component: './website/home',
+    layout: false,
+  },
+  {
     path: '/welcome',
     name: 'welcome',
     icon: 'smile',
@@ -49,10 +64,6 @@ export default [
         // access: 'system-manage:role-manage',
       },
     ],
-  },
-  {
-    path: '/',
-    redirect: '/welcome',
   },
   {
     component: './exception/404',

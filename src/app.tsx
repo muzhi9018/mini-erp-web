@@ -27,6 +27,11 @@ import { errorConfig } from './requestErrorConfig';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 
+const isPublicWebsitePath = (pathname: string) =>
+  pathname === '/' ||
+  pathname === '/products' ||
+  pathname.startsWith('/products/');
+
 interface HttpError extends Error {
   info?: any;
 }
@@ -41,7 +46,7 @@ export async function getInitialState(): Promise<{
   fetchUserInfo?: () => Promise<Auth.CurrentUser | undefined>;
   settingDrawerOpen?: boolean;
 }> {
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = async (): Promise<Auth.CurrentUser | undefined> => {
     try {
       const user = await currentUser({
         skipErrorHandler: true,
@@ -55,23 +60,24 @@ export async function getInitialState(): Promise<{
     }
     return undefined;
   };
-  // 如果不是登录页面，执行
+  // 企业官网页面不需要登录，也不请求后台用户信息。
   const { location } = history;
   if (
-    ![loginPath, '/user/register', '/user/register-result'].includes(
+    isPublicWebsitePath(location.pathname) ||
+    [loginPath, '/user/register', '/user/register-result'].includes(
       location.pathname,
     )
   ) {
-    const currentUser = await fetchUserInfo();
     return {
       fetchUserInfo,
-      currentUser,
       settings: defaultSettings as Partial<LayoutSettings>,
       settingDrawerOpen: false,
     };
   }
+  const currentUserInfo = await fetchUserInfo();
   return {
     fetchUserInfo,
+    currentUser: currentUserInfo,
     settings: defaultSettings as Partial<LayoutSettings>,
     settingDrawerOpen: false,
   };
@@ -119,7 +125,11 @@ export const layout: RunTimeLayoutConfig = ({
     onPageChange: () => {
       const { location } = history;
       // 如果没有登录，重定向到 login
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
+      if (
+        !initialState?.currentUser &&
+        location.pathname !== loginPath &&
+        !isPublicWebsitePath(location.pathname)
+      ) {
         history.replace(
           `${loginPath}?redirect=${encodeURIComponent(location.pathname + location.search + location.hash)}`,
         );

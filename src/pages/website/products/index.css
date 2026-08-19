@@ -1,0 +1,108 @@
+.product-center-page__body {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 105px 0 120px;
+}
+
+.product-center-page__filters {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin: -8px 0 42px;
+}
+
+.product-center-page__filters button {
+  min-width: 88px;
+  padding: 10px 17px;
+  border: 1px solid #d9dcd7;
+  background: #fff;
+  color: #627069;
+  cursor: pointer;
+  font-size: 13px;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.product-center-page__filters button:hover,
+.product-center-page__filters button.is-active {
+  border-color: var(--site-deep);
+  background: var(--site-deep);
+  color: #fff;
+}
+
+.product-center-page__empty {
+  padding: 80px 0;
+  color: var(--site-muted);
+  text-align: center;
+}
+
+.product-center-page__consult {
+  display: flex;
+  width: min(1180px, calc(100% - 48px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  margin: 0 auto 108px;
+  padding: 51px 60px;
+  background: var(--site-sand);
+}
+
+.product-center-page__consult span {
+  color: var(--site-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.product-center-page__consult h2 {
+  margin: 9px 0 6px;
+  color: var(--site-deep);
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.product-center-page__consult p {
+  margin: 0;
+  color: var(--site-muted);
+  font-size: 14px;
+}
+
+.product-center-page__consult .site-button {
+  min-width: 136px;
+}
+
+@media (max-width: 720px) {
+  .product-center-page__body {
+    width: min(100% - 32px, 560px);
+    padding: 70px 0;
+  }
+
+  .product-center-page__filters {
+    justify-content: flex-start;
+    overflow-x: auto;
+    margin-bottom: 30px;
+    padding-bottom: 6px;
+  }
+
+  .product-center-page__filters button {
+    min-width: max-content;
+  }
+
+  .product-center-page__consult {
+    display: block;
+    width: min(100% - 32px, 560px);
+    margin-bottom: 70px;
+    padding: 34px 25px;
+  }
+
+  .product-center-page__consult h2 {
+    font-size: 25px;
+  }
+
+  .product-center-page__consult .site-button {
+    margin-top: 25px;
+  }
+}

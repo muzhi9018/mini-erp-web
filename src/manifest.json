@@ -1,10 +1,10 @@
 {
-  "name": "Ant Design Pro",
-  "short_name": "Ant Design Pro",
+  "name": "筑绿装饰新材",
+  "short_name": "筑绿新材",
   "display": "standalone",
   "start_url": "./?utm_source=homescreen",
-  "theme_color": "#002140",
-  "background_color": "#001529",
+  "theme_color": "#102c24",
+  "background_color": "#f6f4f0",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
