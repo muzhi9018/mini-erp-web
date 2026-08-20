@@ -1,6 +1,7 @@
 .zhulv-site {
   --site-ink: #162e27;
   --site-deep: #102c24;
+  --site-button: #1c4435;
   --site-gold: #c69b58;
   --site-sand: #f6f4f0;
   --site-paper: #fff;
@@ -173,9 +174,9 @@
   justify-content: center;
   gap: 8px;
   padding: 0 20px;
-  border: 1px solid var(--site-deep);
+  border: 1px solid var(--site-button);
   border-radius: 4px;
-  background: var(--site-deep);
+  background: var(--site-button);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -209,14 +210,15 @@
 }
 
 .site-button--outline {
-  border-color: rgba(255, 255, 255, 0.75);
-  background: transparent;
+  border-color: var(--site-button);
+  background: var(--site-button);
   color: #fff;
 }
 
 .site-button--outline:hover {
-  background: #fff;
-  color: var(--site-deep);
+  background: var(--site-gold);
+  border-color: var(--site-gold);
+  color: #fff;
 }
 
 .section-heading {
@@ -355,6 +357,7 @@
 .site-footer {
   padding: 62px 0 0;
   background: #132e26;
+  /*background: #264336;*/
   color: rgba(255, 255, 255, 0.72);
 }
 

@@ -447,8 +447,8 @@
   grid-template-columns: 0.9fr 1.1fr;
   gap: clamp(50px, 10vw, 145px);
   padding: 105px 0 110px;
-  background: #1c4435;
-  box-shadow: 0 0 0 100vmax #1c4435;
+  background: var(--site-button);
+  box-shadow: 0 0 0 100vmax var(--site-button);
   clip-path: inset(0 -100vmax);
 }
 

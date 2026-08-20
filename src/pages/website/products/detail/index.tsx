@@ -1,5 +1,5 @@
 import { Link, useParams } from '@umijs/max';
-import React from 'react';
+import React, { useEffect } from 'react';
 import SiteFooter from '../../components/SiteFooter';
 import SiteHeader from '../../components/SiteHeader';
 import {
@@ -34,6 +34,10 @@ const DetailSectionHeader: React.FC<DetailSectionHeaderProps> = ({
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = slug ? productMap[slug] : undefined;
+
+  useEffect(() => {
+    window.scrollTo({ behavior: 'auto', top: 0 });
+  }, [slug]);
 
   if (!product) {
     return (

@@ -52,8 +52,8 @@
 
 .product-center-page__filters button:hover,
 .product-center-page__filters button.is-active {
-  border-color: var(--site-deep);
-  background: var(--site-deep);
+  border-color: var(--site-button);
+  background: var(--site-button);
   color: #fff;
 }
 

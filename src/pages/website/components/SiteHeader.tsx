@@ -22,18 +22,31 @@ const SiteHeader: React.FC = () => {
   ) => {
     setIsOpen(false);
 
-    if (pathname !== '/' || (to !== '/' && !to.startsWith('/#'))) {
+    if (to === '/') {
+      event.preventDefault();
+      history.push('/');
+      window.scrollTo({
+        behavior: pathname === '/' ? 'smooth' : 'auto',
+        top: 0,
+      });
+      return;
+    }
+
+    if (!to.startsWith('/#')) {
+      event.preventDefault();
+      history.push(to);
+      window.scrollTo({ behavior: 'auto', top: 0 });
+      requestAnimationFrame(() =>
+        window.scrollTo({ behavior: 'auto', top: 0 }),
+      );
+      return;
+    }
+
+    if (pathname !== '/') {
       return;
     }
 
     event.preventDefault();
-
-    if (to === '/') {
-      history.push('/');
-      window.scrollTo({ behavior: 'smooth', top: 0 });
-      return;
-    }
-
     history.push(to);
     document
       .getElementById(to.slice(2))
