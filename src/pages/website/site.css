@@ -66,6 +66,12 @@
   flex-shrink: 0;
 }
 
+.zhulv-brand__image {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
 .zhulv-brand__emblem {
   position: relative;
   display: grid;

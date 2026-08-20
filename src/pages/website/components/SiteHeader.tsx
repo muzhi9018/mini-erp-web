@@ -99,7 +99,10 @@ const SiteHeader: React.FC = () => {
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <BrandMark onClick={(event) => handleNavigation(event, '/')} />
+        <BrandMark
+          imageSrc="/images/logo.png"
+          onClick={(event) => handleNavigation(event, '/')}
+        />
         <nav
           className={`site-header__nav ${isOpen ? 'is-open' : ''}`}
           aria-label="网站导航"
