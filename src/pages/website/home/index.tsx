@@ -7,6 +7,12 @@ import SiteHeader from '../components/SiteHeader';
 import { products, projectCases, websiteImages } from '../data';
 import '../site.css';
 import './index.css';
+import {
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+  MailOutlined,
+  PhoneOutlined,
+} from '@ant-design/icons';
 
 const advantages = [
   {
@@ -66,41 +72,6 @@ const AdvantageIcon: React.FC<{ name: string }> = ({ name }) => {
       <circle cx="17" cy="9" r="2.2" />
       <path d="M3.8 20c.3-3.3 2.3-5.1 5.2-5.1 2.9 0 4.8 1.8 5.2 5.1" />
       <path d="M15.4 15.3c2.7.1 4.3 1.7 4.8 4.7" />
-    </svg>
-  );
-};
-
-const ContactIcon: React.FC<{ name: string }> = ({ name }) => {
-  if (name === 'phone') {
-    return (
-      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-        <path d="M5.4 3.8 8 3.1l1.6 4.5-2 1.3a14 14 0 0 0 7.4 7.4l1.3-2 4.5 1.6-.7 2.6a2.4 2.4 0 0 1-2.5 1.7C10.8 19.4 4.6 13.2 3.7 6.4a2.4 2.4 0 0 1 1.7-2.6Z" />
-      </svg>
-    );
-  }
-
-  if (name === 'mail') {
-    return (
-      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-        <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" />
-        <path d="m4.5 7 7.5 5.8L19.5 7" />
-      </svg>
-    );
-  }
-
-  if (name === 'location') {
-    return (
-      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-        <path d="M12 21s6-5.5 6-11A6 6 0 0 0 6 10c0 5.5 6 11 6 11Z" />
-        <circle cx="12" cy="10" r="2" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M12 7v5l3.5 2.2" />
     </svg>
   );
 };
@@ -253,28 +224,28 @@ const HomePage: React.FC = () => (
       <div className="home-contact__details">
         <div>
           <span className="home-contact__icon">
-            <ContactIcon name="phone" />
+            <PhoneOutlined aria-hidden="true" />
           </span>
           <span className="home-contact__label">服务热线</span>
           <strong>400-888-6688</strong>
         </div>
         <div>
           <span className="home-contact__icon">
-            <ContactIcon name="mail" />
+            <MailOutlined />
           </span>
           <span className="home-contact__label">商务邮箱</span>
           <a href="mailto:sales@zhulv-decor.com">sales@zhulv-decor.com</a>
         </div>
         <div>
           <span className="home-contact__icon">
-            <ContactIcon name="location" />
+            <EnvironmentOutlined />
           </span>
           <span className="home-contact__label">总部地址</span>
           <p>广东省佛山市禅城区南庄陶瓷城</p>
         </div>
         <div>
           <span className="home-contact__icon">
-            <ContactIcon name="time" />
+            <ClockCircleOutlined />
           </span>
           <span className="home-contact__label">营业时间</span>
           <p>周一至周六 09:00 - 18:00</p>

@@ -43,7 +43,7 @@ const SiteHeader: React.FC = () => {
           </a>
         </nav>
         <a className="site-header__consult" href="/#contact">
-          <span aria-hidden="true">⌕</span>
+          <PhoneOutlined aria-hidden="true" />
           免费咨询
         </a>
         <button

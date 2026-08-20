@@ -165,8 +165,8 @@
   left: 0;
 }
 
-.site-header__consult,
-.site-button {
+.zhulv-site .site-header__consult,
+.zhulv-site .site-button {
   display: inline-flex;
   min-height: 42px;
   align-items: center;
@@ -174,28 +174,29 @@
   gap: 8px;
   padding: 0 20px;
   border: 1px solid var(--site-deep);
+  border-radius: 4px;
   background: var(--site-deep);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
+  white-space: nowrap;
   transition:
     transform 0.2s,
     background 0.2s,
     color 0.2s;
 }
 
-.site-header__consult:hover,
-.site-button:hover {
+.zhulv-site .site-header__consult:hover,
+.zhulv-site .site-button:hover {
   transform: translateY(-2px);
   background: var(--site-gold);
   border-color: var(--site-gold);
 }
 
-.site-header__consult span {
-  font-size: 20px;
-  font-weight: 400;
-  transform: rotate(-30deg);
+.site-header__consult .anticon,
+.site-button .anticon {
+  font-size: 16px;
 }
 
 .site-header__consult--mobile,
@@ -546,7 +547,7 @@
     width: 25px;
   }
 
-  .site-header__consult {
+  .zhulv-site .site-header__consult {
     display: none;
   }
 
