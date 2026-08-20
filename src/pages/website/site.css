@@ -2,6 +2,7 @@
   --site-ink: #162e27;
   --site-deep: #102c24;
   --site-button: #1c4435;
+  --site-footer: #132e26;
   --site-gold: #c69b58;
   --site-sand: #f6f4f0;
   --site-paper: #fff;
@@ -356,7 +357,7 @@
 
 .site-footer {
   padding: 62px 0 0;
-  background: #132e26;
+  background: var(--site-footer);
   /*background: #264336;*/
   color: rgba(255, 255, 255, 0.72);
 }
