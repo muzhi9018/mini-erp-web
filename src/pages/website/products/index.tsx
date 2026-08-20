@@ -3,12 +3,7 @@ import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
-import {
-  type ProductCategory,
-  productCategories,
-  products,
-  websiteImages,
-} from '../data';
+import { type ProductCategory, productCategories, products } from '../data';
 import '../site.css';
 import './index.css';
 
@@ -25,12 +20,7 @@ const ProductCenterPage: React.FC = () => {
   return (
     <main className="zhulv-site product-center-page">
       <SiteHeader />
-      <section className="page-hero">
-        <img
-          alt="高端环保装饰材料"
-          className="page-hero__image"
-          src={websiteImages.application}
-        />
+      <section className="page-hero product-center-page__hero">
         <div className="page-hero__content">
           <span className="page-hero__eyebrow">PRODUCT CENTER</span>
           <h1>产品中心</h1>
