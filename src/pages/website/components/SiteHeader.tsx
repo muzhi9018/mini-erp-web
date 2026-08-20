@@ -1,20 +1,61 @@
 import { PhoneOutlined } from '@ant-design/icons';
 import { history, Link, useLocation } from '@umijs/max';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BrandMark from './BrandMark';
 
 const navigation = [
-  { label: '首页', to: '/' },
-  { label: '产品中心', to: '/products' },
-  { label: '精选案例', to: '/#cases' },
-  { label: '公司优势', to: '/#advantages' },
-  { label: '关于我们', to: '/#about' },
-  { label: '联系我们', to: '/#contact' },
+  { label: '首页', section: 'home', to: '/' },
+  { label: '关于我们', section: 'about', to: '/#about' },
+  { label: '产品中心', section: 'products', to: '/products' },
+  { label: '精选案例', section: 'cases', to: '/#cases' },
+  { label: '公司优势', section: 'advantages', to: '/#advantages' },
+  { label: '联系我们', section: 'contact', to: '/#contact' },
 ];
+
+const homeSectionIds = ['about', 'products', 'cases', 'advantages', 'contact'];
 
 const SiteHeader: React.FC = () => {
   const { hash, pathname } = useLocation();
+  const [activeHomeSection, setActiveHomeSection] = useState('home');
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (pathname !== '/') {
+      return;
+    }
+
+    const updateActiveHomeSection = () => {
+      const headerHeight =
+        document.querySelector<HTMLElement>('.site-header')?.offsetHeight ?? 76;
+      let nextSection = 'home';
+
+      for (const sectionId of homeSectionIds) {
+        const section = document.getElementById(sectionId);
+        if (section && section.getBoundingClientRect().top <= headerHeight) {
+          nextSection = sectionId;
+        }
+      }
+
+      setActiveHomeSection(nextSection);
+    };
+
+    const hashSection = hash.slice(1);
+    if (hashSection === 'home' || homeSectionIds.includes(hashSection)) {
+      setActiveHomeSection(hashSection);
+    } else {
+      updateActiveHomeSection();
+    }
+
+    window.addEventListener('scroll', updateActiveHomeSection, {
+      passive: true,
+    });
+    window.addEventListener('resize', updateActiveHomeSection);
+
+    return () => {
+      window.removeEventListener('scroll', updateActiveHomeSection);
+      window.removeEventListener('resize', updateActiveHomeSection);
+    };
+  }, [hash, pathname]);
 
   const handleNavigation = (
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -24,6 +65,7 @@ const SiteHeader: React.FC = () => {
 
     if (to === '/') {
       event.preventDefault();
+      setActiveHomeSection('home');
       history.push('/');
       window.scrollTo({
         behavior: pathname === '/' ? 'smooth' : 'auto',
@@ -47,6 +89,7 @@ const SiteHeader: React.FC = () => {
     }
 
     event.preventDefault();
+    setActiveHomeSection(to.slice(2));
     history.push(to);
     document
       .getElementById(to.slice(2))
@@ -64,10 +107,11 @@ const SiteHeader: React.FC = () => {
           {navigation.map((item) => (
             <Link
               className={
-                pathname === item.to ||
-                (pathname === '/' &&
-                  item.to.startsWith('/#') &&
-                  hash === item.to.slice(1))
+                (pathname === '/' && activeHomeSection === item.section) ||
+                (pathname !== '/' &&
+                  (pathname === item.to ||
+                    (item.to === '/products' &&
+                      pathname.startsWith('/products/'))))
                   ? 'is-active'
                   : undefined
               }
