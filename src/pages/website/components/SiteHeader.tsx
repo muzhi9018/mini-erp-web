@@ -1,5 +1,5 @@
 import { PhoneOutlined } from '@ant-design/icons';
-import { Link, useLocation } from '@umijs/max';
+import { history, Link, useLocation } from '@umijs/max';
 import React, { useState } from 'react';
 import BrandMark from './BrandMark';
 
@@ -13,22 +13,53 @@ const navigation = [
 ];
 
 const SiteHeader: React.FC = () => {
-  const { pathname } = useLocation();
+  const { hash, pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleNavigation = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    to: string,
+  ) => {
+    setIsOpen(false);
+
+    if (pathname !== '/' || (to !== '/' && !to.startsWith('/#'))) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (to === '/') {
+      history.push('/');
+      window.scrollTo({ behavior: 'smooth', top: 0 });
+      return;
+    }
+
+    history.push(to);
+    document
+      .getElementById(to.slice(2))
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <BrandMark />
+        <BrandMark onClick={(event) => handleNavigation(event, '/')} />
         <nav
           className={`site-header__nav ${isOpen ? 'is-open' : ''}`}
           aria-label="网站导航"
         >
           {navigation.map((item) => (
             <Link
-              className={pathname === item.to ? 'is-active' : undefined}
+              className={
+                pathname === item.to ||
+                (pathname === '/' &&
+                  item.to.startsWith('/#') &&
+                  hash === item.to.slice(1))
+                  ? 'is-active'
+                  : undefined
+              }
               key={item.label}
-              onClick={() => setIsOpen(false)}
+              onClick={(event) => handleNavigation(event, item.to)}
               to={item.to}
             >
               {item.label}
@@ -37,12 +68,16 @@ const SiteHeader: React.FC = () => {
           <a
             className="site-header__consult site-header__consult--mobile"
             href="/#contact"
-            onClick={() => setIsOpen(false)}
+            onClick={(event) => handleNavigation(event, '/#contact')}
           >
             免费咨询
           </a>
         </nav>
-        <a className="site-header__consult" href="/#contact">
+        <a
+          className="site-header__consult"
+          href="/#contact"
+          onClick={(event) => handleNavigation(event, '/#contact')}
+        >
           <PhoneOutlined aria-hidden="true" />
           免费咨询
         </a>

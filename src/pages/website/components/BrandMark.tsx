@@ -3,10 +3,16 @@ import React from 'react';
 
 interface BrandMarkProps {
   compact?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-const BrandMark: React.FC<BrandMarkProps> = ({ compact = false }) => (
-  <Link className="zhulv-brand" to="/" aria-label="筑绿装饰新材首页">
+const BrandMark: React.FC<BrandMarkProps> = ({ compact = false, onClick }) => (
+  <Link
+    aria-label="筑绿装饰新材首页"
+    className="zhulv-brand"
+    onClick={onClick}
+    to="/"
+  >
     <span className="zhulv-brand__emblem" aria-hidden="true">
       <span />
     </span>

@@ -1,3 +1,7 @@
+.home-page > section[id] {
+  scroll-margin-top: 76px;
+}
+
 .home-hero {
   position: relative;
   display: grid;
@@ -587,6 +591,10 @@
 }
 
 @media (max-width: 720px) {
+  .home-page > section[id] {
+    scroll-margin-top: 66px;
+  }
+
   .home-hero {
     min-height: 650px;
   }
