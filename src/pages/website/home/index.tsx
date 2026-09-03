@@ -1,10 +1,10 @@
-import { Link, useLocation } from '@umijs/max';
+import { Link, useIntl, useLocation } from '@umijs/max';
 import React, { useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
-import { products, projectCases, websiteImages } from '../data';
+import { getProjectCases, products, websiteImages } from '../data';
 import '../site.css';
 import './index.css';
 import {
@@ -14,26 +14,36 @@ import {
   PhoneOutlined,
 } from '@ant-design/icons';
 
-const advantages = [
+const getAdvantages = (
+  formatMessage: (descriptor: { id: string }) => string,
+) => [
   {
     icon: 'layers',
-    title: '品类齐全',
-    text: '12大产品系列、数百款规格，一站式满足全屋装饰材料需求。',
+    title: formatMessage({ id: 'website.home.advantages.categories.title' }),
+    text: formatMessage({
+      id: 'website.home.advantages.categories.description',
+    }),
   },
   {
     icon: 'certified',
-    title: '环保认证',
-    text: '全系列产品通过多项环保检测，为健康空间提供可靠保障。',
+    title: formatMessage({ id: 'website.home.advantages.environment.title' }),
+    text: formatMessage({
+      id: 'website.home.advantages.environment.description',
+    }),
   },
   {
     icon: 'delivery',
-    title: '快速交付',
-    text: '大型仓储中心备有常用现货，常规定制产品快速交付。',
+    title: formatMessage({ id: 'website.home.advantages.delivery.title' }),
+    text: formatMessage({
+      id: 'website.home.advantages.delivery.description',
+    }),
   },
   {
     icon: 'service',
-    title: '专业服务',
-    text: '设计师与技术团队全程跟进，提供选材、深化与安装指导。',
+    title: formatMessage({ id: 'website.home.advantages.service.title' }),
+    text: formatMessage({
+      id: 'website.home.advantages.service.description',
+    }),
   },
 ];
 
@@ -78,6 +88,9 @@ const AdvantageIcon: React.FC<{ name: string }> = ({ name }) => {
 
 const HomePage: React.FC = () => {
   const { hash } = useLocation();
+  const intl = useIntl();
+  const advantages = getAdvantages(intl.formatMessage);
+  const projectCases = getProjectCases(intl.formatMessage);
 
   useEffect(() => {
     if (!hash) {
@@ -101,7 +114,7 @@ const HomePage: React.FC = () => {
       <SiteHeader />
       <section className="home-hero">
         <img
-          alt="高端装饰材料综合应用空间"
+          alt={intl.formatMessage({ id: 'website.home.hero.imageAlt' })}
           className="home-hero__image"
           src={websiteImages.hero}
         />
@@ -109,19 +122,18 @@ const HomePage: React.FC = () => {
         <div className="home-hero__content">
           <span>ZHU LV DECORATION MATERIALS</span>
           <h1>
-            筑造精品空间
+            {intl.formatMessage({ id: 'website.home.hero.titleStart' })}
             <br />
-            <em>绿色环保建材</em>
+            <em>{intl.formatMessage({ id: 'website.home.hero.titleEnd' })}</em>
           </h1>
-          <p>
-            专注高端环保装饰材料一站式供应，汇聚塑木、柔性软石、PU石材、岩板、鎏金板等十二大产品系列，以匠心品质与创新设计，为每一个空间赋予独特质感与持久生命力。
-          </p>
+          <p>{intl.formatMessage({ id: 'website.home.hero.description' })}</p>
           <div className="home-hero__actions">
             <Link className="site-button" to="/products">
-              探索产品 <b aria-hidden="true">→</b>
+              {intl.formatMessage({ id: 'website.home.hero.exploreProducts' })}{' '}
+              <b aria-hidden="true">→</b>
             </Link>
             <a className="site-button site-button--outline" href="/#contact">
-              获取报价
+              {intl.formatMessage({ id: 'website.home.hero.getQuote' })}
             </a>
           </div>
         </div>
@@ -130,40 +142,58 @@ const HomePage: React.FC = () => {
 
       <section className="home-about" id="about">
         <div className="home-about__gallery">
-          <img alt="户外塑木平台景观" src={websiteImages.aboutOutdoor} />
-          <img alt="PU石材客厅背景墙" src={websiteImages.aboutStone} />
-          <img alt="岩板现代厨房" src={websiteImages.aboutKitchen} />
+          <img
+            alt={intl.formatMessage({
+              id: 'website.home.about.outdoorImageAlt',
+            })}
+            src={websiteImages.aboutOutdoor}
+          />
+          <img
+            alt={intl.formatMessage({ id: 'website.home.about.stoneImageAlt' })}
+            src={websiteImages.aboutStone}
+          />
+          <img
+            alt={intl.formatMessage({
+              id: 'website.home.about.kitchenImageAlt',
+            })}
+            src={websiteImages.aboutKitchen}
+          />
         </div>
         <div className="home-about__content">
           <span>ABOUT ZHU LV</span>
-          <h2>匠心筑造，绿色赋能</h2>
-          <p>
-            筑绿装饰新材是一家致力于高端环保装饰材料研发、生产与销售的综合性企业。我们秉承“绿色筑造、品质为先”的理念，为商业空间、豪宅精装、酒店会所等领域提供一站式材料解决方案。
-          </p>
-          <p>
-            自成立以来，公司始终坚持产品创新与品质管控，引进先进生产设备与工艺技术，建立完善的质量管理体系。产品不仅通过多项环保认证，更以卓越性能与美学设计，赢得众多设计师与开发商的青睐。
-          </p>
-          <p>
-            从材料选择到空间呈现，筑绿以专业服务团队为支撑，为每一位客户提供从选材设计到安装指导的全流程服务，让绿色建材走进每一个品质空间。
-          </p>
+          <h2>{intl.formatMessage({ id: 'website.home.about.title' })}</h2>
+          <p>{intl.formatMessage({ id: 'website.home.about.paragraph1' })}</p>
+          <p>{intl.formatMessage({ id: 'website.home.about.paragraph2' })}</p>
+          <p>{intl.formatMessage({ id: 'website.home.about.paragraph3' })}</p>
           <div className="home-about__stats">
             <div>
               <strong>
                 12<sup>+</sup>
               </strong>
-              <span>产品系列</span>
+              <span>
+                {intl.formatMessage({ id: 'website.home.about.productSeries' })}
+              </span>
             </div>
             <div>
               <strong>
                 500<sup>+</sup>
               </strong>
-              <span>合作项目</span>
+              <span>
+                {intl.formatMessage({ id: 'website.home.about.projects' })}
+              </span>
             </div>
             <div>
               <strong>
-                15<sup>年</sup>
+                15
+                <sup>
+                  {intl.formatMessage({ id: 'website.home.about.years' })}
+                </sup>
               </strong>
-              <span>行业经验</span>
+              <span>
+                {intl.formatMessage({
+                  id: 'website.home.about.industryExperience',
+                })}
+              </span>
             </div>
           </div>
         </div>
@@ -172,8 +202,10 @@ const HomePage: React.FC = () => {
       <section className="home-products" id="products">
         <SectionHeading
           eyebrow="PRODUCT CATEGORIES"
-          title="产品分类"
-          description="十二大产品系列，涵盖墙面、地面、柜体、装饰等全方位装饰材料，满足不同风格与场景的设计需求。"
+          title={intl.formatMessage({ id: 'website.home.products.title' })}
+          description={intl.formatMessage({
+            id: 'website.home.products.description',
+          })}
         />
         <div className="home-products__grid product-grid">
           {products.map((product) => (
@@ -181,15 +213,18 @@ const HomePage: React.FC = () => {
           ))}
         </div>
         <Link className="home-products__more" to="/products">
-          查看全部产品 <span>→</span>
+          {intl.formatMessage({ id: 'website.home.products.viewAll' })}{' '}
+          <span>→</span>
         </Link>
       </section>
 
       <section className="home-cases" id="cases">
         <SectionHeading
           eyebrow="FEATURED PROJECTS"
-          title="精选案例"
-          description="精选真实项目案例，见证筑绿材料如何为不同空间带来质感升级与设计惊喜。"
+          title={intl.formatMessage({ id: 'website.home.cases.title' })}
+          description={intl.formatMessage({
+            id: 'website.home.cases.description',
+          })}
         />
         <div className="home-cases__grid">
           {projectCases.map((project, index) => (
@@ -212,8 +247,10 @@ const HomePage: React.FC = () => {
         <div className="home-advantages__inner">
           <SectionHeading
             eyebrow="OUR ADVANTAGES"
-            title="为什么选择筑绿"
-            description="我们以产品品质为核心，以专业服务为支撑，为每一位客户创造超越期待的价值。"
+            title={intl.formatMessage({ id: 'website.home.advantages.title' })}
+            description={intl.formatMessage({
+              id: 'website.home.advantages.description',
+            })}
           />
           <div className="home-advantages__grid">
             {advantages.map((advantage) => (
@@ -234,41 +271,53 @@ const HomePage: React.FC = () => {
           <SectionHeading
             centered={false}
             eyebrow="CONTACT US"
-            title="联系我们"
-            description="无论您是设计师、开发商还是终端客户，我们都期待与您沟通，为您提供最适合的装饰材料解决方案。"
+            title={intl.formatMessage({ id: 'website.home.contact.title' })}
+            description={intl.formatMessage({
+              id: 'website.home.contact.description',
+            })}
           />
-          <p>
-            欢迎致电咨询或预约到样品展示厅参观选材，我们的专业顾问将为您提供一对一服务。
-          </p>
+          <p>{intl.formatMessage({ id: 'website.home.contact.message' })}</p>
         </div>
         <div className="home-contact__details">
           <div>
             <span className="home-contact__icon">
               <PhoneOutlined aria-hidden="true" />
             </span>
-            <span className="home-contact__label">服务热线</span>
+            <span className="home-contact__label">
+              {intl.formatMessage({ id: 'website.home.contact.phone' })}
+            </span>
             <strong>400-888-6688</strong>
           </div>
           <div>
             <span className="home-contact__icon">
               <MailOutlined />
             </span>
-            <span className="home-contact__label">商务邮箱</span>
+            <span className="home-contact__label">
+              {intl.formatMessage({ id: 'website.home.contact.email' })}
+            </span>
             <a href="mailto:sales@zhulv-decor.com">sales@zhulv-decor.com</a>
           </div>
           <div>
             <span className="home-contact__icon">
               <EnvironmentOutlined />
             </span>
-            <span className="home-contact__label">总部地址</span>
-            <p>广东省佛山市禅城区南庄陶瓷城</p>
+            <span className="home-contact__label">
+              {intl.formatMessage({ id: 'website.home.contact.address' })}
+            </span>
+            <p>
+              {intl.formatMessage({ id: 'website.home.contact.addressValue' })}
+            </p>
           </div>
           <div>
             <span className="home-contact__icon">
               <ClockCircleOutlined />
             </span>
-            <span className="home-contact__label">营业时间</span>
-            <p>周一至周六 09:00 - 18:00</p>
+            <span className="home-contact__label">
+              {intl.formatMessage({ id: 'website.home.contact.hours' })}
+            </span>
+            <p>
+              {intl.formatMessage({ id: 'website.home.contact.hoursValue' })}
+            </p>
           </div>
         </div>
       </section>

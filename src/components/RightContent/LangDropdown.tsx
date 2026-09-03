@@ -1,5 +1,5 @@
 import { CheckOutlined, GlobalOutlined } from '@ant-design/icons';
-import { getAllLocales, getLocale, setLocale } from '@umijs/max';
+import { getAllLocales, getLocale, setLocale, useIntl } from '@umijs/max';
 import type { MenuProps } from 'antd';
 import { Button } from 'antd';
 import { useMemo } from 'react';
@@ -20,6 +20,7 @@ const onLangClick: MenuProps['onClick'] = ({ key }) => {
 
 export const LangDropdown: React.FC = () => {
   const { styles } = useHeaderActionStyles();
+  const intl = useIntl();
   const allLocales = useMemo(() => getAllLocales(), []);
   const currentLocale = getLocale();
   const supportLocales = allLocales.filter((l) => l in localeLabelMap);
@@ -50,7 +51,13 @@ export const LangDropdown: React.FC = () => {
         style: { minWidth: 180 },
       }}
     >
-      <Button type="text" className={styles.action} aria-label="语言切换">
+      <Button
+        aria-label={intl.formatMessage({
+          id: 'component.globalHeader.language',
+        })}
+        className={styles.action}
+        type="text"
+      >
         <GlobalOutlined />
       </Button>
     </HeaderDropdown>

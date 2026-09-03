@@ -1,12 +1,12 @@
-import { Link, useParams } from '@umijs/max';
+import { Link, useIntl, useParams } from '@umijs/max';
 import React, { useEffect } from 'react';
 import SiteFooter from '../../components/SiteFooter';
 import SiteHeader from '../../components/SiteHeader';
 import {
+  getProjectCases,
   productDetailImages,
   productMap,
   products,
-  projectCases,
   websiteImages,
 } from '../../data';
 import '../../site.css';
@@ -33,7 +33,9 @@ const DetailSectionHeader: React.FC<DetailSectionHeaderProps> = ({
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const intl = useIntl();
   const product = slug ? productMap[slug] : undefined;
+  const projectCases = getProjectCases(intl.formatMessage);
 
   useEffect(() => {
     window.scrollTo({ behavior: 'auto', top: 0 });
@@ -45,10 +47,16 @@ const ProductDetailPage: React.FC = () => {
         <SiteHeader />
         <section>
           <span>404</span>
-          <h1>未找到该产品</h1>
-          <p>您访问的产品页面不存在或已被调整。</p>
+          <h1>
+            {intl.formatMessage({ id: 'website.productDetail.notFound.title' })}
+          </h1>
+          <p>
+            {intl.formatMessage({
+              id: 'website.productDetail.notFound.description',
+            })}
+          </p>
           <Link className="site-button" to="/products">
-            返回产品中心
+            {intl.formatMessage({ id: 'website.productDetail.notFound.back' })}
           </Link>
         </section>
       </main>
@@ -77,9 +85,17 @@ const ProductDetailPage: React.FC = () => {
       <section className="product-detail-page__hero">
         <div className="product-detail-page__hero-content">
           <div className="product-detail-page__crumbs">
-            <Link to="/">首页</Link>
+            <Link to="/">
+              {intl.formatMessage({
+                id: 'website.productDetail.breadcrumb.home',
+              })}
+            </Link>
             <span>/</span>
-            <Link to="/products">产品中心</Link>
+            <Link to="/products">
+              {intl.formatMessage({
+                id: 'website.productDetail.breadcrumb.products',
+              })}
+            </Link>
             <span>/</span>
             <span>{product.name}</span>
           </div>
@@ -92,7 +108,10 @@ const ProductDetailPage: React.FC = () => {
         <div className="product-detail-page__feature-layout">
           <div className="product-detail-page__feature-image">
             <img
-              alt={`${product.name}效果展示`}
+              alt={intl.formatMessage(
+                { id: 'website.productDetail.feature.imageAlt' },
+                { productName: product.name },
+              )}
               src={detailImages?.feature ?? product.image}
             />
           </div>
@@ -100,7 +119,11 @@ const ProductDetailPage: React.FC = () => {
             <span className="product-detail-page__eyebrow">
               PRODUCT FEATURES
             </span>
-            <h2>产品特点与优势</h2>
+            <h2>
+              {intl.formatMessage({
+                id: 'website.productDetail.feature.title',
+              })}
+            </h2>
             <i aria-hidden="true" />
             <p>{product.featureIntroduction ?? product.summary}</p>
             <div className="product-detail-page__feature-list">
@@ -120,9 +143,13 @@ const ProductDetailPage: React.FC = () => {
 
       <section className="product-detail-page__specifications detail-section detail-section--sand">
         <DetailSectionHeader
-          description="严格的品质管控，每项指标均达到或超过国家标准"
+          description={intl.formatMessage({
+            id: 'website.productDetail.specifications.description',
+          })}
           eyebrow="TECHNICAL SPECIFICATIONS"
-          title="技术参数"
+          title={intl.formatMessage({
+            id: 'website.productDetail.specifications.title',
+          })}
         />
         <div className="product-detail-page__specification-table-wrap">
           <table>
@@ -140,9 +167,13 @@ const ProductDetailPage: React.FC = () => {
 
       <section className="product-detail-page__applications detail-section">
         <DetailSectionHeader
-          description="广泛应用于各类户外与室内空间，为设计师提供丰富的创作可能"
+          description={intl.formatMessage({
+            id: 'website.productDetail.applications.description',
+          })}
           eyebrow="APPLICATION SCENARIOS"
-          title="应用场景"
+          title={intl.formatMessage({
+            id: 'website.productDetail.applications.title',
+          })}
         />
         <div className="product-detail-page__application-grid">
           {product.applications.map((application, index) => (
@@ -163,15 +194,22 @@ const ProductDetailPage: React.FC = () => {
 
       <section className="product-detail-page__gallery detail-section detail-section--sand">
         <DetailSectionHeader
-          description="精选真实项目案例，见证塑木材料的多元应用与卓越表现"
+          description={intl.formatMessage({
+            id: 'website.productDetail.gallery.description',
+          })}
           eyebrow="PROJECT GALLERY"
-          title="案例展示"
+          title={intl.formatMessage({
+            id: 'website.productDetail.gallery.title',
+          })}
         />
         <div className="product-detail-page__gallery-grid">
           {galleryImages.map((galleryImage, index) => (
             <article key={galleryImage}>
               <img
-                alt={`${product.name}案例 ${index + 1}`}
+                alt={intl.formatMessage(
+                  { id: 'website.productDetail.gallery.imageAlt' },
+                  { index: index + 1, productName: product.name },
+                )}
                 loading="lazy"
                 src={galleryImage}
               />
@@ -183,9 +221,13 @@ const ProductDetailPage: React.FC = () => {
 
       <section className="product-detail-page__related detail-section detail-section--sand">
         <DetailSectionHeader
-          description="探索更多优质装饰材料，为您的项目找到最佳搭配"
+          description={intl.formatMessage({
+            id: 'website.productDetail.related.description',
+          })}
           eyebrow="RELATED PRODUCTS"
-          title="相关产品推荐"
+          title={intl.formatMessage({
+            id: 'website.productDetail.related.title',
+          })}
         />
         <div className="product-detail-page__related-grid">
           {relatedProducts.map((relatedProduct) => (

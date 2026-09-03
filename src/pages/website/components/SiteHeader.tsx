@@ -1,23 +1,52 @@
 import { PhoneOutlined } from '@ant-design/icons';
-import { history, Link, useLocation } from '@umijs/max';
+import { history, Link, useIntl, useLocation } from '@umijs/max';
 import React, { useEffect, useState } from 'react';
+import { LangDropdown } from '@/components';
 import BrandMark from './BrandMark';
 
-const navigation = [
-  { label: '首页', section: 'home', to: '/' },
-  { label: '关于我们', section: 'about', to: '/#about' },
-  { label: '产品中心', section: 'products', to: '/products' },
-  { label: '精选案例', section: 'cases', to: '/#cases' },
-  { label: '公司优势', section: 'advantages', to: '/#advantages' },
-  { label: '联系我们', section: 'contact', to: '/#contact' },
+const getNavigation = (
+  formatMessage: (descriptor: { id: string }) => string,
+) => [
+  {
+    label: formatMessage({ id: 'website.navigation.home' }),
+    section: 'home',
+    to: '/',
+  },
+  {
+    label: formatMessage({ id: 'website.navigation.about' }),
+    section: 'about',
+    to: '/#about',
+  },
+  {
+    label: formatMessage({ id: 'website.navigation.products' }),
+    section: 'products',
+    to: '/products',
+  },
+  {
+    label: formatMessage({ id: 'website.navigation.cases' }),
+    section: 'cases',
+    to: '/#cases',
+  },
+  {
+    label: formatMessage({ id: 'website.navigation.advantages' }),
+    section: 'advantages',
+    to: '/#advantages',
+  },
+  {
+    label: formatMessage({ id: 'website.navigation.contact' }),
+    section: 'contact',
+    to: '/#contact',
+  },
 ];
 
 const homeSectionIds = ['about', 'products', 'cases', 'advantages', 'contact'];
 
 const SiteHeader: React.FC = () => {
   const { hash, pathname } = useLocation();
+  const intl = useIntl();
   const [activeHomeSection, setActiveHomeSection] = useState('home');
   const [isOpen, setIsOpen] = useState(false);
+  const navigation = getNavigation(intl.formatMessage);
 
   useEffect(() => {
     if (pathname !== '/') {
@@ -105,7 +134,7 @@ const SiteHeader: React.FC = () => {
         />
         <nav
           className={`site-header__nav ${isOpen ? 'is-open' : ''}`}
-          aria-label="网站导航"
+          aria-label={intl.formatMessage({ id: 'website.navigation.label' })}
         >
           {navigation.map((item) => (
             <Link
@@ -130,20 +159,29 @@ const SiteHeader: React.FC = () => {
             href="/#contact"
             onClick={(event) => handleNavigation(event, '/#contact')}
           >
-            免费咨询
+            {intl.formatMessage({ id: 'website.navigation.consultation' })}
           </a>
         </nav>
-        <a
-          className="site-header__consult"
-          href="/#contact"
-          onClick={(event) => handleNavigation(event, '/#contact')}
-        >
-          <PhoneOutlined aria-hidden="true" />
-          免费咨询
-        </a>
+        <div className="site-header__actions">
+          <a
+            className="site-header__consult"
+            href="/#contact"
+            onClick={(event) => handleNavigation(event, '/#contact')}
+          >
+            <PhoneOutlined aria-hidden="true" />
+            {intl.formatMessage({ id: 'website.navigation.consultation' })}
+          </a>
+          <div className="site-header__language">
+            <LangDropdown />
+          </div>
+        </div>
         <button
           aria-expanded={isOpen}
-          aria-label={isOpen ? '关闭导航菜单' : '打开导航菜单'}
+          aria-label={intl.formatMessage({
+            id: isOpen
+              ? 'website.navigation.closeMenu'
+              : 'website.navigation.openMenu',
+          })}
           className="site-header__menu-button"
           onClick={() => setIsOpen((open) => !open)}
           type="button"

@@ -4,7 +4,7 @@
 
 .product-center-page__hero {
   min-height: 458px;
-  padding: 92px max(24px, calc((100% - 1180px) / 2)) 76px;
+  padding: 92px max(24px, calc((100% - 1320px) / 2)) 76px;
   background: var(--site-footer);
 }
 

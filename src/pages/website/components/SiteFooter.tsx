@@ -1,10 +1,11 @@
-import { history, Link, useLocation } from '@umijs/max';
+import { history, Link, useIntl, useLocation } from '@umijs/max';
 import React from 'react';
 import { products } from '../data';
 import BrandMark from './BrandMark';
 
 const SiteFooter: React.FC = () => {
   const { pathname } = useLocation();
+  const intl = useIntl();
 
   const handleHomeSectionNavigation = (
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -26,12 +27,10 @@ const SiteFooter: React.FC = () => {
       <div className="site-footer__main">
         <section className="site-footer__intro">
           <BrandMark />
-          <p>
-            专注高端环保装饰材料供应，以匠心品质与创新设计，为每一个空间赋予独特质感与持久生命力。
-          </p>
+          <p>{intl.formatMessage({ id: 'website.footer.introduction' })}</p>
         </section>
         <section>
-          <h2>产品系列</h2>
+          <h2>{intl.formatMessage({ id: 'website.footer.productSeries' })}</h2>
           <ul>
             {products.slice(0, 5).map((product) => (
               <li key={product.slug}>
@@ -41,7 +40,9 @@ const SiteFooter: React.FC = () => {
           </ul>
         </section>
         <section>
-          <h2>快速导航</h2>
+          <h2>
+            {intl.formatMessage({ id: 'website.footer.quickNavigation' })}
+          </h2>
           <ul>
             <li>
               <Link
@@ -50,11 +51,13 @@ const SiteFooter: React.FC = () => {
                 }
                 to="/#about"
               >
-                关于我们
+                {intl.formatMessage({ id: 'website.navigation.about' })}
               </Link>
             </li>
             <li>
-              <Link to="/products">产品中心</Link>
+              <Link to="/products">
+                {intl.formatMessage({ id: 'website.navigation.products' })}
+              </Link>
             </li>
             <li>
               <Link
@@ -63,7 +66,7 @@ const SiteFooter: React.FC = () => {
                 }
                 to="/#cases"
               >
-                精选案例
+                {intl.formatMessage({ id: 'website.navigation.cases' })}
               </Link>
             </li>
             <li>
@@ -73,7 +76,7 @@ const SiteFooter: React.FC = () => {
                 }
                 to="/#advantages"
               >
-                公司优势
+                {intl.formatMessage({ id: 'website.navigation.advantages' })}
               </Link>
             </li>
             <li>
@@ -83,18 +86,20 @@ const SiteFooter: React.FC = () => {
                 }
                 to="/#contact"
               >
-                联系我们
+                {intl.formatMessage({ id: 'website.navigation.contact' })}
               </Link>
             </li>
           </ul>
         </section>
         <section className="site-footer__contact">
-          <h2>联系方式</h2>
+          <h2>
+            {intl.formatMessage({ id: 'website.footer.contactInformation' })}
+          </h2>
           <ul>
-            <li>服务热线：400-888-6688</li>
-            <li>商务邮箱：sales@zhulv-decor.com</li>
-            <li>总部地址：广东佛山禅城区南庄陶瓷城</li>
-            <li>营业时间：周一至周六 09:00-18:00</li>
+            <li>{intl.formatMessage({ id: 'website.footer.phone' })}</li>
+            <li>{intl.formatMessage({ id: 'website.footer.email' })}</li>
+            <li>{intl.formatMessage({ id: 'website.footer.address' })}</li>
+            <li>{intl.formatMessage({ id: 'website.footer.hours' })}</li>
           </ul>
         </section>
       </div>
@@ -106,7 +111,7 @@ const SiteFooter: React.FC = () => {
               e.preventDefault();
             }}
           >
-            Copyright © 2026-2035 筑绿装饰新材 版权所有
+            {intl.formatMessage({ id: 'website.footer.copyright' })}
           </a>
           ｜
           <a

@@ -5,6 +5,7 @@ import network from './zh-TW/network';
 import pages from './zh-TW/pages';
 import settingDrawer from './zh-TW/settingDrawer';
 import settings from './zh-TW/settings';
+import website from './zh-TW/website';
 
 export default {
   'navBar.lang': '語言',
@@ -19,4 +20,5 @@ export default {
   ...settings,
   ...network,
   ...component,
+  ...website,
 };

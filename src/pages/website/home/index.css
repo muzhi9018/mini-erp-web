@@ -37,7 +37,7 @@
 .home-hero__content {
   position: relative;
   z-index: 1;
-  width: min(1180px, calc(100% - 48px));
+  width: min(1320px, calc(100% - 48px));
   margin: 55px auto 0;
 }
 
@@ -120,7 +120,7 @@
 .home-products,
 .home-cases,
 .home-contact {
-  width: min(1180px, calc(100% - 48px));
+  width: min(1320px, calc(100% - 48px));
   margin: 0 auto;
 }
 
@@ -375,7 +375,7 @@
 }
 
 .home-advantages__inner {
-  width: min(1180px, 100%);
+  width: min(1320px, 100%);
   margin: 0 auto;
 }
 

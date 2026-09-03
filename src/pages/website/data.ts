@@ -19,6 +19,8 @@ export interface Product {
   applications: string[];
 }
 
+type FormatMessage = (descriptor: { id: string }) => string;
+
 const image = (fileName: string) => `/website/images/${fileName}.jpg`;
 
 const standardFeatures = (productName: string, highlights: string[]) => [
@@ -41,16 +43,31 @@ const standardFeatures = (productName: string, highlights: string[]) => [
   },
 ];
 
-export const productCategories: Array<{
-  value: ProductCategory | 'all';
-  label: string;
-}> = [
-  { value: 'all', label: '全部产品' },
-  { value: 'wall', label: '墙面装饰' },
-  { value: 'outdoor', label: '户外景观' },
-  { value: 'floor', label: '地面材料' },
-  { value: 'cabinet', label: '全屋定制' },
-  { value: 'profile', label: '型材配件' },
+export const getProductCategories = (formatMessage: FormatMessage) => [
+  {
+    value: 'all' as const,
+    label: formatMessage({ id: 'website.productCategory.all' }),
+  },
+  {
+    value: 'wall' as const,
+    label: formatMessage({ id: 'website.productCategory.wall' }),
+  },
+  {
+    value: 'outdoor' as const,
+    label: formatMessage({ id: 'website.productCategory.outdoor' }),
+  },
+  {
+    value: 'floor' as const,
+    label: formatMessage({ id: 'website.productCategory.floor' }),
+  },
+  {
+    value: 'cabinet' as const,
+    label: formatMessage({ id: 'website.productCategory.cabinet' }),
+  },
+  {
+    value: 'profile' as const,
+    label: formatMessage({ id: 'website.productCategory.profile' }),
+  },
 ];
 
 export const products: Product[] = [
@@ -385,41 +402,41 @@ export const productMap = Object.fromEntries(
   products.map((product) => [product.slug, product]),
 ) as Record<string, Product>;
 
-export const projectCases = [
+export const getProjectCases = (formatMessage: FormatMessage) => [
   {
-    title: '现代轻奢客厅背景墙',
-    category: '岩板 · 客厅空间',
-    description: '连纹岩板一体化设计',
+    title: formatMessage({ id: 'website.case.slab.title' }),
+    category: formatMessage({ id: 'website.case.slab.category' }),
+    description: formatMessage({ id: 'website.case.slab.description' }),
     image: image('case-slab-living'),
   },
   {
-    title: '别墅花园塑木露台',
-    category: '塑木 · 户外空间',
-    description: '深灰塑木地板围栏系统',
+    title: formatMessage({ id: 'website.case.wpc.title' }),
+    category: formatMessage({ id: 'website.case.wpc.category' }),
+    description: formatMessage({ id: 'website.case.wpc.description' }),
     image: image('case-wpc-garden'),
   },
   {
-    title: '轻奢风格客厅背景墙',
-    category: 'PU石材 · 客厅',
-    description: '米白文化石立体质感',
+    title: formatMessage({ id: 'website.case.pu.title' }),
+    category: formatMessage({ id: 'website.case.pu.category' }),
+    description: formatMessage({ id: 'website.case.pu.description' }),
     image: image('case-pu-living'),
   },
   {
-    title: '轻奢步入式衣帽间',
-    category: '全屋定制 · 衣帽间',
-    description: '玻璃门 + 灯带 + 中岛台系统',
+    title: formatMessage({ id: 'website.case.custom.title' }),
+    category: formatMessage({ id: 'website.case.custom.category' }),
+    description: formatMessage({ id: 'website.case.custom.description' }),
     image: image('case-custom-wardrobe'),
   },
   {
-    title: '五星级酒店大堂装饰',
-    category: '鎏金板 · 酒店',
-    description: '鎏金板背景墙奢华呈现',
+    title: formatMessage({ id: 'website.case.gold.title' }),
+    category: formatMessage({ id: 'website.case.gold.category' }),
+    description: formatMessage({ id: 'website.case.gold.description' }),
     image: image('case-gold-hotel'),
   },
   {
-    title: '品牌展厅整体地坪',
-    category: '水洗石 · 商业空间',
-    description: '浅白树脂水洗石无缝地面',
+    title: formatMessage({ id: 'website.case.resin.title' }),
+    category: formatMessage({ id: 'website.case.resin.category' }),
+    description: formatMessage({ id: 'website.case.resin.description' }),
     image: image('case-resin-showroom'),
   },
 ];
