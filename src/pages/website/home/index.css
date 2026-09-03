@@ -37,7 +37,7 @@
 .home-hero__content {
   position: relative;
   z-index: 1;
-  width: min(1320px, calc(100% - 48px));
+  width: var(--site-content-width);
   margin: 55px auto 0;
 }
 
@@ -120,7 +120,7 @@
 .home-products,
 .home-cases,
 .home-contact {
-  width: min(1320px, calc(100% - 48px));
+  width: var(--site-content-width);
   margin: 0 auto;
 }
 
@@ -238,7 +238,7 @@
 
 .home-products {
   position: relative;
-  width: min(1320px, calc(100% - 48px));
+  width: var(--site-content-width);
   padding: 92px 0 96px;
   background: #efece6;
   box-shadow: 0 0 0 100vmax #efece6;
@@ -370,12 +370,12 @@
 }
 
 .home-advantages {
-  padding: 110px 24px 120px;
+  padding: 110px var(--site-content-gutter) 120px;
   background: #f7f5f1;
 }
 
 .home-advantages__inner {
-  width: min(1320px, 100%);
+  width: min(var(--site-content-max-width), 100%);
   margin: 0 auto;
 }
 
@@ -636,7 +636,7 @@
   }
 
   .home-hero__content {
-    width: min(100% - 32px, 560px);
+    width: var(--site-mobile-content-width);
     margin-top: 48px;
   }
 
@@ -671,7 +671,7 @@
   .home-products,
   .home-cases,
   .home-contact {
-    width: min(100% - 32px, 560px);
+    width: var(--site-mobile-content-width);
   }
 
   .home-about {

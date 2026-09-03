@@ -1,5 +1,5 @@
 .detail-section {
-  width: min(1320px, calc(100% - 48px));
+  width: var(--site-content-width);
   margin: 0 auto;
   padding: 80px 0;
 }
@@ -7,8 +7,8 @@
 .detail-section--sand {
   box-sizing: border-box;
   width: 100%;
-  padding-right: max(24px, calc((100% - 1320px) / 2));
-  padding-left: max(24px, calc((100% - 1320px) / 2));
+  padding-right: var(--site-content-inline-padding);
+  padding-left: var(--site-content-inline-padding);
   background: #efece6;
 }
 
@@ -16,7 +16,7 @@
   display: grid;
   min-height: 458px;
   align-items: center;
-  padding: 92px max(24px, calc((100% - 1320px) / 2)) 76px;
+  padding: 92px var(--site-content-inline-padding) 76px;
   background: var(--site-footer);
   color: #fff;
   text-align: left;
@@ -445,15 +445,15 @@
 
 @media (max-width: 640px) {
   .detail-section {
-    width: min(100% - 32px, 560px);
+    width: var(--site-mobile-content-width);
     padding-top: 64px;
     padding-bottom: 64px;
   }
 
   .detail-section--sand {
     width: 100%;
-    padding-right: 16px;
-    padding-left: 16px;
+    padding-right: var(--site-mobile-content-gutter);
+    padding-left: var(--site-mobile-content-gutter);
   }
 
   .product-detail-page__hero {

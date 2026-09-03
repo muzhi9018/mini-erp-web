@@ -7,6 +7,27 @@
   --site-sand: #f6f4f0;
   --site-paper: #fff;
   --site-muted: #67716d;
+  /* Shared layout tokens for every website page. */
+  --site-content-max-width: 1320px;
+  --site-content-gutter: 24px;
+  --site-content-width: min(
+    var(--site-content-max-width),
+    calc(100% - var(--site-content-gutter) - var(--site-content-gutter))
+  );
+  --site-content-inline-padding: max(
+    var(--site-content-gutter),
+    calc((100% - var(--site-content-max-width)) / 2)
+  );
+  --site-mobile-content-max-width: 560px;
+  --site-mobile-content-gutter: 16px;
+  --site-mobile-content-width: min(
+    var(--site-mobile-content-max-width),
+    calc(
+      100% -
+      var(--site-mobile-content-gutter) -
+      var(--site-mobile-content-gutter)
+    )
+  );
   color: var(--site-ink);
   background: var(--site-paper);
   font-family: AlibabaSans, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -48,7 +69,7 @@
 
 .site-header__inner,
 .site-footer__main {
-  width: min(1320px, calc(100% - 48px));
+  width: var(--site-content-width);
   margin: 0 auto;
 }
 
@@ -435,7 +456,7 @@
 
 .site-footer__bottom {
   display: flex;
-  width: min(1320px, calc(100% - 48px));
+  width: var(--site-content-width);
   justify-content: space-between;
   gap: 24px;
   margin: 0 auto;
@@ -451,7 +472,7 @@
   min-height: 410px;
   align-items: center;
   overflow: hidden;
-  padding: 130px max(24px, calc((100% - 1320px) / 2)) 70px;
+  padding: 130px var(--site-content-inline-padding) 70px;
   background: var(--site-deep);
   color: #fff;
 }
@@ -537,7 +558,7 @@
 
   .site-header__inner,
   .site-footer__main {
-    width: min(100% - 32px, 560px);
+    width: var(--site-mobile-content-width);
   }
 
   .site-header__nav {
@@ -652,14 +673,14 @@
   }
 
   .site-footer__bottom {
-    width: min(100% - 32px, 560px);
+    width: var(--site-mobile-content-width);
     flex-direction: column;
     gap: 7px;
   }
 
   .page-hero {
     min-height: 360px;
-    padding: 112px 24px 50px;
+    padding: 112px var(--site-content-gutter) 50px;
   }
 
   .page-hero p {
