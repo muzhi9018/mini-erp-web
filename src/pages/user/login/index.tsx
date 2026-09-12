@@ -167,8 +167,7 @@ const Login: React.FC = () => {
         message.success(defaultLoginSuccessMessage);
         await fetchUserInfo();
         const urlParams = new URL(window.location.href).searchParams;
-        const redirectUrl = getSafeRedirectUrl(urlParams.get('redirect'));
-        window.location.href = redirectUrl;
+        window.location.href = getSafeRedirectUrl(urlParams.get('redirect'));
         return;
       }
       const msg: API.LoginResult = {
