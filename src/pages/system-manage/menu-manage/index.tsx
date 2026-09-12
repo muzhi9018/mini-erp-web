@@ -326,7 +326,6 @@ const MenuManage: React.FC = () => {
             >
               新增子菜单
             </a>
-            ,
           </Access>,
           <Access
             key={`access-edit-${record.id}`}

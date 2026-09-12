@@ -52,4 +52,7 @@ export default {
   'menu.system-manage': '系統管理',
   'menu.system-manage.menu-manage': '菜單管理',
   'menu.system-manage.role-manage': '角色管理',
+  'menu.website-config': '官網設定',
+  'menu.website-config.category-manager': '分類管理',
+  'menu.website-config.product-manager': '商品管理',
 };

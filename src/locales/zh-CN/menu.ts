@@ -53,4 +53,7 @@ export default {
   'menu.system-manage': '系统管理',
   'menu.system-manage.menu-manage': '菜单管理',
   'menu.system-manage.role-manage': '角色管理',
+  'menu.website-config': '官网配置',
+  'menu.website-config.category-manager': '分类管理',
+  'menu.website-config.product-manager': '商品管理',
 };
