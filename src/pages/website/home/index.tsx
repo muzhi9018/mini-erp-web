@@ -11,8 +11,6 @@ import {
   ClockCircleOutlined,
   EnvironmentOutlined,
   MailOutlined,
-  PhoneOutlined,
-  WechatOutlined,
 } from '@ant-design/icons';
 import { LineBrandOutlined } from '@/components';
 
