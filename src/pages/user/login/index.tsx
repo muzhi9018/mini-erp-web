@@ -32,17 +32,22 @@ import Settings from '../../../../config/defaultSettings';
  * Validate redirect URL to prevent open redirect attacks.
  * Only allow same-origin relative paths starting with '/'.
  */
-const getSafeRedirectUrl = (redirect: string | null): string => {
-  if (!redirect?.startsWith('/')) return '/';
+const defaultBackofficePath = '/welcome';
 
-  if (redirect.startsWith('//')) return '/';
+const getSafeRedirectUrl = (redirect: string | null): string => {
+  if (!redirect?.startsWith('/')) return defaultBackofficePath;
+
+  if (redirect.startsWith('//')) return defaultBackofficePath;
 
   try {
     const parsed = new URL(redirect, window.location.origin);
-    if (parsed.origin !== window.location.origin) return '/';
+    if (parsed.origin !== window.location.origin) return defaultBackofficePath;
+    if (parsed.pathname === '/login' || parsed.pathname === '/user/login') {
+      return defaultBackofficePath;
+    }
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    return '/';
+    return defaultBackofficePath;
   }
 };
 

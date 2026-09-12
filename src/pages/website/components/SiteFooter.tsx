@@ -26,7 +26,7 @@ const SiteFooter: React.FC = () => {
     <footer className="site-footer">
       <div className="site-footer__main">
         <section className="site-footer__intro">
-          <BrandMark />
+          <BrandMark imageSrc={'/images/logo.png'} />
           <p>{intl.formatMessage({ id: 'website.footer.introduction' })}</p>
         </section>
         <section>
@@ -113,15 +113,15 @@ const SiteFooter: React.FC = () => {
           >
             {intl.formatMessage({ id: 'website.footer.copyright' })}
           </a>
-          ｜
-          <a
-            href="https://beian.miit.gov.cn/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="jsx-3066022125 copyright-icp-text"
-          >
-            粤ICP备2025399213号-1
-          </a>
+          {/*｜*/}
+          {/*<a*/}
+          {/*  href="https://beian.miit.gov.cn/"*/}
+          {/*  target="_blank"*/}
+          {/*  rel="noopener noreferrer"*/}
+          {/*  className="jsx-3066022125 copyright-icp-text"*/}
+          {/*>*/}
+          {/*  粤ICP备2025399213号-1*/}
+          {/*</a>*/}
         </span>
         <span></span>
       </div>

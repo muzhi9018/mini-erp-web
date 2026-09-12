@@ -12,7 +12,9 @@ import {
   EnvironmentOutlined,
   MailOutlined,
   PhoneOutlined,
+  WechatOutlined,
 } from '@ant-design/icons';
+import { LineBrandOutlined } from '@/components';
 
 const getAdvantages = (
   formatMessage: (descriptor: { id: string }) => string,
@@ -281,12 +283,12 @@ const HomePage: React.FC = () => {
         <div className="home-contact__details">
           <div>
             <span className="home-contact__icon">
-              <PhoneOutlined aria-hidden="true" />
+              <LineBrandOutlined />
             </span>
             <span className="home-contact__label">
-              {intl.formatMessage({ id: 'website.home.contact.phone' })}
+              {intl.formatMessage({ id: 'website.home.contact.line' })}
             </span>
-            <strong>400-888-6688</strong>
+            <a href="https://lin.ee/N2TZCiCL">https://lin.ee/N2TZCiCL</a>
           </div>
           <div>
             <span className="home-contact__icon">
@@ -295,7 +297,7 @@ const HomePage: React.FC = () => {
             <span className="home-contact__label">
               {intl.formatMessage({ id: 'website.home.contact.email' })}
             </span>
-            <a href="mailto:sales@zhulv-decor.com">sales@zhulv-decor.com</a>
+            <a href="mailto:sales@greenbuild.tw.cn">sales@greenbuild.tw.cn</a>
           </div>
           <div>
             <span className="home-contact__icon">

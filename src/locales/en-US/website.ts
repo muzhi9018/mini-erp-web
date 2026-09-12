@@ -17,7 +17,7 @@ export default {
   'website.footer.quickNavigation': 'Quick Links',
   'website.footer.contactInformation': 'Contact Information',
   'website.footer.phone': 'Service Hotline: 400-888-6688',
-  'website.footer.email': 'Business Email: sales@zhulv-decor.com',
+  'website.footer.email': 'Business Email: sales@greenbuild.tw.cn',
   'website.footer.address':
     'Headquarters: Nanzhuang Ceramic City, Chancheng, Foshan, Guangdong',
   'website.footer.hours': 'Business Hours: Mon–Sat 09:00–18:00',
@@ -73,7 +73,7 @@ export default {
     'Whether you are a designer, developer, or end customer, we look forward to finding the right decorative-material solution with you.',
   'website.home.contact.message':
     'Call us or arrange a visit to our sample showroom. Our professional advisers will provide one-to-one service.',
-  'website.home.contact.phone': 'Service Hotline',
+  'website.home.contact.line': 'Official LINE Account',
   'website.home.contact.email': 'Business Email',
   'website.home.contact.address': 'Headquarters',
   'website.home.contact.addressValue':

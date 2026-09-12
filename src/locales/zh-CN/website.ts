@@ -17,7 +17,7 @@ export default {
   'website.footer.quickNavigation': '快速导航',
   'website.footer.contactInformation': '联系方式',
   'website.footer.phone': '服务热线：400-888-6688',
-  'website.footer.email': '商务邮箱：sales@zhulv-decor.com',
+  'website.footer.email': '商务邮箱：sales@greenbuild.tw.cn',
   'website.footer.address': '总部地址：广东佛山禅城区南庄陶瓷城',
   'website.footer.hours': '营业时间：周一至周六 09:00-18:00',
   'website.footer.copyright': 'Copyright © 2026-2035 筑绿装饰新材 版权所有',
@@ -70,7 +70,7 @@ export default {
     '无论您是设计师、开发商还是终端客户，我们都期待与您沟通，为您提供最适合的装饰材料解决方案。',
   'website.home.contact.message':
     '欢迎致电咨询或预约到样品展示厅参观选材，我们的专业顾问将为您提供一对一服务。',
-  'website.home.contact.phone': '服务热线',
+  'website.home.contact.line': '官方 LINE',
   'website.home.contact.email': '商务邮箱',
   'website.home.contact.address': '总部地址',
   'website.home.contact.addressValue': '广东省佛山市禅城区南庄陶瓷城',
