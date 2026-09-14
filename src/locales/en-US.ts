@@ -6,6 +6,7 @@ import pages from './en-US/pages';
 import settingDrawer from './en-US/settingDrawer';
 import settings from './en-US/settings';
 import website from './en-US/website';
+import websiteCategoryManager from './en-US/websiteCategoryManager';
 
 export default {
   'navBar.lang': 'Languages',
@@ -21,4 +22,5 @@ export default {
   ...component,
   ...pages,
   ...website,
+  ...websiteCategoryManager,
 };

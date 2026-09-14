@@ -2,7 +2,7 @@ import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { getLocale, history, Link } from '@umijs/max';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import React from 'react';
@@ -214,7 +214,10 @@ export const request: RequestConfig = {
       // 拦截请求配置，进行个性化处理。
       const localToken = localStorage.getItem(LOCAL_TOKEN);
       const currentUser: Auth.CurrentUser = JSON.parse(localToken ?? '{}');
-      let headers = config.headers;
+      let headers: RequestOptions['headers'] = {
+        ...config.headers,
+        'Accept-Language': getLocale(),
+      };
       if (currentUser.accessToken && currentUser.tokenType) {
         headers = {
           ...headers,

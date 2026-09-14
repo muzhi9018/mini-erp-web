@@ -133,11 +133,11 @@ export default defineConfig({
    * @doc https://umijs.org/docs/max/i18n
    */
   locale: {
-    // default zh-CN
-    default: 'zh-CN',
+    // 默认使用繁体中文
+    default: 'zh-TW',
     antd: true,
-    // default true, when it is true, will use `navigator.language` overwrite default
-    baseNavigator: true,
+    // 不使用浏览器语言覆盖默认语言，保留用户手动选择的语言
+    baseNavigator: false,
   },
   /**
    * @name antd 插件
@@ -234,5 +234,6 @@ export default defineConfig({
     __UTOO_VERSION__: require('@utoo/pack/package.json').version,
     LOCAL_TOKEN: 'LOCAL_TOKEN',
     LOCAL_OSS_STORAGE_ID: 'LOCAL_OSS_STORAGE_ID',
+    CONTEXT_PATH: '',
   },
 });

@@ -8,5 +8,6 @@ export default defineConfig({
     BASE_URL: 'https://local.muzhi.store/api',
     CLIENT_ID: 'muzhi-cloud',
     CLIENT_BASIC_TOKEN: 'Basic bXV6aGktY2xvdWQ6bXV6aGktcGFzc3dvcmQ=',
+    CONTEXT_PATH: '',
   },
 });

@@ -2,14 +2,25 @@ import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: {
+      '@ant-design/pro-components': join(
+        __dirname,
+        'node_modules/@ant-design/pro-components/es/index.js',
+      ),
       '@': join(__dirname, 'src'),
       '@root': join(__dirname),
       '@@': join(__dirname, 'src', '.umi'),
     },
   },
   test: {
+    server: {
+      deps: {
+        // Transform ProComponents and antd's extensionless ESM locale imports.
+        inline: ['@ant-design/pro-components', /antd\/es\//],
+      },
+    },
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./tests/setupTests.ts'],

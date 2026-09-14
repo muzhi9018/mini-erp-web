@@ -6,6 +6,7 @@ import pages from './zh-CN/pages';
 import settingDrawer from './zh-CN/settingDrawer';
 import settings from './zh-CN/settings';
 import website from './zh-CN/website';
+import websiteCategoryManager from './zh-CN/websiteCategoryManager';
 
 export default {
   'navBar.lang': '语言',
@@ -21,4 +22,5 @@ export default {
   ...network,
   ...component,
   ...website,
+  ...websiteCategoryManager,
 };
