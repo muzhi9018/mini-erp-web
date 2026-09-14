@@ -8,18 +8,15 @@ import {
 import { useIntl } from '@umijs/max';
 import { Button, message } from 'antd';
 import { useRef, useState } from 'react';
-import {
-  type Category,
-  listCategories,
-} from '@/services/website/productCategory';
+import { listCategories } from '@/services/website/productCategory';
 import CategoryForm, { categoryLanguages } from './CategoryForm';
 
 const CategoryManager = () => {
   const intl = useIntl();
   const actionRef = useRef<ActionType>(undefined);
   const [messageApi, contextHolder] = message.useMessage();
-  const [form, setForm] = useState<{ category?: Category }>();
-  const columns: ProColumns<Category>[] = [
+  const [form, setForm] = useState<{ category?: Website.Category }>();
+  const columns: ProColumns<Website.Category>[] = [
     {
       title: intl.formatMessage({
         id: 'categoryManager.id',
@@ -98,7 +95,7 @@ const CategoryManager = () => {
       })}
     >
       {contextHolder}
-      <ProTable<Category>
+      <ProTable<Website.Category>
         actionRef={actionRef}
         rowKey="id"
         headerTitle={intl.formatMessage({
