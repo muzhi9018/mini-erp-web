@@ -13,8 +13,12 @@ import ProductForm from './ProductForm';
 
 const ProductManager = () => {
   const intl = useIntl();
-  const t = (key: string, defaultMessage: string) =>
-    intl.formatMessage({ id: `productManager.${key}`, defaultMessage });
+  const t = (
+    key: string,
+    defaultMessage: string,
+    values?: Record<string, string | number>,
+  ) =>
+    intl.formatMessage({ id: `productManager.${key}`, defaultMessage }, values);
   const [editor, setEditor] = useState<{ product?: Website.Product }>();
   const [messageApi, contextHolder] = message.useMessage();
   const columns: ProColumns<Website.Product>[] = [
@@ -75,8 +79,17 @@ const ProductManager = () => {
             const language = categoryLanguages.find(
               ({ value }) => value === locale,
             );
+            const languageName = language
+              ? intl.formatMessage(language.label)
+              : locale;
             messageApi.success(
-              `${editor.product ? t('languageSuccess', '商品语言已添加') : t('createSuccess', '商品已创建')}（${language ? intl.formatMessage(language.label) : locale}）`,
+              editor.product
+                ? t('languageSuccess', '商品语言已添加（{language}）', {
+                    language: languageName,
+                  })
+                : t('createSuccess', '商品已创建（{language}）', {
+                    language: languageName,
+                  }),
             );
             setEditor(undefined);
           }}

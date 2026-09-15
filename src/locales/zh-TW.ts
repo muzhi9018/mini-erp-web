@@ -7,6 +7,7 @@ import settingDrawer from './zh-TW/settingDrawer';
 import settings from './zh-TW/settings';
 import website from './zh-TW/website';
 import websiteCategoryManager from './zh-TW/websiteCategoryManager';
+import websiteProductManager from './zh-TW/websiteProductManager';
 
 export default {
   'navBar.lang': '語言',
@@ -23,4 +24,5 @@ export default {
   ...component,
   ...website,
   ...websiteCategoryManager,
+  ...websiteProductManager,
 };

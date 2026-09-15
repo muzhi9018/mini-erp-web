@@ -38,8 +38,12 @@ import { useStyles } from './index.style';
 
 const useText = () => {
   const intl = useIntl();
-  return (key: string, defaultMessage: string) =>
-    intl.formatMessage({ id: `productManager.${key}`, defaultMessage });
+  return (
+    key: string,
+    defaultMessage: string,
+    values?: Record<string, string | number>,
+  ) =>
+    intl.formatMessage({ id: `productManager.${key}`, defaultMessage }, values);
 };
 
 type FieldName = string | (string | number)[];
@@ -136,7 +140,7 @@ function ProductImageUpload({
     try {
       const uploaded = await uploadProductImage(file as File);
       if (!uploaded.url)
-        throw new Error('Upload response is missing image URL');
+        throw new Error(t('uploadResponseError', '上传接口未返回图片地址'));
       onChange?.(uploaded.url);
       onSuccess?.(uploaded);
     } catch (error) {
@@ -435,7 +439,7 @@ const ProductForm = ({
                 placeholder={
                   section.key === 'specifications'
                     ? t('parameterNamePlaceholder', '例如：产品尺寸')
-                    : t('itemTitlePlaceholder', '请输入优势标题')
+                    : t('featureTitlePlaceholder', '请输入优势标题')
                 }
                 required
                 maxLength={256}
@@ -537,8 +541,11 @@ const ProductForm = ({
         <>
           {product ? (
             <p>
-              {t('sharedProduct', '当前商品')}：{product.name} · {product.slug}{' '}
-              · ID {product.id}
+              {t('sharedProduct', '当前商品：{name} · {slug} · ID {id}', {
+                name: product.name,
+                slug: product.slug,
+                id: product.id,
+              })}
             </p>
           ) : (
             <div className="grid gap-x-5 md:grid-cols-2">
@@ -587,7 +594,10 @@ const ProductForm = ({
                     pageNum += 1;
                   }
                   return categories.map((category) => ({
-                    label: `${category.name} (${category.code})`,
+                    label: t('categoryOption', '{name} ({code})', {
+                      name: category.name,
+                      code: category.code,
+                    }),
                     value: category.id,
                   }));
                 }}

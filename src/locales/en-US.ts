@@ -7,6 +7,7 @@ import settingDrawer from './en-US/settingDrawer';
 import settings from './en-US/settings';
 import website from './en-US/website';
 import websiteCategoryManager from './en-US/websiteCategoryManager';
+import websiteProductManager from './en-US/websiteProductManager';
 
 export default {
   'navBar.lang': 'Languages',
@@ -23,4 +24,5 @@ export default {
   ...pages,
   ...website,
   ...websiteCategoryManager,
+  ...websiteProductManager,
 };
