@@ -1,7 +1,5 @@
 import { request } from '@umijs/max';
 
-
-
 export async function listCategories(params: {
   pageNum: number;
   pageSize: number;
@@ -13,7 +11,7 @@ export async function listCategories(params: {
 }
 
 export async function createCategory(data: Website.CreateCategory) {
-  return request('/website/product/category', { method: 'POST', data });
+  return request('/website/product/category/create', { method: 'POST', data });
 }
 
 export async function addCategoryI18n(data: Website.AddCategoryI18n) {
