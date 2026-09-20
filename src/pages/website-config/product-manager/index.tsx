@@ -6,9 +6,9 @@ import {
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
 import { Button, message } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getSystemLocales } from '@/services/system/locale';
 import { listProducts } from '@/services/website/product';
-import { productLanguages } from './languages';
 import ProductForm from './ProductForm';
 
 const ProductManager = () => {
@@ -21,6 +21,20 @@ const ProductManager = () => {
     intl.formatMessage({ id: `productManager.${key}`, defaultMessage }, values);
   const [editor, setEditor] = useState<{ product?: Website.Product }>();
   const [messageApi, contextHolder] = message.useMessage();
+  const [languages, setLanguages] = useState<System.SystemLocale[]>([]);
+  useEffect(() => {
+    let active = true;
+    getSystemLocales()
+      .then((locales) => {
+        if (active) setLanguages(locales);
+      })
+      .catch(() => {
+        // 加载失败时保留语言编码展示，接口错误由全局请求处理器提示。
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const columns: ProColumns<Website.Product>[] = [
     { title: t('id', '商品 ID'), dataIndex: 'id', width: 190 },
     { title: t('name', '商品名称'), dataIndex: 'name' },
@@ -35,9 +49,9 @@ const ProductManager = () => {
       dataIndex: 'locale',
       width: 120,
       valueEnum: Object.fromEntries(
-        productLanguages.map(({ label, value }) => [
-          value,
-          intl.formatMessage(label),
+        languages.map(({ code, nativeName, name }) => [
+          code,
+          nativeName || name,
         ]),
       ),
     },
@@ -75,13 +89,7 @@ const ProductManager = () => {
         <ProductForm
           product={editor.product}
           onClose={() => setEditor(undefined)}
-          onSuccess={(locale) => {
-            const language = productLanguages.find(
-              ({ value }) => value === locale,
-            );
-            const languageName = language
-              ? intl.formatMessage(language.label)
-              : locale;
+          onSuccess={(_locale, languageName) => {
             messageApi.success(
               editor.product
                 ? t('languageSuccess', '商品语言已添加（{language}）', {

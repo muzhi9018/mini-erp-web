@@ -32,7 +32,8 @@ declare namespace Website {
     itemType: 'APPLICATION' | 'CASE';
     title: string;
     description?: string;
-    imageUrl: string;
+    imageAttachmentId: number | string;
+    imageUrl?: string;
     sortOrder: number;
   };
 
@@ -46,6 +47,8 @@ declare namespace Website {
     specificationIntroduction?: string;
     applicationIntroduction?: string;
     caseIntroduction?: string;
+    coverImageAttachmentId?: number | string;
+    featureImageAttachmentId?: number | string;
     coverImageUrl?: string;
     featureImageUrl?: string;
     features: ProductDetailItem[];
@@ -70,10 +73,6 @@ declare namespace Website {
     productId: Product['id'];
     productI18nId: number | string;
     locale: string;
-  };
-
-  type ProductImage = {
-    url: string;
   };
 
   type Category = {

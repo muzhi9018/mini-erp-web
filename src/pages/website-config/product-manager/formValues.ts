@@ -10,9 +10,12 @@ export type ProductFormValues = Omit<
   specifications: Pick<Website.ProductDetailItem, 'title' | 'content'>[];
   applications: Pick<
     Website.ProductMediaItem,
-    'title' | 'imageUrl' | 'description'
+    'title' | 'imageAttachmentId' | 'description'
   >[];
-  cases: Pick<Website.ProductMediaItem, 'title' | 'imageUrl' | 'description'>[];
+  cases: Pick<
+    Website.ProductMediaItem,
+    'title' | 'imageAttachmentId' | 'description'
+  >[];
 };
 
 export function toProductTranslation(
@@ -34,7 +37,7 @@ export function toProductTranslation(
   ) =>
     items.map((item, sortOrder) => ({
       title: item.title.trim(),
-      imageUrl: item.imageUrl.trim(),
+      imageAttachmentId: item.imageAttachmentId,
       description: item.description?.trim(),
       itemType,
       sortOrder,
@@ -49,8 +52,8 @@ export function toProductTranslation(
     specificationIntroduction: values.specificationIntroduction?.trim(),
     applicationIntroduction: values.applicationIntroduction?.trim(),
     caseIntroduction: values.caseIntroduction?.trim(),
-    coverImageUrl: values.coverImageUrl?.trim(),
-    featureImageUrl: values.featureImageUrl?.trim(),
+    coverImageAttachmentId: values.coverImageAttachmentId,
+    featureImageAttachmentId: values.featureImageAttachmentId,
     features: details(values.features, 'FEATURE'),
     specifications: details(values.specifications, 'SPECIFICATION'),
     applications: media(values.applications, 'APPLICATION'),

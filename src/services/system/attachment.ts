@@ -2,6 +2,7 @@ import { request } from '@umijs/max';
 
 export const WEBSITE_PRODUCT_CATEGORY_ATTACHMENT_MODEL =
   'WEBSITE_PRODUCT_CATEGORY';
+export const WEBSITE_PRODUCT_ATTACHMENT_MODEL = 'WEBSITE_PRODUCT';
 
 /** 上传附件 */
 export async function uploadAttachment(file: File, model: string) {

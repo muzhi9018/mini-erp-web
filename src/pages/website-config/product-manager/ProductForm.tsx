@@ -27,14 +27,14 @@ import {
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import {
-  addProductI18n,
-  createProduct,
-  uploadProductImage,
-} from '@/services/website/product';
+  uploadAttachment,
+  WEBSITE_PRODUCT_ATTACHMENT_MODEL,
+} from '@/services/system/attachment';
+import { getSystemLocales } from '@/services/system/locale';
+import { addProductI18n, createProduct } from '@/services/website/product';
 import { listCategories } from '@/services/website/productCategory';
 import { type ProductFormValues, toProductTranslation } from './formValues';
 import { useStyles } from './index.style';
-import { productLanguages } from './languages';
 
 const useText = () => {
   const intl = useIntl();
@@ -86,39 +86,23 @@ function TextField({
 }
 
 function ProductImageUpload({
-  value,
   onChange,
   label,
   disabled,
   showError,
+  onUploadingChange,
 }: {
-  value?: string;
-  onChange?: (url?: string) => void;
+  value?: number | string;
+  onChange?: (attachmentId?: number | string) => void;
   label: string;
   disabled?: boolean;
   showError: (content: string) => void;
+  onUploadingChange: (uploading: boolean) => void;
 }) {
   const t = useText();
   const { styles } = useStyles();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [previewImage, setPreviewImage] = useState('');
-
-  useEffect(() => {
-    if (!value) {
-      setFileList((current) =>
-        current.some(({ status }) => status === 'uploading') ? current : [],
-      );
-      return;
-    }
-    setFileList([
-      {
-        uid: `uploaded-${value}`,
-        name: label,
-        status: 'done',
-        url: value,
-      },
-    ]);
-  }, [label, value]);
 
   const beforeUpload = (file: RcFile) => {
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -137,14 +121,22 @@ function ProductImageUpload({
     onError,
     onSuccess,
   }) => {
+    onChange?.(undefined);
+    onUploadingChange(true);
     try {
-      const uploaded = await uploadProductImage(file as File);
-      if (!uploaded.url)
-        throw new Error(t('uploadResponseError', '上传接口未返回图片地址'));
-      onChange?.(uploaded.url);
-      onSuccess?.(uploaded);
+      const attachment = await uploadAttachment(
+        file as File,
+        WEBSITE_PRODUCT_ATTACHMENT_MODEL,
+      );
+      if (attachment.id === undefined || attachment.id === null)
+        throw new Error(t('uploadResponseError', '上传接口未返回附件 ID'));
+      onChange?.(attachment.id);
+      onSuccess?.(attachment);
     } catch (error) {
+      showError(t('uploadError', '图片上传失败，请重试'));
       onError?.(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      onUploadingChange(false);
     }
   };
 
@@ -158,7 +150,20 @@ function ProductImageUpload({
         fileList={fileList}
         listType="picture-card"
         maxCount={1}
-        onChange={({ fileList: nextFileList }) => setFileList(nextFileList)}
+        onChange={({ fileList: nextFileList }) => {
+          setFileList(
+            nextFileList.map((file) => {
+              const attachment = file.response as System.Attachment | undefined;
+              return attachment?.previewUrl
+                ? {
+                    ...file,
+                    url: attachment.previewUrl,
+                    thumbUrl: attachment.previewUrl,
+                  }
+                : file;
+            }),
+          );
+        }}
         onPreview={(file) => setPreviewImage(file.url ?? file.thumbUrl ?? '')}
         onRemove={() => {
           onChange?.(undefined);
@@ -204,12 +209,14 @@ function ImageField({
   required,
   disabled,
   showError,
+  onUploadingChange,
 }: {
   name: FieldName;
   label: string;
   required?: boolean;
   disabled?: boolean;
   showError: (content: string) => void;
+  onUploadingChange: (uploading: boolean) => void;
 }) {
   return (
     <Form.Item name={name} label={label} rules={[{ required }]}>
@@ -217,6 +224,7 @@ function ImageField({
         label={label}
         disabled={disabled}
         showError={showError}
+        onUploadingChange={onUploadingChange}
       />
     </Form.Item>
   );
@@ -229,7 +237,7 @@ const ProductForm = ({
 }: {
   product?: Website.Product;
   onClose: () => void;
-  onSuccess: (locale: string) => void;
+  onSuccess: (locale: string, languageName: string) => void;
 }) => {
   const intl = useIntl();
   const t = useText();
@@ -238,8 +246,18 @@ const ProductForm = ({
   const [modal, modalContext] = Modal.useModal();
   const [messageApi, messageContext] = message.useMessage();
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(0);
+  const [languages, setLanguages] = useState<System.SystemLocale[]>([]);
+  const [loadingLanguages, setLoadingLanguages] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const pending = useRef(false);
+  const defaultLanguage = languages.find(({ defaultLocal }) => defaultLocal);
+  const languageUnavailable =
+    !languages.length || (!product && !defaultLanguage);
+  const busy = submitting || uploadingImages > 0;
+  const handleUploadingChange = (uploading: boolean) => {
+    setUploadingImages((count) => Math.max(0, count + (uploading ? 1 : -1)));
+  };
   const panels = [
     {
       key: 'base',
@@ -293,8 +311,32 @@ const ProductForm = ({
     panels.map(({ key }) => key),
   );
 
+  useEffect(() => {
+    let active = true;
+    getSystemLocales()
+      .then((locales) => {
+        if (!active) return;
+        setLanguages(locales);
+        if (!product) {
+          form.setFieldValue(
+            'locale',
+            locales.find(({ defaultLocal }) => defaultLocal)?.code,
+          );
+        }
+      })
+      .catch(() => {
+        // 接口错误由全局请求处理器提示，语言未就绪时禁止提交。
+      })
+      .finally(() => {
+        if (active) setLoadingLanguages(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [form, product]);
+
   const close = () => {
-    if (pending.current) return;
+    if (pending.current || uploadingImages > 0) return;
     if (!form.isFieldsTouched()) return onClose();
     modal.confirm({
       title: t('discardTitle', '放弃尚未保存的内容？'),
@@ -309,11 +351,24 @@ const ProductForm = ({
   };
 
   const submit = async (values: ProductFormValues) => {
-    if (pending.current) return;
+    const language = product
+      ? languages.find(({ code }) => code === values.locale)
+      : defaultLanguage;
+    if (
+      pending.current ||
+      uploadingImages > 0 ||
+      loadingLanguages ||
+      !language ||
+      language.code === product?.locale
+    )
+      return;
     pending.current = true;
     setSubmitting(true);
     try {
-      const productI18n = toProductTranslation(values);
+      const productI18n = toProductTranslation({
+        ...values,
+        locale: language.code,
+      });
       if (product) {
         await addProductI18n({ ...productI18n, productId: product.id });
       } else {
@@ -331,7 +386,7 @@ const ProductForm = ({
       pending.current = false;
       setSubmitting(false);
     }
-    onSuccess(values.locale);
+    onSuccess(language.code, language.nativeName || language.name);
   };
 
   const goToPanel = (index: number) => {
@@ -385,7 +440,7 @@ const ProductForm = ({
       <Button
         size="small"
         icon={<ArrowUpOutlined />}
-        disabled={submitting || index === 0}
+        disabled={busy || index === 0}
         onClick={() => move(index, index - 1)}
       >
         {t('moveUp', '上移')}
@@ -393,7 +448,7 @@ const ProductForm = ({
       <Button
         size="small"
         icon={<ArrowDownOutlined />}
-        disabled={submitting || index === length - 1}
+        disabled={busy || index === length - 1}
         onClick={() => move(index, index + 1)}
       >
         {t('moveDown', '下移')}
@@ -402,7 +457,7 @@ const ProductForm = ({
         size="small"
         danger
         icon={<DeleteOutlined />}
-        disabled={submitting || length <= 4}
+        disabled={busy || length <= 4}
         onClick={() => remove(index)}
       >
         {t('remove', '删除')}
@@ -496,11 +551,12 @@ const ProductForm = ({
             >
               <div className={styles.mediaLayout}>
                 <ImageField
-                  name={[field.name, 'imageUrl']}
+                  name={[field.name, 'imageAttachmentId']}
                   label={t('itemImage', '上传图片')}
                   required
-                  disabled={submitting}
+                  disabled={busy}
                   showError={(content) => messageApi.error(content)}
+                  onUploadingChange={handleUploadingChange}
                 />
                 <div>
                   <TextField
@@ -631,15 +687,33 @@ const ProductForm = ({
                 ? t('targetLanguage', '目标语言')
                 : t('initialLanguage', '首种语言')
             }
+            extra={
+              !loadingLanguages && languageUnavailable
+                ? t(
+                    'languageUnavailable',
+                    '系统语言不可用或未配置默认语言，请检查配置后重新打开表单。',
+                  )
+                : !product
+                  ? t(
+                      'defaultLanguageHint',
+                      '新增商品固定使用系统默认语言，创建后可添加其他语言。',
+                    )
+                  : undefined
+            }
             rules={[{ required: true }]}
           >
             <Select
+              allowClear={Boolean(product)}
+              disabled={!product || loadingLanguages || submitting}
+              loading={loadingLanguages}
               placeholder={t('selectLanguage', '请选择内容语言')}
-              options={productLanguages.map(({ label, value }) => ({
-                label: intl.formatMessage(label),
-                value,
-                disabled: value === product?.locale,
-              }))}
+              options={languages
+                .filter((language) => product || language.defaultLocal)
+                .map((language) => ({
+                  label: language.nativeName || language.name,
+                  value: language.code,
+                  disabled: language.code === product?.locale,
+                }))}
             />
           </Form.Item>
         </>
@@ -680,10 +754,11 @@ const ProductForm = ({
             maxLength={500}
           />
           <ImageField
-            name="coverImageUrl"
+            name="coverImageAttachmentId"
             label={t('coverImageUrl', '商品卡片封面')}
-            disabled={submitting}
+            disabled={busy}
             showError={(content) => messageApi.error(content)}
+            onUploadingChange={handleUploadingChange}
           />
           <p className={styles.uploadHint}>
             {t('coverUploadHint', '支持 JPG、PNG 格式，大小不超过 5 MB。')}
@@ -706,10 +781,11 @@ const ProductForm = ({
           {panel.key === 'features' && (
             <>
               <ImageField
-                name="featureImageUrl"
+                name="featureImageAttachmentId"
                 label={t('featureImageUrl', '特点区域配图')}
-                disabled={submitting}
+                disabled={busy}
                 showError={(content) => messageApi.error(content)}
+                onUploadingChange={handleUploadingChange}
               />
               <p className={styles.uploadHint}>
                 {t(
@@ -746,13 +822,16 @@ const ProductForm = ({
       }
       onBack={close}
       footer={[
-        <Button key="cancel" disabled={submitting} onClick={close}>
+        <Button key="cancel" disabled={busy} onClick={close}>
           {t('cancel', '取消')}
         </Button>,
         <Button
           key="submit"
           type="primary"
           loading={submitting}
+          disabled={
+            loadingLanguages || languageUnavailable || uploadingImages > 0
+          }
           onClick={() => form.submit()}
         >
           {product
@@ -772,18 +851,13 @@ const ProductForm = ({
         form={form}
         layout="vertical"
         onFinish={submit}
-        disabled={submitting}
+        disabled={busy}
         scrollToFirstError={{ block: 'center', focus: true }}
         validateMessages={{
           required: t('required', '此项为必填项'),
           whitespace: t('whitespace', '不能只填写空格'),
         }}
         initialValues={{
-          locale: product
-            ? undefined
-            : productLanguages.some(({ value }) => value === intl.locale)
-              ? intl.locale
-              : 'zh-CN',
           sortOrder: 0,
           isRecommended: false,
           features: Array.from({ length: 4 }, () => ({})),
