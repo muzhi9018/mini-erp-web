@@ -1,10 +1,11 @@
 import { Link, useIntl, useLocation } from '@umijs/max';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { listWebsiteProducts } from '@/services/website/product';
 import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
-import { getProjectCases, products, websiteImages } from '../data';
+import { getProjectCases, websiteImages } from '../data';
 import '../site.css';
 import './index.css';
 import {
@@ -91,6 +92,27 @@ const HomePage: React.FC = () => {
   const intl = useIntl();
   const advantages = getAdvantages(intl.formatMessage);
   const projectCases = getProjectCases(intl.formatMessage);
+  const [websiteProducts, setWebsiteProducts] = useState<
+    Website.PublicProduct[]
+  >([]);
+
+  useEffect(() => {
+    let active = true;
+    setWebsiteProducts([]);
+    listWebsiteProducts()
+      .then((items) => {
+        if (active) {
+          setWebsiteProducts(items);
+        }
+      })
+      .catch(() => {
+        if (active) setWebsiteProducts([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [intl.locale]);
 
   useEffect(() => {
     if (!hash) {
@@ -208,7 +230,7 @@ const HomePage: React.FC = () => {
           })}
         />
         <div className="home-products__grid product-grid">
-          {products.map((product) => (
+          {websiteProducts.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
         </div>

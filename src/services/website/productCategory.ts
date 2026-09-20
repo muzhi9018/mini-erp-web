@@ -10,6 +10,13 @@ export async function listCategories(params: {
   });
 }
 
+export async function listWebsiteCategories() {
+  return request<Website.PublicCategory[]>(
+    '/website/product/category/website/list',
+    { method: 'GET' },
+  );
+}
+
 export async function createCategory(data: Website.CreateCategory) {
   return request('/website/product/category/create', { method: 'POST', data });
 }

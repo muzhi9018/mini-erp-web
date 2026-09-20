@@ -1,24 +1,76 @@
 import { useIntl } from '@umijs/max';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { listWebsiteProducts } from '@/services/website/product';
+import { listWebsiteCategories } from '@/services/website/productCategory';
 import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
-import { getProductCategories, type ProductCategory, products } from '../data';
 import '../site.css';
 import './index.css';
 
+type CategoryFilter = Website.Category['id'] | 'all';
+
 const ProductCenterPage: React.FC = () => {
   const intl = useIntl();
-  const [category, setCategory] = useState<ProductCategory | 'all'>('all');
-  const productCategories = getProductCategories(intl.formatMessage);
-  const visibleProducts = useMemo(
-    () =>
-      products.filter(
-        (product) => category === 'all' || product.category === category,
-      ),
-    [category],
-  );
+  const [category, setCategory] = useState<CategoryFilter>('all');
+  const [categories, setCategories] = useState<Website.PublicCategory[]>([]);
+  const [products, setProducts] = useState<Website.PublicProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setCategories([]);
+    listWebsiteCategories()
+      .then((items) => {
+        if (active) {
+          setCategories(items);
+          setCategory((currentCategory) =>
+            currentCategory === 'all' ||
+            items.some((item) => item.id === currentCategory)
+              ? currentCategory
+              : 'all',
+          );
+        }
+      })
+      .catch(() => {
+        if (active) setCategories([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [intl.locale]);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingProducts(true);
+    setProducts([]);
+    listWebsiteProducts(category === 'all' ? undefined : category)
+      .then((items) => {
+        if (active) {
+          setProducts(items);
+        }
+      })
+      .catch(() => {
+        if (active) setProducts([]);
+      })
+      .finally(() => {
+        if (active) setLoadingProducts(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [category, intl.locale]);
+
+  const productCategories = [
+    {
+      id: 'all' as const,
+      name: intl.formatMessage({ id: 'website.productCategory.all' }),
+    },
+    ...categories,
+  ];
 
   return (
     <main className="zhulv-site product-center-page">
@@ -51,23 +103,28 @@ const ProductCenterPage: React.FC = () => {
         >
           {productCategories.map((item) => (
             <button
-              aria-selected={category === item.value}
-              className={category === item.value ? 'is-active' : ''}
-              key={item.value}
-              onClick={() => setCategory(item.value)}
+              aria-selected={category === item.id}
+              className={category === item.id ? 'is-active' : ''}
+              key={item.id}
+              onClick={() => setCategory(item.id)}
               role="tab"
               type="button"
             >
-              {item.label}
+              {item.name}
             </button>
           ))}
         </div>
         <div className="product-grid">
-          {visibleProducts.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
         </div>
-        {visibleProducts.length === 0 && (
+        {loadingProducts && (
+          <p className="product-center-page__empty">
+            {intl.formatMessage({ id: 'website.products.loading' })}
+          </p>
+        )}
+        {!loadingProducts && products.length === 0 && (
           <p className="product-center-page__empty">
             {intl.formatMessage({ id: 'website.products.empty' })}
           </p>

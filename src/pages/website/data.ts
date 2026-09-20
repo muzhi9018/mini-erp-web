@@ -43,33 +43,6 @@ const standardFeatures = (productName: string, highlights: string[]) => [
   },
 ];
 
-export const getProductCategories = (formatMessage: FormatMessage) => [
-  {
-    value: 'all' as const,
-    label: formatMessage({ id: 'website.productCategory.all' }),
-  },
-  {
-    value: 'wall' as const,
-    label: formatMessage({ id: 'website.productCategory.wall' }),
-  },
-  {
-    value: 'outdoor' as const,
-    label: formatMessage({ id: 'website.productCategory.outdoor' }),
-  },
-  {
-    value: 'floor' as const,
-    label: formatMessage({ id: 'website.productCategory.floor' }),
-  },
-  {
-    value: 'cabinet' as const,
-    label: formatMessage({ id: 'website.productCategory.cabinet' }),
-  },
-  {
-    value: 'profile' as const,
-    label: formatMessage({ id: 'website.productCategory.profile' }),
-  },
-];
-
 export const products: Product[] = [
   {
     slug: 'wpc',
@@ -398,10 +371,6 @@ export const products: Product[] = [
   },
 ];
 
-export const productMap = Object.fromEntries(
-  products.map((product) => [product.slug, product]),
-) as Record<string, Product>;
-
 export const getProjectCases = (formatMessage: FormatMessage) => [
   {
     title: formatMessage({ id: 'website.case.slab.title' }),
@@ -446,32 +415,4 @@ export const websiteImages = {
   aboutOutdoor: image('case-wpc-garden'),
   aboutStone: image('case-pu-living'),
   aboutKitchen: image('about-kitchen'),
-  application: image('application-scenario'),
-};
-
-export const productDetailImages: Record<
-  string,
-  {
-    feature: string;
-    applications: string[];
-    gallery: string[];
-  }
-> = {
-  wpc: {
-    feature: image('wpc-detail-feature'),
-    applications: [
-      image('wpc-application-deck'),
-      image('wpc-application-fence'),
-      image('wpc-application-pergola'),
-      image('wpc-application-pool'),
-    ],
-    gallery: [
-      image('wpc-detail-feature'),
-      image('wpc-application-fence'),
-      image('wpc-application-deck'),
-      image('wpc-application-pergola'),
-      image('wpc-application-pool'),
-      image('wpc-gallery-6'),
-    ],
-  },
 };

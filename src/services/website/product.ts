@@ -7,6 +7,26 @@ export async function listProducts(params: Website.ProductListParams) {
   });
 }
 
+export async function listWebsiteProducts(
+  categoryId?: Website.Category['id'],
+) {
+  const url = '/website/product/website/list';
+  if (categoryId === undefined) {
+    return request<Website.PublicProduct[]>(url, { method: 'GET' });
+  }
+  return request<Website.PublicProduct[]>(url, {
+    method: 'GET',
+    params: { categoryId },
+  });
+}
+
+export async function getWebsiteProductDetail(slug: string) {
+  return request<Website.PublicProduct>(
+    `/website/product/website/detail/${encodeURIComponent(slug)}`,
+    { method: 'GET' },
+  );
+}
+
 export async function createProduct(data: Website.CreateProduct) {
   return request<Website.ProductCreated>('/website/product/create', {
     method: 'POST',

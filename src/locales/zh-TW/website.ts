@@ -83,6 +83,7 @@ export default {
   'website.products.collection.description':
     '從材質、色彩到安裝落地，為不同風格和場景找到適合的空間表達。',
   'website.products.categoryFilter': '產品分類篩選',
+  'website.products.loading': '正在載入產品…',
   'website.products.empty': '暫未找到對應產品。',
   'website.products.consultation.title': '告訴我們您的空間需求',
   'website.products.consultation.description':
@@ -94,6 +95,7 @@ export default {
   'website.productCategory.floor': '地面材料',
   'website.productCategory.cabinet': '全屋訂製',
   'website.productCategory.profile': '型材配件',
+  'website.productDetail.loading': '正在載入產品詳情…',
   'website.productDetail.notFound.title': '找不到該產品',
   'website.productDetail.notFound.description':
     '您瀏覽的產品頁面不存在或已被調整。',

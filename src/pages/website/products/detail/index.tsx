@@ -1,14 +1,11 @@
 import { Link, useIntl, useParams } from '@umijs/max';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  getWebsiteProductDetail,
+  listWebsiteProducts,
+} from '@/services/website/product';
 import SiteFooter from '../../components/SiteFooter';
 import SiteHeader from '../../components/SiteHeader';
-import {
-  getProjectCases,
-  productDetailImages,
-  productMap,
-  products,
-  websiteImages,
-} from '../../data';
 import '../../site.css';
 import './index.css';
 
@@ -34,12 +31,62 @@ const DetailSectionHeader: React.FC<DetailSectionHeaderProps> = ({
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const intl = useIntl();
-  const product = slug ? productMap[slug] : undefined;
-  const projectCases = getProjectCases(intl.formatMessage);
+  const [product, setProduct] = useState<Website.PublicProduct>();
+  const [relatedProducts, setRelatedProducts] = useState<
+    Website.PublicProduct[]
+  >([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo({ behavior: 'auto', top: 0 });
   }, [slug]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setProduct(undefined);
+    setRelatedProducts([]);
+
+    if (!slug) {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    Promise.all([
+      getWebsiteProductDetail(slug),
+      listWebsiteProducts().catch(() => []),
+    ])
+      .then(([nextProduct, products]) => {
+        if (!active) return;
+        setProduct(nextProduct);
+        setRelatedProducts(
+          products.filter((item) => item.slug !== nextProduct.slug).slice(0, 4),
+        );
+      })
+      .catch(() => {
+        if (active) setProduct(undefined);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [intl.locale, slug]);
+
+  if (loading) {
+    return (
+      <main className="zhulv-site product-not-found">
+        <SiteHeader />
+        <section>
+          <p>{intl.formatMessage({ id: 'website.productDetail.loading' })}</p>
+        </section>
+      </main>
+    );
+  }
 
   if (!product) {
     return (
@@ -63,20 +110,11 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const detailImages = productDetailImages[product.slug];
-  const applicationImages =
-    detailImages?.applications ??
-    product.applications.map((_, index) =>
-      index % 2 === 0 ? product.image : websiteImages.application,
-    );
-  const galleryImages =
-    detailImages?.gallery ?? projectCases.map((item) => item.image);
-  const relatedProducts =
-    product.slug === 'wpc'
-      ? ['flexible-stone', 'pu-stone', 'aluminum', 'resin-stone'].map(
-          (relatedSlug) => productMap[relatedSlug],
-        )
-      : products.filter((item) => item.slug !== product.slug).slice(0, 4);
+  const features = product.features ?? [];
+  const specifications = product.specifications ?? [];
+  const applications = product.applications ?? [];
+  const cases = product.cases ?? [];
+  const featureImageUrl = product.featureImageUrl ?? product.coverImageUrl;
 
   return (
     <main className="zhulv-site product-detail-page">
@@ -100,20 +138,24 @@ const ProductDetailPage: React.FC = () => {
             <span>{product.name}</span>
           </div>
           <h1>{product.name}</h1>
-          <p>{product.tagline}</p>
+          {(product.tagline ?? product.summary) && (
+            <p>{product.tagline ?? product.summary}</p>
+          )}
         </div>
       </section>
 
       <section className="product-detail-page__features detail-section">
         <div className="product-detail-page__feature-layout">
           <div className="product-detail-page__feature-image">
-            <img
-              alt={intl.formatMessage(
-                { id: 'website.productDetail.feature.imageAlt' },
-                { productName: product.name },
-              )}
-              src={detailImages?.feature ?? product.image}
-            />
+            {featureImageUrl && (
+              <img
+                alt={intl.formatMessage(
+                  { id: 'website.productDetail.feature.imageAlt' },
+                  { productName: product.name },
+                )}
+                src={featureImageUrl}
+              />
+            )}
           </div>
           <div className="product-detail-page__feature-copy">
             <span className="product-detail-page__eyebrow">
@@ -127,12 +169,12 @@ const ProductDetailPage: React.FC = () => {
             <i aria-hidden="true" />
             <p>{product.featureIntroduction ?? product.summary}</p>
             <div className="product-detail-page__feature-list">
-              {product.features.map((feature, index) => (
-                <article key={feature.title}>
+              {features.map((feature, index) => (
+                <article key={`${feature.sortOrder}-${feature.title}`}>
                   <span>0{index + 1}</span>
                   <div>
                     <h3>{feature.title}</h3>
-                    <p>{feature.description}</p>
+                    <p>{feature.content}</p>
                   </div>
                 </article>
               ))}
@@ -141,111 +183,138 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="product-detail-page__specifications detail-section detail-section--sand">
-        <DetailSectionHeader
-          description={intl.formatMessage({
-            id: 'website.productDetail.specifications.description',
-          })}
-          eyebrow="TECHNICAL SPECIFICATIONS"
-          title={intl.formatMessage({
-            id: 'website.productDetail.specifications.title',
-          })}
-        />
-        <div className="product-detail-page__specification-table-wrap">
-          <table>
-            <tbody>
-              {product.specifications.map(([label, value]) => (
-                <tr key={label}>
-                  <th>{label}</th>
-                  <td>{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {specifications.length > 0 && (
+        <section className="product-detail-page__specifications detail-section detail-section--sand">
+          <DetailSectionHeader
+            description={
+              product.specificationIntroduction ??
+              intl.formatMessage({
+                id: 'website.productDetail.specifications.description',
+              })
+            }
+            eyebrow="TECHNICAL SPECIFICATIONS"
+            title={intl.formatMessage({
+              id: 'website.productDetail.specifications.title',
+            })}
+          />
+          <div className="product-detail-page__specification-table-wrap">
+            <table>
+              <tbody>
+                {specifications.map((specification) => (
+                  <tr key={`${specification.sortOrder}-${specification.title}`}>
+                    <th>{specification.title}</th>
+                    <td>{specification.content}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
-      <section className="product-detail-page__applications detail-section">
-        <DetailSectionHeader
-          description={intl.formatMessage({
-            id: 'website.productDetail.applications.description',
-          })}
-          eyebrow="APPLICATION SCENARIOS"
-          title={intl.formatMessage({
-            id: 'website.productDetail.applications.title',
-          })}
-        />
-        <div className="product-detail-page__application-grid">
-          {product.applications.map((application, index) => (
-            <article key={application}>
-              <img
-                alt={application}
-                loading="lazy"
-                src={applicationImages[index]}
-              />
-              <div className="product-detail-page__application-copy">
-                <span>0{index + 1}</span>
-                <h3>{application}</h3>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="product-detail-page__gallery detail-section detail-section--sand">
-        <DetailSectionHeader
-          description={intl.formatMessage({
-            id: 'website.productDetail.gallery.description',
-          })}
-          eyebrow="PROJECT GALLERY"
-          title={intl.formatMessage({
-            id: 'website.productDetail.gallery.title',
-          })}
-        />
-        <div className="product-detail-page__gallery-grid">
-          {galleryImages.map((galleryImage, index) => (
-            <article key={galleryImage}>
-              <img
-                alt={intl.formatMessage(
-                  { id: 'website.productDetail.gallery.imageAlt' },
-                  { index: index + 1, productName: product.name },
+      {applications.length > 0 && (
+        <section className="product-detail-page__applications detail-section">
+          <DetailSectionHeader
+            description={
+              product.applicationIntroduction ??
+              intl.formatMessage({
+                id: 'website.productDetail.applications.description',
+              })
+            }
+            eyebrow="APPLICATION SCENARIOS"
+            title={intl.formatMessage({
+              id: 'website.productDetail.applications.title',
+            })}
+          />
+          <div className="product-detail-page__application-grid">
+            {applications.map((application, index) => (
+              <article
+                key={`${application.imageAttachmentId}-${application.title}`}
+              >
+                {application.imageUrl && (
+                  <img
+                    alt={application.title}
+                    loading="lazy"
+                    src={application.imageUrl}
+                  />
                 )}
-                loading="lazy"
-                src={galleryImage}
-              />
-              <span aria-hidden="true">+</span>
-            </article>
-          ))}
-        </div>
-      </section>
+                <div className="product-detail-page__application-copy">
+                  <span>0{index + 1}</span>
+                  <h3>{application.title}</h3>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="product-detail-page__related detail-section detail-section--sand">
-        <DetailSectionHeader
-          description={intl.formatMessage({
-            id: 'website.productDetail.related.description',
-          })}
-          eyebrow="RELATED PRODUCTS"
-          title={intl.formatMessage({
-            id: 'website.productDetail.related.title',
-          })}
-        />
-        <div className="product-detail-page__related-grid">
-          {relatedProducts.map((relatedProduct) => (
-            <Link
-              className="product-detail-page__related-card"
-              key={relatedProduct.slug}
-              to={`/products/${relatedProduct.slug}`}
-            >
-              <img alt={relatedProduct.name} src={relatedProduct.image} />
-              <div className="product-detail-page__related-card-copy">
-                <span>{relatedProduct.englishName}</span>
-                <h3>{relatedProduct.name}</h3>
-                <p>{relatedProduct.summary}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {cases.length > 0 && (
+        <section className="product-detail-page__gallery detail-section detail-section--sand">
+          <DetailSectionHeader
+            description={
+              product.caseIntroduction ??
+              intl.formatMessage({
+                id: 'website.productDetail.gallery.description',
+              })
+            }
+            eyebrow="PROJECT GALLERY"
+            title={intl.formatMessage({
+              id: 'website.productDetail.gallery.title',
+            })}
+          />
+          <div className="product-detail-page__gallery-grid">
+            {cases.map((caseItem) => (
+              <article key={`${caseItem.imageAttachmentId}-${caseItem.title}`}>
+                {caseItem.imageUrl && (
+                  <img
+                    alt={caseItem.title}
+                    loading="lazy"
+                    src={caseItem.imageUrl}
+                  />
+                )}
+                <span aria-hidden="true">+</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {relatedProducts.length > 0 && (
+        <section className="product-detail-page__related detail-section detail-section--sand">
+          <DetailSectionHeader
+            description={intl.formatMessage({
+              id: 'website.productDetail.related.description',
+            })}
+            eyebrow="RELATED PRODUCTS"
+            title={intl.formatMessage({
+              id: 'website.productDetail.related.title',
+            })}
+          />
+          <div className="product-detail-page__related-grid">
+            {relatedProducts.map((relatedProduct) => (
+              <Link
+                className="product-detail-page__related-card"
+                key={relatedProduct.slug}
+                to={`/products/${relatedProduct.slug}`}
+              >
+                {relatedProduct.coverImageUrl && (
+                  <img
+                    alt={relatedProduct.name}
+                    src={relatedProduct.coverImageUrl}
+                  />
+                )}
+                <div className="product-detail-page__related-card-copy">
+                  {relatedProduct.subtitle && (
+                    <span>{relatedProduct.subtitle}</span>
+                  )}
+                  <h3>{relatedProduct.name}</h3>
+                  {relatedProduct.summary && <p>{relatedProduct.summary}</p>}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <SiteFooter />
     </main>

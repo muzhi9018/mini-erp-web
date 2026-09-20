@@ -21,6 +21,26 @@ declare namespace Website {
     total: number;
   };
 
+  type PublicProduct = Product & {
+    productI18nId: number | string;
+    categoryName?: string;
+    subtitle?: string;
+    summary?: string;
+    tagline?: string;
+    featureIntroduction?: string;
+    specificationIntroduction?: string;
+    applicationIntroduction?: string;
+    caseIntroduction?: string;
+    coverImageAttachmentId?: number | string;
+    featureImageAttachmentId?: number | string;
+    coverImageUrl?: string;
+    featureImageUrl?: string;
+    features?: ProductDetailItem[];
+    specifications?: ProductDetailItem[];
+    applications?: ProductMediaItem[];
+    cases?: ProductMediaItem[];
+  };
+
   type ProductDetailItem = {
     itemType: 'FEATURE' | 'SPECIFICATION';
     title: string;
@@ -104,5 +124,11 @@ declare namespace Website {
   type CategoryPage = {
     records: Category[];
     total: number;
+  };
+
+  type PublicCategory = Category & {
+    description?: string;
+    imageAttachmentId?: number | string;
+    imageUrl?: string;
   };
 }

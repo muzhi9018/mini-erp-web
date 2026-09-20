@@ -87,6 +87,7 @@ export default {
   'website.products.collection.description':
     'From material and color to installation, find the right expression for every style and setting.',
   'website.products.categoryFilter': 'Product category filter',
+  'website.products.loading': 'Loading products…',
   'website.products.empty': 'No matching products found.',
   'website.products.consultation.title': 'Tell Us About Your Space',
   'website.products.consultation.description':
@@ -98,6 +99,7 @@ export default {
   'website.productCategory.floor': 'Flooring',
   'website.productCategory.cabinet': 'Custom Cabinetry',
   'website.productCategory.profile': 'Profiles & Accessories',
+  'website.productDetail.loading': 'Loading product details…',
   'website.productDetail.notFound.title': 'Product Not Found',
   'website.productDetail.notFound.description':
     'The product page you requested does not exist or has moved.',
