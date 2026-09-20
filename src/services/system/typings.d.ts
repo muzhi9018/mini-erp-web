@@ -1,4 +1,13 @@
 declare namespace System {
+  type Attachment = {
+    id: number | string;
+    originalName: string;
+    contentType: string;
+    fileSize: number;
+    objectKey: string;
+    previewUrl: string;
+  };
+
   type Menu = {
     id?: string;
     parentId?: string;
@@ -23,5 +32,13 @@ declare namespace System {
 
   type MenuPage = Common.BasePage & {
     records: MenuVO[];
+  };
+
+  type SystemLocale = {
+    id: number;
+    code: string;
+    name: string;
+    nativeName: string;
+    defaultLocal: boolean;
   };
 }

@@ -1,4 +1,8 @@
 export default {
+  'categoryManager.defaultLanguageHint':
+    'New categories use the system default language. Other languages can be added after creation.',
+  'categoryManager.languageUnavailable':
+    'System languages are unavailable or no default language is configured. Check the configuration and reopen the form.',
   'categoryManager.title': 'Category management',
   'categoryManager.list': 'Categories',
   'categoryManager.id': 'Category ID',
@@ -44,7 +48,11 @@ export default {
   'categoryManager.description': 'Description',
   'categoryManager.descriptionPlaceholder':
     'Optional description in the selected language',
-  'categoryManager.imageUrl': 'Category image URL',
-  'categoryManager.imageUrlPlaceholder':
-    'Optional, for example https://example.com/category.jpg',
+  'categoryManager.image': 'Category image',
+  'categoryManager.uploadImage': 'Upload image',
+  'categoryManager.imageUploadHint': 'Optional. JPG, JPEG, or PNG, up to 5 MB.',
+  'categoryManager.imageTypeError': 'Only JPG, JPEG, or PNG images are allowed',
+  'categoryManager.imageSizeError': 'The image must be no larger than 5 MB',
+  'categoryManager.imageUploadError': 'Image upload failed. Please try again.',
+  'categoryManager.imagePreview': 'Category image preview',
 };

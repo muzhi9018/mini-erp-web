@@ -89,7 +89,7 @@ declare namespace Website {
     locale: string;
     name: string;
     description?: string;
-    imageUrl?: string;
+    imageAttachmentId?: number | string;
   };
 
   export type CreateCategory = {

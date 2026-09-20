@@ -8,7 +8,7 @@ import { useIntl } from '@umijs/max';
 import { Button, message } from 'antd';
 import { useState } from 'react';
 import { listProducts } from '@/services/website/product';
-import { categoryLanguages } from '../category-manager/CategoryForm';
+import { productLanguages } from './languages';
 import ProductForm from './ProductForm';
 
 const ProductManager = () => {
@@ -35,7 +35,7 @@ const ProductManager = () => {
       dataIndex: 'locale',
       width: 120,
       valueEnum: Object.fromEntries(
-        categoryLanguages.map(({ label, value }) => [
+        productLanguages.map(({ label, value }) => [
           value,
           intl.formatMessage(label),
         ]),
@@ -76,7 +76,7 @@ const ProductManager = () => {
           product={editor.product}
           onClose={() => setEditor(undefined)}
           onSuccess={(locale) => {
-            const language = categoryLanguages.find(
+            const language = productLanguages.find(
               ({ value }) => value === locale,
             );
             const languageName = language

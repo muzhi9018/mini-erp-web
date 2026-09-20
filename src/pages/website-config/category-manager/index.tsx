@@ -7,15 +7,30 @@ import {
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
 import { Button, message } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { getSystemLocales } from '@/services/system/locale';
 import { listCategories } from '@/services/website/productCategory';
-import CategoryForm, { categoryLanguages } from './CategoryForm';
+import CategoryForm from './CategoryForm';
 
 const CategoryManager = () => {
   const intl = useIntl();
   const actionRef = useRef<ActionType>(undefined);
   const [messageApi, contextHolder] = message.useMessage();
   const [form, setForm] = useState<{ category?: Website.Category }>();
+  const [languages, setLanguages] = useState<System.SystemLocale[]>([]);
+  useEffect(() => {
+    let active = true;
+    getSystemLocales()
+      .then((locales) => {
+        if (active) setLanguages(locales);
+      })
+      .catch(() => {
+        // 加载失败时保留语言编码展示，接口错误由全局请求处理器提示。
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const columns: ProColumns<Website.Category>[] = [
     {
       title: intl.formatMessage({
@@ -47,9 +62,9 @@ const CategoryManager = () => {
       dataIndex: 'locale',
       width: 120,
       valueEnum: Object.fromEntries(
-        categoryLanguages.map(({ label, value }) => [
-          value,
-          intl.formatMessage(label),
+        languages.map(({ code, nativeName, name }) => [
+          code,
+          nativeName || name,
         ]),
       ),
     },
@@ -167,10 +182,7 @@ const CategoryManager = () => {
         <CategoryForm
           category={form.category}
           onClose={() => setForm(undefined)}
-          onSuccess={(locale) => {
-            const language = categoryLanguages.find(
-              ({ value }) => value === locale,
-            )?.label;
+          onSuccess={(_locale, languageName) => {
             messageApi.success(
               intl.formatMessage(
                 form.category
@@ -182,7 +194,7 @@ const CategoryManager = () => {
                       id: 'categoryManager.createSuccess',
                       defaultMessage: '分类已创建（{language}）',
                     },
-                { language: language ? intl.formatMessage(language) : locale },
+                { language: languageName },
               ),
             );
             void actionRef.current?.reload();

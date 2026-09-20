@@ -1,3 +1,4 @@
+import { PictureOutlined } from '@ant-design/icons';
 import {
   ModalForm,
   ProForm,
@@ -7,36 +8,18 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { Alert, Col } from 'antd';
-import { useState } from 'react';
+import { Alert, Col, Form, Image, message, Spin, Upload } from 'antd';
+import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
+import { useEffect, useState } from 'react';
+import {
+  uploadAttachment,
+  WEBSITE_PRODUCT_CATEGORY_ATTACHMENT_MODEL,
+} from '@/services/system/attachment';
+import { getSystemLocales } from '@/services/system/locale';
 import {
   addCategoryI18n,
   createCategory,
 } from '@/services/website/productCategory';
-
-export const categoryLanguages = [
-  {
-    label: {
-      id: 'categoryManager.language.zhCN',
-      defaultMessage: '简体中文',
-    },
-    value: 'zh-CN',
-  },
-  {
-    label: {
-      id: 'categoryManager.language.zhTW',
-      defaultMessage: '繁体中文',
-    },
-    value: 'zh-TW',
-  },
-  {
-    label: {
-      id: 'categoryManager.language.enUS',
-      defaultMessage: '英语',
-    },
-    value: 'en-US',
-  },
-];
 
 type CategoryFormValues = Website.CategoryI18n & {
   code: string;
@@ -46,21 +29,197 @@ type CategoryFormValues = Website.CategoryI18n & {
 type CategoryFormProps = {
   category?: Website.Category;
   onClose: () => void;
-  onSuccess: (locale: string) => void;
+  onSuccess: (locale: string, languageName: string) => void;
+};
+
+type CategoryImageUploadProps = {
+  disabled?: boolean;
+  onChange?: (value?: number | string) => void;
+  onUploadingChange: (uploading: boolean) => void;
+};
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+const readImage = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+const CategoryImageUpload = ({
+  disabled,
+  onChange,
+  onUploadingChange,
+}: CategoryImageUploadProps) => {
+  const intl = useIntl();
+  const [messageApi, messageContext] = message.useMessage();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [previewImage, setPreviewImage] = useState('');
+
+  const beforeUpload: UploadProps['beforeUpload'] = (file) => {
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      messageApi.error(
+        intl.formatMessage({
+          id: 'categoryManager.imageTypeError',
+          defaultMessage: '仅支持 JPG、JPEG 或 PNG 图片',
+        }),
+      );
+      return Upload.LIST_IGNORE;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      messageApi.error(
+        intl.formatMessage({
+          id: 'categoryManager.imageSizeError',
+          defaultMessage: '图片大小不能超过 5 MB',
+        }),
+      );
+      return Upload.LIST_IGNORE;
+    }
+    return true;
+  };
+
+  const customRequest: UploadProps['customRequest'] = async ({
+    file,
+    onError,
+    onSuccess,
+  }) => {
+    onChange?.(undefined);
+    onUploadingChange(true);
+    try {
+      const attachment = await uploadAttachment(
+        file as File,
+        WEBSITE_PRODUCT_CATEGORY_ATTACHMENT_MODEL,
+      );
+      if (attachment.id === undefined || attachment.id === null) {
+        throw new Error('Attachment id is missing');
+      }
+      onChange?.(attachment.id);
+      onSuccess?.(attachment);
+    } catch (error) {
+      messageApi.error(
+        intl.formatMessage({
+          id: 'categoryManager.imageUploadError',
+          defaultMessage: '图片上传失败，请重试',
+        }),
+      );
+      onError?.(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      onUploadingChange(false);
+    }
+  };
+
+  const handlePreview = async (file: UploadFile) => {
+    const source =
+      file.url ||
+      file.thumbUrl ||
+      (file.originFileObj
+        ? await readImage(file.originFileObj as RcFile)
+        : undefined);
+    if (source) setPreviewImage(source);
+  };
+
+  return (
+    <>
+      {messageContext}
+      <Upload
+        accept="image/jpeg,image/png"
+        listType="picture-card"
+        maxCount={1}
+        disabled={disabled}
+        fileList={fileList}
+        beforeUpload={beforeUpload}
+        customRequest={customRequest}
+        onChange={({ fileList: nextFileList }) => {
+          setFileList(
+            nextFileList.map((file) => {
+              const attachment = file.response as System.Attachment | undefined;
+              return attachment?.previewUrl
+                ? {
+                    ...file,
+                    url: attachment.previewUrl,
+                    thumbUrl: attachment.previewUrl,
+                  }
+                : file;
+            }),
+          );
+        }}
+        onPreview={handlePreview}
+        onRemove={() => {
+          onChange?.(undefined);
+          setPreviewImage('');
+        }}
+      >
+        <Spin spinning={fileList.some(({ status }) => status === 'uploading')}>
+          <PictureOutlined />
+          <div className="mt-2">
+            {intl.formatMessage({
+              id: 'categoryManager.uploadImage',
+              defaultMessage: '上传图片',
+            })}
+          </div>
+        </Spin>
+      </Upload>
+      {previewImage && (
+        <Image
+          alt={intl.formatMessage({
+            id: 'categoryManager.imagePreview',
+            defaultMessage: '分类图片预览',
+          })}
+          wrapperStyle={{ display: 'none' }}
+          preview={{
+            visible: true,
+            src: previewImage,
+            onVisibleChange: (visible) => {
+              if (!visible) setPreviewImage('');
+            },
+          }}
+        />
+      )}
+    </>
+  );
 };
 
 const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
   const intl = useIntl();
+  const [form] = Form.useForm<CategoryFormValues>();
   const [submitting, setSubmitting] = useState(false);
-  const currentLocale = intl.locale;
-  const defaultLocale = categoryLanguages.some(
-    ({ value }) => value === currentLocale,
-  )
-    ? currentLocale
-    : 'zh-CN';
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [languages, setLanguages] = useState<System.SystemLocale[]>([]);
+  const [loadingLanguages, setLoadingLanguages] = useState(true);
+  const defaultLanguage = languages.find(({ defaultLocal }) => defaultLocal);
+  const languageUnavailable =
+    !languages.length || (!category && !defaultLanguage);
+  const busy = submitting || uploadingImage;
+
+  useEffect(() => {
+    let active = true;
+    getSystemLocales()
+      .then((locales) => {
+        if (!active) return;
+        setLanguages(locales);
+        if (!category) {
+          form.setFieldValue(
+            'locale',
+            locales.find(({ defaultLocal }) => defaultLocal)?.code,
+          );
+        }
+      })
+      .catch(() => {
+        // 接口错误由全局请求处理器提示，语言未就绪时禁止提交。
+      })
+      .finally(() => {
+        if (active) setLoadingLanguages(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [category, form]);
 
   return (
     <ModalForm<CategoryFormValues>
+      form={form}
       title={intl.formatMessage(
         category
           ? {
@@ -76,17 +235,16 @@ const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
       open
       grid
       rowProps={{ gutter: 16, style: { marginInline: 0 } }}
-      disabled={submitting}
+      disabled={busy}
       initialValues={{
         sortOrder: 0,
-        locale: category ? undefined : defaultLocale,
       }}
       modalProps={{
         centered: true,
         destroyOnHidden: true,
         mask: { closable: false },
-        closable: !submitting,
-        keyboard: !submitting,
+        closable: !busy,
+        keyboard: !busy,
         styles: {
           body: { maxHeight: 'calc(100dvh - 160px)', overflowY: 'auto' },
         },
@@ -109,19 +267,32 @@ const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
             defaultMessage: '取消',
           }),
         },
-        resetButtonProps: { disabled: submitting },
-        submitButtonProps: { loading: submitting },
+        resetButtonProps: { disabled: busy },
+        submitButtonProps: {
+          loading: submitting,
+          disabled: loadingLanguages || languageUnavailable || uploadingImage,
+        },
       }}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
       onFinish={async (values) => {
+        const language = category
+          ? languages.find(({ code }) => code === values.locale)
+          : defaultLanguage;
+        if (
+          loadingLanguages ||
+          uploadingImage ||
+          !language ||
+          language.code === category?.locale
+        )
+          return false;
         setSubmitting(true);
         const translation: Website.CategoryI18n = {
-          locale: values.locale,
+          locale: language.code,
           name: values.name.trim(),
           description: values.description?.trim(),
-          imageUrl: values.imageUrl?.trim(),
+          imageAttachmentId: values.imageAttachmentId,
         };
         try {
           if (category) {
@@ -142,7 +313,7 @@ const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
         } finally {
           setSubmitting(false);
         }
-        onSuccess(values.locale);
+        onSuccess(language.code, language.nativeName || language.name);
         return true;
       }}
     >
@@ -233,6 +404,11 @@ const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
       <ProFormSelect
         colProps={{ xs: 24, sm: 8 }}
         name="locale"
+        disabled={!category || loadingLanguages || submitting}
+        fieldProps={{
+          loading: loadingLanguages,
+          allowClear: Boolean(category),
+        }}
         label={intl.formatMessage(
           category
             ? {
@@ -248,11 +424,28 @@ const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
           id: 'categoryManager.languageRequired',
           defaultMessage: '请选择语言',
         })}
-        options={categoryLanguages.map((language) => ({
-          ...language,
-          label: intl.formatMessage(language.label),
-          disabled: language.value === category?.locale,
-        }))}
+        extra={
+          !loadingLanguages && languageUnavailable
+            ? intl.formatMessage({
+                id: 'categoryManager.languageUnavailable',
+                defaultMessage:
+                  '系统语言不可用或未配置默认语言，请检查配置后重新打开表单。',
+              })
+            : !category
+              ? intl.formatMessage({
+                  id: 'categoryManager.defaultLanguageHint',
+                  defaultMessage:
+                    '新增分类固定使用系统默认语言，创建后可添加其他语言。',
+                })
+              : undefined
+        }
+        options={languages
+          .filter((language) => category || language.defaultLocal)
+          .map((language) => ({
+            value: language.code,
+            label: language.nativeName || language.name,
+            disabled: language.code === category?.locale,
+          }))}
         rules={[
           {
             required: true,
@@ -298,18 +491,22 @@ const CategoryForm = ({ category, onClose, onSuccess }: CategoryFormProps) => {
         })}
         fieldProps={{ autoSize: { minRows: 3, maxRows: 5 } }}
       />
-      <ProFormText
-        name="imageUrl"
+      <ProForm.Item
+        name="imageAttachmentId"
         label={intl.formatMessage({
-          id: 'categoryManager.imageUrl',
-          defaultMessage: '分类图片地址',
+          id: 'categoryManager.image',
+          defaultMessage: '分类图片',
         })}
-        placeholder={intl.formatMessage({
-          id: 'categoryManager.imageUrlPlaceholder',
-          defaultMessage: '选填，例如 https://example.com/category.jpg',
+        extra={intl.formatMessage({
+          id: 'categoryManager.imageUploadHint',
+          defaultMessage: '选填，支持 JPG、JPEG、PNG，大小不超过 5 MB。',
         })}
-        fieldProps={{ maxLength: 512 }}
-      />
+      >
+        <CategoryImageUpload
+          disabled={busy}
+          onUploadingChange={setUploadingImage}
+        />
+      </ProForm.Item>
     </ModalForm>
   );
 };

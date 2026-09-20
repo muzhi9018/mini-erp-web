@@ -32,9 +32,9 @@ import {
   uploadProductImage,
 } from '@/services/website/product';
 import { listCategories } from '@/services/website/productCategory';
-import { categoryLanguages } from '../category-manager/CategoryForm';
 import { type ProductFormValues, toProductTranslation } from './formValues';
 import { useStyles } from './index.style';
+import { productLanguages } from './languages';
 
 const useText = () => {
   const intl = useIntl();
@@ -635,7 +635,7 @@ const ProductForm = ({
           >
             <Select
               placeholder={t('selectLanguage', '请选择内容语言')}
-              options={categoryLanguages.map(({ label, value }) => ({
+              options={productLanguages.map(({ label, value }) => ({
                 label: intl.formatMessage(label),
                 value,
                 disabled: value === product?.locale,
@@ -781,7 +781,7 @@ const ProductForm = ({
         initialValues={{
           locale: product
             ? undefined
-            : categoryLanguages.some(({ value }) => value === intl.locale)
+            : productLanguages.some(({ value }) => value === intl.locale)
               ? intl.locale
               : 'zh-CN',
           sortOrder: 0,

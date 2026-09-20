@@ -1,4 +1,8 @@
 export default {
+  'categoryManager.defaultLanguageHint':
+    '新增分類固定使用系統預設語言，建立後可新增其他語言。',
+  'categoryManager.languageUnavailable':
+    '系統語言無法使用或尚未設定預設語言，請檢查設定後重新開啟表單。',
   'categoryManager.title': '分類管理',
   'categoryManager.list': '分類列表',
   'categoryManager.id': '分類 ID',
@@ -39,7 +43,12 @@ export default {
   'categoryManager.nameRequired': '請輸入分類名稱',
   'categoryManager.description': '分類描述',
   'categoryManager.descriptionPlaceholder': '選填，使用所選語言介紹此分類',
-  'categoryManager.imageUrl': '分類圖片網址',
-  'categoryManager.imageUrlPlaceholder':
-    '選填，例如 https://example.com/category.jpg',
+  'categoryManager.image': '分類圖片',
+  'categoryManager.uploadImage': '上傳圖片',
+  'categoryManager.imageUploadHint':
+    '選填，支援 JPG、JPEG、PNG，大小不超過 5 MB。',
+  'categoryManager.imageTypeError': '僅支援 JPG、JPEG 或 PNG 圖片',
+  'categoryManager.imageSizeError': '圖片大小不能超過 5 MB',
+  'categoryManager.imageUploadError': '圖片上傳失敗，請重試',
+  'categoryManager.imagePreview': '分類圖片預覽',
 };

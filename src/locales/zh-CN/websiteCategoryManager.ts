@@ -1,4 +1,8 @@
 export default {
+  'categoryManager.defaultLanguageHint':
+    '新增分类固定使用系统默认语言，创建后可添加其他语言。',
+  'categoryManager.languageUnavailable':
+    '系统语言不可用或未配置默认语言，请检查配置后重新打开表单。',
   'categoryManager.title': '分类管理',
   'categoryManager.list': '分类列表',
   'categoryManager.id': '分类 ID',
@@ -39,7 +43,12 @@ export default {
   'categoryManager.nameRequired': '请输入分类名称',
   'categoryManager.description': '分类描述',
   'categoryManager.descriptionPlaceholder': '选填，使用所选语言介绍此分类',
-  'categoryManager.imageUrl': '分类图片地址',
-  'categoryManager.imageUrlPlaceholder':
-    '选填，例如 https://example.com/category.jpg',
+  'categoryManager.image': '分类图片',
+  'categoryManager.uploadImage': '上传图片',
+  'categoryManager.imageUploadHint':
+    '选填，支持 JPG、JPEG、PNG，大小不超过 5 MB。',
+  'categoryManager.imageTypeError': '仅支持 JPG、JPEG 或 PNG 图片',
+  'categoryManager.imageSizeError': '图片大小不能超过 5 MB',
+  'categoryManager.imageUploadError': '图片上传失败，请重试',
+  'categoryManager.imagePreview': '分类图片预览',
 };
