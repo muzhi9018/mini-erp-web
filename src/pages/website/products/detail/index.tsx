@@ -54,23 +54,26 @@ const ProductDetailPage: React.FC = () => {
       };
     }
 
-    Promise.all([
-      getWebsiteProductDetail(slug),
-      listWebsiteProducts().catch(() => []),
-    ])
-      .then(([nextProduct, products]) => {
+    const loadProduct = async () => {
+      try {
+        const nextProduct = await getWebsiteProductDetail(slug);
+        const products = await listWebsiteProducts(
+          nextProduct.categoryId,
+        ).catch(() => []);
+
         if (!active) return;
         setProduct(nextProduct);
         setRelatedProducts(
           products.filter((item) => item.slug !== nextProduct.slug).slice(0, 4),
         );
-      })
-      .catch(() => {
+      } catch {
         if (active) setProduct(undefined);
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    };
+
+    void loadProduct();
 
     return () => {
       active = false;
