@@ -5,6 +5,7 @@ export type ProductFormValues = Omit<
   categoryId: Website.Category['id'];
   slug: string;
   sortOrder?: number;
+  isShow?: boolean;
   isRecommended?: boolean;
   features: Pick<Website.ProductDetailItem, 'title' | 'content'>[];
   specifications: Pick<Website.ProductDetailItem, 'title' | 'content'>[];

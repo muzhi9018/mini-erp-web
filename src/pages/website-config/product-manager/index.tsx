@@ -1,15 +1,31 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
+  type ActionType,
   PageContainer,
   type ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { Button, message } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, Modal, message, Select } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import { getSystemLocales } from '@/services/system/locale';
-import { listProducts } from '@/services/website/product';
+import {
+  getProductDetail,
+  listProductLocales,
+  listProducts,
+} from '@/services/website/product';
 import ProductForm from './ProductForm';
+
+type ProductEditor =
+  | { mode: 'create' }
+  | { mode: 'addLanguage'; product: Website.Product }
+  | { mode: 'edit'; product: Website.PublicProduct };
+
+type ProductLanguageSelector = {
+  product: Website.Product;
+  locales: System.SystemLocale[];
+  selectedLocale?: string;
+};
 
 const ProductManager = () => {
   const intl = useIntl();
@@ -19,7 +35,13 @@ const ProductManager = () => {
     values?: Record<string, string | number>,
   ) =>
     intl.formatMessage({ id: `productManager.${key}`, defaultMessage }, values);
-  const [editor, setEditor] = useState<{ product?: Website.Product }>();
+  const actionRef = useRef<ActionType>(undefined);
+  const [editor, setEditor] = useState<ProductEditor>();
+  const [loadingLocalesProductId, setLoadingLocalesProductId] =
+    useState<Website.Product['id']>();
+  const [languageSelector, setLanguageSelector] =
+    useState<ProductLanguageSelector>();
+  const [loadingProductDetail, setLoadingProductDetail] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [languages, setLanguages] = useState<System.SystemLocale[]>([]);
   useEffect(() => {
@@ -36,9 +58,9 @@ const ProductManager = () => {
     };
   }, []);
   const columns: ProColumns<Website.Product>[] = [
-    { title: t('id', '商品 ID'), dataIndex: 'id', width: 190 },
-    { title: t('name', '商品名称'), dataIndex: 'name' },
-    { title: t('slug', '商品标识'), dataIndex: 'slug' },
+    { title: t('id', '商品 ID'), dataIndex: 'id', width: 100 },
+    { title: t('name', '商品名称'), dataIndex: 'name', width: 100 },
+    { title: t('slug', '商品标识'), dataIndex: 'slug', width: 100 },
     {
       title: t('categoryId', '所属分类 ID'),
       dataIndex: 'categoryId',
@@ -68,13 +90,43 @@ const ProductManager = () => {
     {
       title: t('actions', '操作'),
       valueType: 'option',
-      width: 140,
+      width: 190,
       fixed: 'right',
       render: (_, product) => [
         <Button
+          key="edit"
+          type="link"
+          icon={<EditOutlined />}
+          loading={loadingLocalesProductId === product.id}
+          disabled={
+            loadingLocalesProductId !== undefined &&
+            loadingLocalesProductId !== product.id
+          }
+          onClick={async () => {
+            setLoadingLocalesProductId(product.id);
+            try {
+              const locales = await listProductLocales(product.id);
+              if (!locales.length) {
+                messageApi.warning(
+                  t('noConfiguredLanguage', '该商品暂未配置可修改的语言。'),
+                );
+                return;
+              }
+              setLanguageSelector({ product, locales });
+            } catch {
+              // 接口错误由全局请求处理器提示，加载失败时保留列表页。
+            } finally {
+              setLoadingLocalesProductId(undefined);
+            }
+          }}
+        >
+          {t('edit', '修改')}
+        </Button>,
+        <Button
           key="language"
           type="link"
-          onClick={() => setEditor({ product })}
+          disabled={loadingLocalesProductId !== undefined}
+          onClick={() => setEditor({ mode: 'addLanguage', product })}
         >
           {t('addLanguage', '添加商品语言')}
         </Button>,
@@ -85,21 +137,93 @@ const ProductManager = () => {
   return (
     <>
       {contextHolder}
+      <Modal
+        title={t('selectEditLanguage', '选择修改语言')}
+        open={Boolean(languageSelector)}
+        destroyOnHidden
+        centered
+        footer={null}
+        closable={!loadingProductDetail}
+        keyboard={!loadingProductDetail}
+        mask={{ closable: false }}
+        onCancel={() => {
+          if (!loadingProductDetail) setLanguageSelector(undefined);
+        }}
+      >
+        <p>
+          {t(
+            'selectEditLanguageDescription',
+            '请选择要修改的“{name}”内容语言。',
+            {
+              name: languageSelector?.product.name ?? '',
+            },
+          )}
+        </p>
+        <label htmlFor="product-edit-locale">
+          {t('editLanguageLabel', '商品语言')}
+        </label>
+        <Select
+          id="product-edit-locale"
+          className="mt-2 w-full"
+          disabled={loadingProductDetail}
+          loading={loadingProductDetail}
+          placeholder={t('editLanguagePlaceholder', '请选择商品语言')}
+          value={languageSelector?.selectedLocale}
+          options={languageSelector?.locales.map(
+            ({ code, nativeName, name }) => ({
+              label: nativeName || name,
+              value: code,
+            }),
+          )}
+          onChange={async (selectedLocale) => {
+            if (!languageSelector || loadingProductDetail) return;
+            const { product } = languageSelector;
+            setLanguageSelector({ ...languageSelector, selectedLocale });
+            setLoadingProductDetail(true);
+            try {
+              const detail = await getProductDetail(product.id, selectedLocale);
+              setLanguageSelector(undefined);
+              setEditor({ mode: 'edit', product: detail });
+            } catch {
+              setLanguageSelector((current) =>
+                current ? { ...current, selectedLocale: undefined } : current,
+              );
+              // 接口错误由全局请求处理器提示，加载失败时保留语言选择弹窗。
+            } finally {
+              setLoadingProductDetail(false);
+            }
+          }}
+        />
+        <div className="mt-6 flex justify-end">
+          <Button
+            disabled={loadingProductDetail}
+            onClick={() => setLanguageSelector(undefined)}
+          >
+            {t('cancel', '取消')}
+          </Button>
+        </div>
+      </Modal>
       {editor ? (
         <ProductForm
-          product={editor.product}
+          product={editor.mode === 'addLanguage' ? editor.product : undefined}
+          editProduct={editor.mode === 'edit' ? editor.product : undefined}
           onClose={() => setEditor(undefined)}
           onSuccess={(_locale, languageName) => {
             messageApi.success(
-              editor.product
-                ? t('languageSuccess', '商品语言已添加（{language}）', {
+              editor.mode === 'edit'
+                ? t('updateSuccess', '商品已修改（{language}）', {
                     language: languageName,
                   })
-                : t('createSuccess', '商品已创建（{language}）', {
-                    language: languageName,
-                  }),
+                : editor.mode === 'addLanguage'
+                  ? t('languageSuccess', '商品语言已添加（{language}）', {
+                      language: languageName,
+                    })
+                  : t('createSuccess', '商品已创建（{language}）', {
+                      language: languageName,
+                    }),
             );
             setEditor(undefined);
+            void actionRef.current?.reload();
           }}
         />
       ) : (
@@ -108,6 +232,7 @@ const ProductManager = () => {
           subTitle={t('subtitleList', '管理官网商品及各语言的展示内容')}
         >
           <ProTable<Website.Product>
+            actionRef={actionRef}
             rowKey="id"
             headerTitle={t('list', '商品列表')}
             columns={columns}
@@ -120,7 +245,7 @@ const ProductManager = () => {
                 key="create"
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => setEditor({})}
+                onClick={() => setEditor({ mode: 'create' })}
               >
                 {t('create', '新增商品')}
               </Button>,

@@ -31,7 +31,11 @@ import {
   WEBSITE_PRODUCT_ATTACHMENT_MODEL,
 } from '@/services/system/attachment';
 import { getSystemLocales } from '@/services/system/locale';
-import { addProductI18n, createProduct } from '@/services/website/product';
+import {
+  addProductI18n,
+  createProduct,
+  updateProduct,
+} from '@/services/website/product';
 import { listCategories } from '@/services/website/productCategory';
 import { type ProductFormValues, toProductTranslation } from './formValues';
 import { useStyles } from './index.style';
@@ -86,6 +90,8 @@ function TextField({
 }
 
 function ProductImageUpload({
+  value,
+  initialUrl,
   onChange,
   label,
   disabled,
@@ -93,6 +99,7 @@ function ProductImageUpload({
   onUploadingChange,
 }: {
   value?: number | string;
+  initialUrl?: string;
   onChange?: (attachmentId?: number | string) => void;
   label: string;
   disabled?: boolean;
@@ -101,7 +108,19 @@ function ProductImageUpload({
 }) {
   const t = useText();
   const { styles } = useStyles();
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [fileList, setFileList] = useState<UploadFile[]>(() =>
+    value !== undefined && initialUrl
+      ? [
+          {
+            uid: String(value),
+            name: label,
+            status: 'done',
+            url: initialUrl,
+            thumbUrl: initialUrl,
+          },
+        ]
+      : [],
+  );
   const [previewImage, setPreviewImage] = useState('');
 
   const beforeUpload = (file: RcFile) => {
@@ -206,6 +225,7 @@ function ProductImageUpload({
 function ImageField({
   name,
   label,
+  initialUrl,
   required,
   disabled,
   showError,
@@ -213,6 +233,7 @@ function ImageField({
 }: {
   name: FieldName;
   label: string;
+  initialUrl?: string;
   required?: boolean;
   disabled?: boolean;
   showError: (content: string) => void;
@@ -222,6 +243,7 @@ function ImageField({
     <Form.Item name={name} label={label} rules={[{ required }]}>
       <ProductImageUpload
         label={label}
+        initialUrl={initialUrl}
         disabled={disabled}
         showError={showError}
         onUploadingChange={onUploadingChange}
@@ -232,10 +254,12 @@ function ImageField({
 
 const ProductForm = ({
   product,
+  editProduct,
   onClose,
   onSuccess,
 }: {
   product?: Website.Product;
+  editProduct?: Website.PublicProduct;
   onClose: () => void;
   onSuccess: (locale: string, languageName: string) => void;
 }) => {
@@ -251,9 +275,13 @@ const ProductForm = ({
   const [loadingLanguages, setLoadingLanguages] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const pending = useRef(false);
+  const isEditing = Boolean(editProduct);
+  const isAddingLanguage = Boolean(product) && !isEditing;
+  const isCreating = !isEditing && !isAddingLanguage;
+  const currentProduct = editProduct ?? product;
   const defaultLanguage = languages.find(({ defaultLocal }) => defaultLocal);
   const languageUnavailable =
-    !languages.length || (!product && !defaultLanguage);
+    !languages.length || (isCreating && !defaultLanguage);
   const busy = submitting || uploadingImages > 0;
   const handleUploadingChange = (uploading: boolean) => {
     setUploadingImages((count) => Math.max(0, count + (uploading ? 1 : -1)));
@@ -317,7 +345,7 @@ const ProductForm = ({
       .then((locales) => {
         if (!active) return;
         setLanguages(locales);
-        if (!product) {
+        if (isCreating) {
           form.setFieldValue(
             'locale',
             locales.find(({ defaultLocal }) => defaultLocal)?.code,
@@ -333,7 +361,7 @@ const ProductForm = ({
     return () => {
       active = false;
     };
-  }, [form, product]);
+  }, [form, isCreating]);
 
   const close = () => {
     if (pending.current || uploadingImages > 0) return;
@@ -351,15 +379,16 @@ const ProductForm = ({
   };
 
   const submit = async (values: ProductFormValues) => {
-    const language = product
-      ? languages.find(({ code }) => code === values.locale)
-      : defaultLanguage;
+    const submittedLocale = editProduct?.locale ?? values.locale;
+    const language = isCreating
+      ? defaultLanguage
+      : languages.find(({ code }) => code === submittedLocale);
     if (
       pending.current ||
       uploadingImages > 0 ||
       loadingLanguages ||
       !language ||
-      language.code === product?.locale
+      (isAddingLanguage && language.code === product?.locale)
     )
       return;
     pending.current = true;
@@ -367,9 +396,20 @@ const ProductForm = ({
     try {
       const productI18n = toProductTranslation({
         ...values,
-        locale: language.code,
+        locale: editProduct?.locale ?? language.code,
       });
-      if (product) {
+      if (editProduct) {
+        await updateProduct({
+          ...productI18n,
+          id: editProduct.id,
+          productI18nId: editProduct.productI18nId,
+          categoryId: values.categoryId,
+          slug: values.slug.trim(),
+          sortOrder: values.sortOrder ?? 0,
+          isShow: values.isShow ?? false,
+          isRecommended: values.isRecommended ?? false,
+        });
+      } else if (product) {
         await addProductI18n({ ...productI18n, productId: product.id });
       } else {
         await createProduct({
@@ -553,6 +593,7 @@ const ProductForm = ({
                 <ImageField
                   name={[field.name, 'imageAttachmentId']}
                   label={t('itemImage', '上传图片')}
+                  initialUrl={editProduct?.[section.key]?.[index]?.imageUrl}
                   required
                   disabled={busy}
                   showError={(content) => messageApi.error(content)}
@@ -595,12 +636,12 @@ const ProductForm = ({
     if (panel.key === 'base') {
       children = (
         <>
-          {product ? (
+          {isAddingLanguage ? (
             <p>
               {t('sharedProduct', '当前商品：{name} · {slug} · ID {id}', {
-                name: product.name,
-                slug: product.slug,
-                id: product.id,
+                name: currentProduct?.name ?? '',
+                slug: currentProduct?.slug ?? '',
+                id: currentProduct?.id ?? '',
               })}
             </p>
           ) : (
@@ -609,8 +650,10 @@ const ProductForm = ({
                 name="slug"
                 label={t('slug', '商品标识')}
                 extra={t(
-                  'slugHint',
-                  '用于官网详情页地址，例如 /products/wpc，创建后保持不变。',
+                  isEditing ? 'editSlugHint' : 'slugHint',
+                  isEditing
+                    ? '用于官网详情页地址；修改后原地址将失效。'
+                    : '用于官网详情页地址，例如 /products/wpc。',
                 )}
                 rules={[
                   { required: true },
@@ -678,14 +721,26 @@ const ProductForm = ({
               >
                 <Switch />
               </Form.Item>
+              {isEditing && (
+                <Form.Item
+                  name="isShow"
+                  label={t('status', '官网状态')}
+                  valuePropName="checked"
+                  extra={t('statusHint', '是否在官网公开展示此商品。')}
+                >
+                  <Switch />
+                </Form.Item>
+              )}
             </div>
           )}
           <Form.Item
             name="locale"
             label={
-              product
-                ? t('targetLanguage', '目标语言')
-                : t('initialLanguage', '首种语言')
+              isEditing
+                ? t('language', '内容语言')
+                : isAddingLanguage
+                  ? t('targetLanguage', '目标语言')
+                  : t('initialLanguage', '首种语言')
             }
             extra={
               !loadingLanguages && languageUnavailable
@@ -693,7 +748,7 @@ const ProductForm = ({
                     'languageUnavailable',
                     '系统语言不可用或未配置默认语言，请检查配置后重新打开表单。',
                   )
-                : !product
+                : isCreating
                   ? t(
                       'defaultLanguageHint',
                       '新增商品固定使用系统默认语言，创建后可添加其他语言。',
@@ -703,16 +758,19 @@ const ProductForm = ({
             rules={[{ required: true }]}
           >
             <Select
-              allowClear={Boolean(product)}
-              disabled={!product || loadingLanguages || submitting}
+              allowClear={isAddingLanguage}
+              disabled={
+                isCreating || isEditing || loadingLanguages || submitting
+              }
               loading={loadingLanguages}
               placeholder={t('selectLanguage', '请选择内容语言')}
               options={languages
-                .filter((language) => product || language.defaultLocal)
+                .filter((language) => !isCreating || language.defaultLocal)
                 .map((language) => ({
                   label: language.nativeName || language.name,
                   value: language.code,
-                  disabled: language.code === product?.locale,
+                  disabled:
+                    isAddingLanguage && language.code === product?.locale,
                 }))}
             />
           </Form.Item>
@@ -756,6 +814,7 @@ const ProductForm = ({
           <ImageField
             name="coverImageAttachmentId"
             label={t('coverImageUrl', '商品卡片封面')}
+            initialUrl={editProduct?.coverImageUrl}
             disabled={busy}
             showError={(content) => messageApi.error(content)}
             onUploadingChange={handleUploadingChange}
@@ -783,6 +842,7 @@ const ProductForm = ({
               <ImageField
                 name="featureImageAttachmentId"
                 label={t('featureImageUrl', '特点区域配图')}
+                initialUrl={editProduct?.featureImageUrl}
                 disabled={busy}
                 showError={(content) => messageApi.error(content)}
                 onUploadingChange={handleUploadingChange}
@@ -815,10 +875,64 @@ const ProductForm = ({
     };
   });
 
+  const initialValues = editProduct
+    ? {
+        categoryId: editProduct.categoryId,
+        slug: editProduct.slug,
+        sortOrder: editProduct.sortOrder,
+        isShow: editProduct.isShow,
+        isRecommended: editProduct.isRecommended,
+        locale: editProduct.locale,
+        name: editProduct.name,
+        subtitle: editProduct.subtitle,
+        summary: editProduct.summary,
+        tagline: editProduct.tagline,
+        featureIntroduction: editProduct.featureIntroduction,
+        specificationIntroduction: editProduct.specificationIntroduction,
+        applicationIntroduction: editProduct.applicationIntroduction,
+        caseIntroduction: editProduct.caseIntroduction,
+        coverImageAttachmentId: editProduct.coverImageAttachmentId,
+        featureImageAttachmentId: editProduct.featureImageAttachmentId,
+        features: editProduct.features?.map(({ title, content }) => ({
+          title,
+          content,
+        })),
+        specifications: editProduct.specifications?.map(
+          ({ title, content }) => ({ title, content }),
+        ),
+        applications: editProduct.applications?.map(
+          ({ title, imageAttachmentId, description }) => ({
+            title,
+            imageAttachmentId,
+            description,
+          }),
+        ),
+        cases: editProduct.cases?.map(
+          ({ title, imageAttachmentId, description }) => ({
+            title,
+            imageAttachmentId,
+            description,
+          }),
+        ),
+      }
+    : {
+        sortOrder: 0,
+        isShow: false,
+        isRecommended: false,
+        features: Array.from({ length: 4 }, () => ({})),
+        specifications: Array.from({ length: 4 }, () => ({})),
+        applications: Array.from({ length: 4 }, () => ({})),
+        cases: Array.from({ length: 4 }, () => ({})),
+      };
+
   return (
     <PageContainer
       title={
-        product ? t('addLanguage', '添加商品语言') : t('create', '新增商品')
+        isEditing
+          ? t('edit', '修改商品')
+          : isAddingLanguage
+            ? t('addLanguage', '添加商品语言')
+            : t('create', '新增商品')
       }
       onBack={close}
       footer={[
@@ -834,14 +948,16 @@ const ProductForm = ({
           }
           onClick={() => form.submit()}
         >
-          {product
-            ? t('addLanguage', '添加商品语言')
-            : t('createSubmit', '创建商品')}
+          {isEditing
+            ? t('updateSubmit', '保存修改')
+            : isAddingLanguage
+              ? t('addLanguage', '添加商品语言')
+              : t('createSubmit', '创建商品')}
         </Button>,
       ]}
       subTitle={
-        product
-          ? `${product.name} · ${product.slug}`
+        currentProduct
+          ? `${currentProduct.name} · ${currentProduct.slug}`
           : t('editorSubtitle', '按照官网展示顺序，组织商品的完整内容')
       }
     >
@@ -857,14 +973,7 @@ const ProductForm = ({
           required: t('required', '此项为必填项'),
           whitespace: t('whitespace', '不能只填写空格'),
         }}
-        initialValues={{
-          sortOrder: 0,
-          isRecommended: false,
-          features: Array.from({ length: 4 }, () => ({})),
-          specifications: Array.from({ length: 4 }, () => ({})),
-          applications: Array.from({ length: 4 }, () => ({})),
-          cases: Array.from({ length: 4 }, () => ({})),
-        }}
+        initialValues={initialValues}
       >
         <section
           className={styles.editorNotice}
@@ -875,20 +984,27 @@ const ProductForm = ({
           </span>
           <div className={styles.noticeContent}>
             <h2 id="editor-notice-title" className={styles.noticeTitle}>
-              {product
-                ? t('translationHint', '为此商品添加一种新的语言内容')
-                : t('createHint', '创建商品及首种语言内容')}
+              {isEditing
+                ? t('editHint', '修改当前语言的商品内容')
+                : isAddingLanguage
+                  ? t('translationHint', '为此商品添加一种新的语言内容')
+                  : t('createHint', '创建商品及首种语言内容')}
             </h2>
             <p className={styles.noticeDescription}>
-              {product
+              {isEditing
                 ? t(
-                    'translationDescription',
-                    '分类、商品标识和展示设置由所有语言共用。每种语言只能添加一次，已有语言不会被覆盖。',
+                    'editDescription',
+                    '可修改商品设置及当前语言内容；内容语言不可更换。',
                   )
-                : t(
-                    'createDescription',
-                    '请完整填写各模块内容；新商品默认隐藏，可在内容确认后再安排官网展示。',
-                  )}
+                : isAddingLanguage
+                  ? t(
+                      'translationDescription',
+                      '分类、商品标识和展示设置由所有语言共用。每种语言只能添加一次，已有语言不会被覆盖。',
+                    )
+                  : t(
+                      'createDescription',
+                      '请完整填写各模块内容；新商品默认隐藏，可在内容确认后再安排官网展示。',
+                    )}
             </p>
           </div>
         </section>

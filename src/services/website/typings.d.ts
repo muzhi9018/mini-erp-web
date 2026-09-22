@@ -2,6 +2,7 @@ declare namespace Website {
 
   type Product = {
     id: number | string;
+    productI18nId: number | string;
     name: string;
     slug: string;
     categoryId: number | string;
@@ -22,7 +23,6 @@ declare namespace Website {
   };
 
   type PublicProduct = Product & {
-    productI18nId: number | string;
     categoryName?: string;
     subtitle?: string;
     summary?: string;
@@ -87,6 +87,16 @@ declare namespace Website {
 
   type AddProductI18n = ProductI18n & {
     productId: Product['id'];
+  };
+
+  type UpdateProduct = ProductI18n & {
+    id: Product['id'];
+    productI18nId: Product['productI18nId'];
+    categoryId: Category['id'];
+    slug: string;
+    sortOrder: number;
+    isShow: boolean;
+    isRecommended: boolean;
   };
 
   type ProductCreated = {

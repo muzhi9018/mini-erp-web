@@ -14,14 +14,24 @@ export default {
   'productManager.hidden': 'Hidden',
   'productManager.actions': 'Actions',
   'productManager.addLanguage': 'Add product language',
+  'productManager.edit': 'Edit product',
+  'productManager.selectEditLanguage': 'Select language to edit',
+  'productManager.selectEditLanguageDescription':
+    'Select the content language to edit for “{name}”.',
+  'productManager.editLanguageLabel': 'Product language',
+  'productManager.editLanguagePlaceholder': 'Select a product language',
+  'productManager.noConfiguredLanguage':
+    'This product has no configured language to edit.',
   'productManager.create': 'New product',
   'productManager.total': '{total} items',
   'productManager.listHint':
     'The list uses the current interface language. Switch the interface language to view other localized content.',
   'productManager.languageSuccess': 'Product language added ({language})',
   'productManager.createSuccess': 'Product created ({language})',
+  'productManager.updateSuccess': 'Product updated ({language})',
   'productManager.cancel': 'Cancel',
   'productManager.createSubmit': 'Create product',
+  'productManager.updateSubmit': 'Save changes',
   'productManager.editorSubtitle':
     'Organize the complete product content in website display order',
   'productManager.base': 'Basic settings',
@@ -46,6 +56,9 @@ export default {
     'Add content in another language for this product',
   'productManager.translationDescription':
     'The category, product slug, and display settings are shared by all languages. Each language can be added only once, and existing content will not be overwritten.',
+  'productManager.editHint': 'Edit the current product language',
+  'productManager.editDescription':
+    'You can update product settings and the current localized content. The content language cannot be changed.',
   'productManager.createHint':
     'Create a product and its first language version',
   'productManager.createDescription':
@@ -80,7 +93,9 @@ export default {
   'productManager.descriptionPlaceholder': 'Enter a short description',
   'productManager.sharedProduct': 'Current product: {name} · {slug} · ID {id}',
   'productManager.slugHint':
-    'Used in the product detail page URL, for example /products/wpc. It cannot be changed after creation.',
+    'Used in the product detail page URL, for example /products/wpc.',
+  'productManager.editSlugHint':
+    'Used in the product detail page URL. The previous URL will stop working after a change.',
   'productManager.slugInvalid':
     'Use lowercase letters, numbers, and hyphens only. The slug cannot start or end with a hyphen.',
   'productManager.category': 'Category',
@@ -91,6 +106,8 @@ export default {
   'productManager.recommended': 'Globally recommended',
   'productManager.recommendedHint':
     'Use this product in global recommendation placements on the website.',
+  'productManager.statusHint':
+    'Controls whether this product is publicly visible on the website.',
   'productManager.targetLanguage': 'Target language',
   'productManager.initialLanguage': 'Initial language',
   'productManager.selectLanguage': 'Select a content language',

@@ -7,6 +7,23 @@ export async function listProducts(params: Website.ProductListParams) {
   });
 }
 
+export async function listProductLocales(productId: Website.Product['id']) {
+  return request<System.SystemLocale[]>('/website/product/product/locales', {
+    method: 'GET',
+    params: { productId },
+  });
+}
+
+export async function getProductDetail(
+  productId: Website.Product['id'],
+  locale: string,
+) {
+  return request<Website.PublicProduct>('/website/product/detail', {
+    method: 'GET',
+    params: { productId, locale },
+  });
+}
+
 export async function listWebsiteProducts(
   categoryId?: Website.Category['id'],
 ) {
@@ -36,6 +53,13 @@ export async function createProduct(data: Website.CreateProduct) {
 
 export async function addProductI18n(data: Website.AddProductI18n) {
   return request<Website.ProductCreated>('/website/product/addI18n', {
+    method: 'POST',
+    data,
+  });
+}
+
+export async function updateProduct(data: Website.UpdateProduct) {
+  return request<void>('/website/product/update', {
     method: 'POST',
     data,
   });

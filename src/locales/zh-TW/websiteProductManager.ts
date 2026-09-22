@@ -13,14 +13,23 @@ export default {
   'productManager.hidden': '隱藏',
   'productManager.actions': '操作',
   'productManager.addLanguage': '新增商品語言',
+  'productManager.edit': '修改商品',
+  'productManager.selectEditLanguage': '選擇修改語言',
+  'productManager.selectEditLanguageDescription':
+    '請選擇要修改的「{name}」內容語言。',
+  'productManager.editLanguageLabel': '商品語言',
+  'productManager.editLanguagePlaceholder': '請選擇商品語言',
+  'productManager.noConfiguredLanguage': '此商品暫未設定可修改的語言。',
   'productManager.create': '新增商品',
   'productManager.total': '共 {total} 筆',
   'productManager.listHint':
     '列表依目前介面語言顯示。新增其他語言後，可切換介面語言查看。',
   'productManager.languageSuccess': '已新增商品語言（{language}）',
   'productManager.createSuccess': '已建立商品（{language}）',
+  'productManager.updateSuccess': '已修改商品（{language}）',
   'productManager.cancel': '取消',
   'productManager.createSubmit': '建立商品',
+  'productManager.updateSubmit': '儲存修改',
   'productManager.editorSubtitle': '依照官網展示順序，編排商品的完整內容',
   'productManager.base': '基礎設定',
   'productManager.baseDescription':
@@ -38,6 +47,9 @@ export default {
   'productManager.translationHint': '為此商品新增一種語言內容',
   'productManager.translationDescription':
     '分類、商品識別碼和展示設定由所有語言共用。每種語言只能新增一次，現有語言不會被覆蓋。',
+  'productManager.editHint': '修改目前語言的商品內容',
+  'productManager.editDescription':
+    '可修改商品設定及目前語言內容；內容語言不可更換。',
   'productManager.createHint': '建立商品及首種語言內容',
   'productManager.createDescription':
     '請完整填寫各模組內容；新商品預設隱藏，可在確認內容後再安排於官網展示。',
@@ -68,8 +80,8 @@ export default {
   'productManager.description': '描述',
   'productManager.descriptionPlaceholder': '請輸入簡短描述',
   'productManager.sharedProduct': '目前商品：{name} · {slug} · ID {id}',
-  'productManager.slugHint':
-    '用於官網詳情頁網址，例如 /products/wpc，建立後保持不變。',
+  'productManager.slugHint': '用於官網詳情頁網址，例如 /products/wpc。',
+  'productManager.editSlugHint': '用於官網詳情頁網址；修改後原網址將失效。',
   'productManager.slugInvalid':
     '僅支援小寫英文字母、數字和連字號，不能以連字號開頭或結尾',
   'productManager.category': '所屬分類',
@@ -79,6 +91,7 @@ export default {
   'productManager.sortHint': '數值越小越靠前。',
   'productManager.recommended': '全域推薦',
   'productManager.recommendedHint': '是否用於官網全域推薦展示位。',
+  'productManager.statusHint': '是否在官網公開展示此商品。',
   'productManager.targetLanguage': '目標語言',
   'productManager.initialLanguage': '首種語言',
   'productManager.selectLanguage': '請選擇內容語言',
