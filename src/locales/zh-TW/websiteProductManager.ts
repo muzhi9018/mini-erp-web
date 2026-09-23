@@ -18,6 +18,12 @@ export default {
   'productManager.actions': '操作',
   'productManager.addLanguage': '新增商品語言',
   'productManager.edit': '修改商品',
+  'productManager.delete': '刪除',
+  'productManager.deleteConfirmTitle': '刪除商品「{name}」？',
+  'productManager.deleteConfirmDescription':
+    '刪除後，此商品及其全部語言內容將被永久移除，且無法復原。',
+  'productManager.confirmDelete': '確認刪除',
+  'productManager.deleteSuccess': '商品已刪除（{name}）',
   'productManager.selectEditLanguage': '選擇修改語言',
   'productManager.selectEditLanguageDescription':
     '請選擇要修改的「{name}」內容語言。',

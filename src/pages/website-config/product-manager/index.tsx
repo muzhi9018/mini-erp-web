@@ -1,4 +1,4 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   type ActionType,
   PageContainer,
@@ -6,10 +6,11 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { Button, Modal, message, Select } from 'antd';
+import { Button, Modal, message, Popconfirm, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { getSystemLocales } from '@/services/system/locale';
 import {
+  deleteProduct,
   getProductDetail,
   listProductLocales,
   listProducts,
@@ -38,6 +39,8 @@ const ProductManager = () => {
   const actionRef = useRef<ActionType>(undefined);
   const [editor, setEditor] = useState<ProductEditor>();
   const [loadingLocalesProductId, setLoadingLocalesProductId] =
+    useState<Website.Product['id']>();
+  const [deletingProductId, setDeletingProductId] =
     useState<Website.Product['id']>();
   const [languageSelector, setLanguageSelector] =
     useState<ProductLanguageSelector>();
@@ -90,7 +93,7 @@ const ProductManager = () => {
     {
       title: t('actions', '操作'),
       valueType: 'option',
-      width: 190,
+      width: 280,
       fixed: 'right',
       render: (_, product) => [
         <Button
@@ -99,8 +102,9 @@ const ProductManager = () => {
           icon={<EditOutlined />}
           loading={loadingLocalesProductId === product.id}
           disabled={
-            loadingLocalesProductId !== undefined &&
-            loadingLocalesProductId !== product.id
+            deletingProductId !== undefined ||
+            (loadingLocalesProductId !== undefined &&
+              loadingLocalesProductId !== product.id)
           }
           onClick={async () => {
             setLoadingLocalesProductId(product.id);
@@ -125,11 +129,63 @@ const ProductManager = () => {
         <Button
           key="language"
           type="link"
-          disabled={loadingLocalesProductId !== undefined}
+          disabled={
+            loadingLocalesProductId !== undefined ||
+            deletingProductId !== undefined
+          }
           onClick={() => setEditor({ mode: 'addLanguage', product })}
         >
           {t('addLanguage', '添加商品语言')}
         </Button>,
+        <Popconfirm
+          key="delete"
+          title={t('deleteConfirmTitle', '删除商品“{name}”？', {
+            name: product.name,
+          })}
+          description={t(
+            'deleteConfirmDescription',
+            '删除后，该商品及其全部语言内容将被永久移除，且无法恢复。',
+          )}
+          okText={t('confirmDelete', '确认删除')}
+          cancelText={t('cancel', '取消')}
+          okButtonProps={{
+            danger: true,
+            loading: deletingProductId === product.id,
+          }}
+          disabled={
+            loadingLocalesProductId !== undefined ||
+            deletingProductId !== undefined
+          }
+          onConfirm={async () => {
+            setDeletingProductId(product.id);
+            try {
+              await deleteProduct(product.id);
+              messageApi.success(
+                t('deleteSuccess', '商品已删除（{name}）', {
+                  name: product.name,
+                }),
+              );
+              void actionRef.current?.reload();
+            } catch {
+              // 接口错误由全局请求处理器提示，删除失败时保留当前列表。
+            } finally {
+              setDeletingProductId(undefined);
+            }
+          }}
+        >
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            loading={deletingProductId === product.id}
+            disabled={
+              loadingLocalesProductId !== undefined ||
+              deletingProductId !== undefined
+            }
+          >
+            {t('delete', '删除')}
+          </Button>
+        </Popconfirm>,
       ],
     },
   ];

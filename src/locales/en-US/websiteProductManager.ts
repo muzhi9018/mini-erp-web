@@ -19,6 +19,12 @@ export default {
   'productManager.actions': 'Actions',
   'productManager.addLanguage': 'Add product language',
   'productManager.edit': 'Edit product',
+  'productManager.delete': 'Delete',
+  'productManager.deleteConfirmTitle': 'Delete “{name}”?',
+  'productManager.deleteConfirmDescription':
+    'This permanently deletes the product and all of its localized content. This action cannot be undone.',
+  'productManager.confirmDelete': 'Delete product',
+  'productManager.deleteSuccess': 'Product deleted ({name})',
   'productManager.selectEditLanguage': 'Select language to edit',
   'productManager.selectEditLanguageDescription':
     'Select the content language to edit for “{name}”.',

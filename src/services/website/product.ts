@@ -64,3 +64,10 @@ export async function updateProduct(data: Website.UpdateProduct) {
     data,
   });
 }
+
+export async function deleteProduct(productId: Website.Product['id']) {
+  return request<void>(
+    `/website/product/delete/${encodeURIComponent(String(productId))}`,
+    { method: 'POST' },
+  );
+}
