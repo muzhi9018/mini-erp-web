@@ -1,4 +1,8 @@
 export default {
+  'productManager.defaultLanguageHint':
+    '新增商品固定使用系統預設語言，建立後可新增其他語言。',
+  'productManager.languageUnavailable':
+    '系統語言無法使用或尚未設定預設語言，請檢查設定後重新開啟表單。',
   'productManager.title': '商品管理',
   'productManager.subtitleList': '管理官網商品及各語言的展示內容',
   'productManager.list': '商品列表',

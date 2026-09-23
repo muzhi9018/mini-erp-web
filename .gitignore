@@ -55,3 +55,4 @@ requestRecord.mock.js
 
 # TSX tests
 *.test.tsx
+*.test.ts

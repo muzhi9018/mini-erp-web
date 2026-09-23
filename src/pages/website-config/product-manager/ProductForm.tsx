@@ -34,6 +34,7 @@ import { getSystemLocales } from '@/services/system/locale';
 import {
   addProductI18n,
   createProduct,
+  listProductLocales,
   updateProduct,
 } from '@/services/website/product';
 import { listCategories } from '@/services/website/productCategory';
@@ -147,8 +148,9 @@ function ProductImageUpload({
         file as File,
         WEBSITE_PRODUCT_ATTACHMENT_MODEL,
       );
-      if (attachment.id === undefined || attachment.id === null)
+      if (attachment.id === undefined || attachment.id === null) {
         throw new Error(t('uploadResponseError', '上传接口未返回附件 ID'));
+      }
       onChange?.(attachment.id);
       onSuccess?.(attachment);
     } catch (error) {
@@ -272,6 +274,9 @@ const ProductForm = ({
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(0);
   const [languages, setLanguages] = useState<System.SystemLocale[]>([]);
+  const [productLocales, setProductLocales] = useState<System.SystemLocale[]>(
+    [],
+  );
   const [loadingLanguages, setLoadingLanguages] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const pending = useRef(false);
@@ -279,6 +284,11 @@ const ProductForm = ({
   const isAddingLanguage = Boolean(product) && !isEditing;
   const isCreating = !isEditing && !isAddingLanguage;
   const currentProduct = editProduct ?? product;
+  const productId = product?.id;
+  const existingLocaleCodes = new Set([
+    ...(isAddingLanguage && product?.locale ? [product.locale] : []),
+    ...productLocales.map(({ code }) => code),
+  ]);
   const defaultLanguage = languages.find(({ defaultLocal }) => defaultLocal);
   const languageUnavailable =
     !languages.length || (isCreating && !defaultLanguage);
@@ -341,10 +351,16 @@ const ProductForm = ({
 
   useEffect(() => {
     let active = true;
-    getSystemLocales()
-      .then((locales) => {
+    Promise.all([
+      getSystemLocales(),
+      isAddingLanguage && productId !== undefined
+        ? listProductLocales(productId)
+        : Promise.resolve<System.SystemLocale[]>([]),
+    ])
+      .then(([locales, configuredLocales]) => {
         if (!active) return;
         setLanguages(locales);
+        setProductLocales(configuredLocales);
         if (isCreating) {
           form.setFieldValue(
             'locale',
@@ -361,7 +377,7 @@ const ProductForm = ({
     return () => {
       active = false;
     };
-  }, [form, isCreating]);
+  }, [form, isAddingLanguage, isCreating, productId]);
 
   const close = () => {
     if (pending.current || uploadingImages > 0) return;
@@ -388,7 +404,7 @@ const ProductForm = ({
       uploadingImages > 0 ||
       loadingLanguages ||
       !language ||
-      (isAddingLanguage && language.code === product?.locale)
+      (isAddingLanguage && existingLocaleCodes.has(language.code))
     )
       return;
     pending.current = true;
@@ -559,6 +575,7 @@ const ProductForm = ({
           <Button
             type="dashed"
             block
+            className="col-span-full"
             icon={<PlusOutlined />}
             onClick={() => add({})}
           >
@@ -620,6 +637,7 @@ const ProductForm = ({
           <Button
             type="dashed"
             block
+            className="col-span-full"
             icon={<PlusOutlined />}
             onClick={() => add({})}
           >
@@ -636,6 +654,47 @@ const ProductForm = ({
     if (panel.key === 'base') {
       children = (
         <>
+          <Form.Item
+            name="locale"
+            label={
+              isEditing
+                ? t('language', '内容语言')
+                : isAddingLanguage
+                  ? t('targetLanguage', '目标语言')
+                  : t('initialLanguage', '首种语言')
+            }
+            extra={
+              !loadingLanguages && languageUnavailable
+                ? t(
+                    'languageUnavailable',
+                    '系统语言不可用或未配置默认语言，请检查配置后重新打开表单。',
+                  )
+                : isCreating
+                  ? t(
+                      'defaultLanguageHint',
+                      '新增商品固定使用系统默认语言，创建后可添加其他语言。',
+                    )
+                  : undefined
+            }
+            rules={[{ required: true }]}
+          >
+            <Select
+              allowClear={isAddingLanguage}
+              disabled={
+                isCreating || isEditing || loadingLanguages || submitting
+              }
+              loading={loadingLanguages}
+              placeholder={t('selectLanguage', '请选择内容语言')}
+              options={languages
+                .filter((language) => !isCreating || language.defaultLocal)
+                .map((language) => ({
+                  label: language.nativeName || language.name,
+                  value: language.code,
+                  disabled:
+                    isAddingLanguage && existingLocaleCodes.has(language.code),
+                }))}
+            />
+          </Form.Item>
           {isAddingLanguage ? (
             <p>
               {t('sharedProduct', '当前商品：{name} · {slug} · ID {id}', {
@@ -733,47 +792,6 @@ const ProductForm = ({
               )}
             </div>
           )}
-          <Form.Item
-            name="locale"
-            label={
-              isEditing
-                ? t('language', '内容语言')
-                : isAddingLanguage
-                  ? t('targetLanguage', '目标语言')
-                  : t('initialLanguage', '首种语言')
-            }
-            extra={
-              !loadingLanguages && languageUnavailable
-                ? t(
-                    'languageUnavailable',
-                    '系统语言不可用或未配置默认语言，请检查配置后重新打开表单。',
-                  )
-                : isCreating
-                  ? t(
-                      'defaultLanguageHint',
-                      '新增商品固定使用系统默认语言，创建后可添加其他语言。',
-                    )
-                  : undefined
-            }
-            rules={[{ required: true }]}
-          >
-            <Select
-              allowClear={isAddingLanguage}
-              disabled={
-                isCreating || isEditing || loadingLanguages || submitting
-              }
-              loading={loadingLanguages}
-              placeholder={t('selectLanguage', '请选择内容语言')}
-              options={languages
-                .filter((language) => !isCreating || language.defaultLocal)
-                .map((language) => ({
-                  label: language.nativeName || language.name,
-                  value: language.code,
-                  disabled:
-                    isAddingLanguage && language.code === product?.locale,
-                }))}
-            />
-          </Form.Item>
         </>
       );
     } else if (panel.key === 'card') {

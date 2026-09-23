@@ -1,4 +1,8 @@
 export default {
+  'productManager.defaultLanguageHint':
+    'New products use the system default language. Other languages can be added after creation.',
+  'productManager.languageUnavailable':
+    'System languages are unavailable or no default language is configured. Check the configuration and reopen the form.',
   'productManager.title': 'Product management',
   'productManager.subtitleList':
     'Manage website products and their localized content',
