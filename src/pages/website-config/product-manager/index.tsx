@@ -8,6 +8,7 @@ import {
 import { useIntl } from '@umijs/max';
 import { Button, Modal, message, Popconfirm, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { Access, useAccess } from 'umi';
 import { getSystemLocales } from '@/services/system/locale';
 import {
   deleteProduct,
@@ -29,6 +30,7 @@ type ProductLanguageSelector = {
 };
 
 const ProductManager = () => {
+  const { hasPermission } = useAccess();
   const intl = useIntl();
   const t = (
     key: string,
@@ -96,96 +98,111 @@ const ProductManager = () => {
       width: 280,
       fixed: 'right',
       render: (_, product) => [
-        <Button
-          key="edit"
-          type="link"
-          icon={<EditOutlined />}
-          loading={loadingLocalesProductId === product.id}
-          disabled={
-            deletingProductId !== undefined ||
-            (loadingLocalesProductId !== undefined &&
-              loadingLocalesProductId !== product.id)
-          }
-          onClick={async () => {
-            setLoadingLocalesProductId(product.id);
-            try {
-              const locales = await listProductLocales(product.id);
-              if (!locales.length) {
-                messageApi.warning(
-                  t('noConfiguredLanguage', '该商品暂未配置可修改的语言。'),
-                );
-                return;
-              }
-              setLanguageSelector({ product, locales });
-            } catch {
-              // 接口错误由全局请求处理器提示，加载失败时保留列表页。
-            } finally {
-              setLoadingLocalesProductId(undefined);
-            }
-          }}
-        >
-          {t('edit', '修改')}
-        </Button>,
-        <Button
-          key="language"
-          type="link"
-          disabled={
-            loadingLocalesProductId !== undefined ||
-            deletingProductId !== undefined
-          }
-          onClick={() => setEditor({ mode: 'addLanguage', product })}
-        >
-          {t('addLanguage', '添加商品语言')}
-        </Button>,
-        <Popconfirm
-          key="delete"
-          title={t('deleteConfirmTitle', '删除商品“{name}”？', {
-            name: product.name,
-          })}
-          description={t(
-            'deleteConfirmDescription',
-            '删除后，该商品及其全部语言内容将被永久移除，且无法恢复。',
-          )}
-          okText={t('confirmDelete', '确认删除')}
-          cancelText={t('cancel', '取消')}
-          okButtonProps={{
-            danger: true,
-            loading: deletingProductId === product.id,
-          }}
-          disabled={
-            loadingLocalesProductId !== undefined ||
-            deletingProductId !== undefined
-          }
-          onConfirm={async () => {
-            setDeletingProductId(product.id);
-            try {
-              await deleteProduct(product.id);
-              messageApi.success(
-                t('deleteSuccess', '商品已删除（{name}）', {
-                  name: product.name,
-                }),
-              );
-              void actionRef.current?.reload();
-            } catch {
-              // 接口错误由全局请求处理器提示，删除失败时保留当前列表。
-            } finally {
-              setDeletingProductId(undefined);
-            }
-          }}
+        <Access
+          key="access-edit"
+          accessible={hasPermission('website-config:product-manager:update')}
         >
           <Button
+            key="edit"
             type="link"
-            danger
-            icon={<DeleteOutlined />}
-            loading={deletingProductId === product.id}
+            icon={<EditOutlined />}
+            loading={loadingLocalesProductId === product.id}
+            disabled={
+              deletingProductId !== undefined ||
+              (loadingLocalesProductId !== undefined &&
+                loadingLocalesProductId !== product.id)
+            }
+            onClick={async () => {
+              setLoadingLocalesProductId(product.id);
+              try {
+                const locales = await listProductLocales(product.id);
+                if (!locales.length) {
+                  messageApi.warning(
+                    t('noConfiguredLanguage', '该商品暂未配置可修改的语言。'),
+                  );
+                  return;
+                }
+                setLanguageSelector({ product, locales });
+              } catch {
+                // 接口错误由全局请求处理器提示，加载失败时保留列表页。
+              } finally {
+                setLoadingLocalesProductId(undefined);
+              }
+            }}
+          >
+            {t('edit', '修改')}
+          </Button>
+        </Access>,
+        <Access
+          key="access-add-i18n"
+          accessible={hasPermission('website-config:product-manager:add-i18n')}
+        >
+          <Button
+            key="language"
+            type="link"
             disabled={
               loadingLocalesProductId !== undefined ||
               deletingProductId !== undefined
             }
+            onClick={() => setEditor({ mode: 'addLanguage', product })}
           >
-            {t('delete', '删除')}
+            {t('addLanguage', '添加商品语言')}
           </Button>
-        </Popconfirm>,
+        </Access>,
+        <Access
+          key="access-add-i18n"
+          accessible={hasPermission('website-config:product-manager:delete')}
+        >
+          <Popconfirm
+            key="delete"
+            title={t('deleteConfirmTitle', '删除商品“{name}”？', {
+              name: product.name,
+            })}
+            description={t(
+              'deleteConfirmDescription',
+              '删除后，该商品及其全部语言内容将被永久移除，且无法恢复。',
+            )}
+            okText={t('confirmDelete', '确认删除')}
+            cancelText={t('cancel', '取消')}
+            okButtonProps={{
+              danger: true,
+              loading: deletingProductId === product.id,
+            }}
+            disabled={
+              loadingLocalesProductId !== undefined ||
+              deletingProductId !== undefined
+            }
+            onConfirm={async () => {
+              setDeletingProductId(product.id);
+              try {
+                await deleteProduct(product.id);
+                messageApi.success(
+                  t('deleteSuccess', '商品已删除（{name}）', {
+                    name: product.name,
+                  }),
+                );
+                void actionRef.current?.reload();
+              } catch {
+                // 接口错误由全局请求处理器提示，删除失败时保留当前列表。
+              } finally {
+                setDeletingProductId(undefined);
+              }
+            }}
+          >
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              loading={deletingProductId === product.id}
+              disabled={
+                loadingLocalesProductId !== undefined ||
+                deletingProductId !== undefined
+              }
+            >
+              {t('delete', '删除')}
+            </Button>
+          </Popconfirm>
+        </Access>,
       ],
     },
   ];
@@ -297,14 +314,21 @@ const ProductManager = () => {
               '列表按当前界面语言展示。新增其他语言后，可切换界面语言查看。',
             )}
             toolBarRender={() => [
-              <Button
-                key="create"
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setEditor({ mode: 'create' })}
+              <Access
+                key="access-edit"
+                accessible={hasPermission(
+                  'website-config:product-manager:create',
+                )}
               >
-                {t('create', '新增商品')}
-              </Button>,
+                <Button
+                  key="create"
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setEditor({ mode: 'create' })}
+                >
+                  {t('create', '新增商品')}
+                </Button>
+              </Access>,
             ]}
             params={{ locale: intl.locale }}
             request={async ({ current = 1, pageSize = 10 }) => {
