@@ -74,14 +74,14 @@ export default [
     routes: [
       {
         path: '/system-manage',
-        redirect: '/system-manage/menu-manage',
+        redirect: '/system-manage/user-manage',
       },
       {
-        // 菜单管理
-        path: '/system-manage/menu-manage',
-        name: 'menu-manage',
-        component: './system-manage/menu-manage',
-        access: 'system-manage:menu-manage',
+        // 用户管理
+        path: '/system-manage/user-manage',
+        name: 'user-manage',
+        component: './system-manage/user-manage',
+        access: 'system-manage:user-manage',
       },
       {
         // 角色管理
@@ -89,6 +89,13 @@ export default [
         name: 'role-manage',
         component: './system-manage/role-manage',
         access: 'system-manage:role-manage',
+      },
+      {
+        // 菜单管理
+        path: '/system-manage/menu-manage',
+        name: 'menu-manage',
+        component: './system-manage/menu-manage',
+        access: 'system-manage:menu-manage',
       },
     ],
   },

@@ -104,3 +104,27 @@ declare namespace Role {
 
 }
 
+declare namespace User {
+  type SysUser = {
+    id: string;
+    username?: string;
+    userNo?: string;
+    realName?: string;
+    mobile?: string;
+    status?: number;
+    remark?: string;
+    gmtCreate?: string;
+    roles?: { id: string; roleName?: string }[];
+  };
+
+  type SysUserQuery = {
+    pageNum: number;
+    pageSize: number;
+    username?: string;
+    realName?: string;
+    mobile?: string;
+    status?: number;
+  };
+
+}
+

@@ -53,6 +53,7 @@ export default {
   'menu.system-manage': 'System Management',
   'menu.system-manage.menu-manage': 'Menu Manager',
   'menu.system-manage.role-manage': 'Role Manager',
+  'menu.system-manage.user-manage': 'User Manager',
   'menu.website-config': 'Website Settings',
   'menu.website-config.category-manager': 'Category Management',
   'menu.website-config.product-manager': 'Product Management',
