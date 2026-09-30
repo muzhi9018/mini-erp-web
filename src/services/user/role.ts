@@ -1,5 +1,9 @@
 import { doGet, doPost } from '@/services/httpClient';
 
+export async function listAllRoles(): Promise<Role.RoleSummary[]> {
+  return doGet('/system/role/listAll');
+}
+
 /**
  * 获取当前用户信息
  * @param params 查询参数

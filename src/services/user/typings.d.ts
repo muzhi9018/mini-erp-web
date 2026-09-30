@@ -102,6 +102,12 @@ declare namespace Role {
     records: Role[]
   }
 
+  type RoleSummary = {
+    id: string;
+    roleCode?: string;
+    roleName: string;
+  };
+
 }
 
 declare namespace User {
@@ -126,5 +132,19 @@ declare namespace User {
     status?: number;
   };
 
-}
+  type CreateSysUser = {
+    username: string;
+    password: string;
+    userNo?: string;
+    realName?: string;
+    mobile?: string;
+    status?: number;
+    remark?: string;
+  };
 
+  type AuthorizeRole = {
+    userId: string;
+    roleId: string;
+  };
+
+}

@@ -5,6 +5,7 @@ import network from './zh-CN/network';
 import pages from './zh-CN/pages';
 import settingDrawer from './zh-CN/settingDrawer';
 import settings from './zh-CN/settings';
+import systemUserManager from './zh-CN/systemUserManager';
 import website from './zh-CN/website';
 import websiteCategoryManager from './zh-CN/websiteCategoryManager';
 import websiteProductManager from './zh-CN/websiteProductManager';
@@ -20,6 +21,7 @@ export default {
   ...menu,
   ...settingDrawer,
   ...settings,
+  ...systemUserManager,
   ...network,
   ...component,
   ...website,

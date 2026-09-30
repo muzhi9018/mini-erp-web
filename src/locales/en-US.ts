@@ -5,6 +5,7 @@ import network from './en-US/network';
 import pages from './en-US/pages';
 import settingDrawer from './en-US/settingDrawer';
 import settings from './en-US/settings';
+import systemUserManager from './en-US/systemUserManager';
 import website from './en-US/website';
 import websiteCategoryManager from './en-US/websiteCategoryManager';
 import websiteProductManager from './en-US/websiteProductManager';
@@ -19,6 +20,7 @@ export default {
   ...menu,
   ...settingDrawer,
   ...settings,
+  ...systemUserManager,
   ...network,
   ...component,
   ...pages,
