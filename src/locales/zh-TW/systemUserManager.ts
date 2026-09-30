@@ -39,4 +39,12 @@ export default {
   'userManager.copyPassword': '複製密碼',
   'userManager.passwordCopied': '密碼已複製',
   'userManager.close': '關閉',
+  'userManager.delete': '刪除',
+  'userManager.confirmDelete': '確認刪除',
+  'userManager.deleteConfirmTitle': '確定刪除用戶「{username}」？',
+  'userManager.deleteConfirmDescription':
+    '該用戶及其角色授權將被刪除，且無法復原。',
+  'userManager.deleteSuccess': '用戶刪除成功',
+  'userManager.changeStatusFor': '{username} 的用戶狀態',
+  'userManager.changeStatusSuccess': '用戶狀態更新成功',
 };

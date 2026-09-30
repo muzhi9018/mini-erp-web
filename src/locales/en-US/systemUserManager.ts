@@ -41,4 +41,12 @@ export default {
   'userManager.copyPassword': 'Copy Password',
   'userManager.passwordCopied': 'Password copied',
   'userManager.close': 'Close',
+  'userManager.delete': 'Delete',
+  'userManager.confirmDelete': 'Confirm Delete',
+  'userManager.deleteConfirmTitle': 'Delete user “{username}”?',
+  'userManager.deleteConfirmDescription':
+    'This user and their role assignments will be deleted. This action cannot be undone.',
+  'userManager.deleteSuccess': 'User deleted successfully',
+  'userManager.changeStatusFor': 'User status for {username}',
+  'userManager.changeStatusSuccess': 'User status updated successfully',
 };

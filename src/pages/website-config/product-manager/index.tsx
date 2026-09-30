@@ -150,7 +150,7 @@ const ProductManager = () => {
           </Button>
         </Access>,
         <Access
-          key="access-add-i18n"
+          key="access-delete"
           accessible={hasPermission('website-config:product-manager:delete')}
         >
           <Popconfirm

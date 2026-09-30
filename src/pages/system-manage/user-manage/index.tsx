@@ -10,13 +10,15 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { Button, Modal, message, Popconfirm, Typography } from 'antd';
+import { Button, Modal, message, Popconfirm, Switch, Typography } from 'antd';
 import { useRef, useState } from 'react';
 import { Access, useAccess } from 'umi';
 import { listAllRoles } from '@/services/user/role';
 import {
   authorizeUserRole,
+  changeUserStatus,
   createUser,
+  deleteUser,
   findUsersByPage,
   resetUserPassword,
 } from '@/services/user/user';
@@ -27,6 +29,8 @@ const UserManage = () => {
   const { styles } = useStyles();
   const { hasPermission } = useAccess();
   const actionRef = useRef<ActionType>(undefined);
+  const [users, setUsers] = useState<User.SysUser[]>([]);
+  const [changingStatusFor, setChangingStatusFor] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
   const [authorizeUser, setAuthorizeUser] = useState<User.SysUser>();
   const [allRoles, setAllRoles] = useState<Role.RoleSummary[]>([]);
@@ -36,6 +40,43 @@ const UserManage = () => {
     password: string;
   }>();
   const [messageApi, contextHolder] = message.useMessage();
+  const handleChangeStatus = async (user: User.SysUser) => {
+    if (changingStatusFor !== undefined) return;
+    setChangingStatusFor(user.id);
+    try {
+      const status = await changeUserStatus(user.id);
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === user.id ? { ...item, status } : item,
+        ),
+      );
+      messageApi.success(
+        intl.formatMessage({
+          id: 'userManager.changeStatusSuccess',
+          defaultMessage: '用户状态更新成功',
+        }),
+      );
+      await actionRef.current?.reload();
+    } catch {
+      // 请求错误已由全局处理器提示，切换失败时保留原状态。
+    } finally {
+      setChangingStatusFor(undefined);
+    }
+  };
+  const handleDeleteUser = async (user: User.SysUser) => {
+    try {
+      await deleteUser(user.id);
+      messageApi.success(
+        intl.formatMessage({
+          id: 'userManager.deleteSuccess',
+          defaultMessage: '用户删除成功',
+        }),
+      );
+      void actionRef.current?.reload();
+    } catch {
+      // 请求错误已由全局处理器提示，删除失败时保留当前列表。
+    }
+  };
   const handleResetPassword = async (user: User.SysUser) => {
     try {
       const password = await resetUserPassword(user.id);
@@ -98,29 +139,6 @@ const UserManage = () => {
     },
     {
       title: intl.formatMessage({
-        id: 'userManager.status',
-        defaultMessage: '状态',
-      }),
-      dataIndex: 'status',
-      valueEnum: {
-        1: {
-          text: intl.formatMessage({
-            id: 'userManager.enabled',
-            defaultMessage: '正常',
-          }),
-          status: 'Success',
-        },
-        0: {
-          text: intl.formatMessage({
-            id: 'userManager.disabled',
-            defaultMessage: '禁用',
-          }),
-          status: 'Error',
-        },
-      },
-    },
-    {
-      title: intl.formatMessage({
         id: 'userManager.roles',
         defaultMessage: '已授权角色',
       }),
@@ -153,6 +171,55 @@ const UserManage = () => {
       dataIndex: 'gmtCreate',
       valueType: 'dateTime',
       search: false,
+    },
+    {
+      title: intl.formatMessage({
+        id: 'userManager.status',
+        defaultMessage: '状态',
+      }),
+      dataIndex: 'status',
+      valueEnum: {
+        1: {
+          text: intl.formatMessage({
+            id: 'userManager.enabled',
+            defaultMessage: '正常',
+          }),
+          status: 'Success',
+        },
+        0: {
+          text: intl.formatMessage({
+            id: 'userManager.disabled',
+            defaultMessage: '禁用',
+          }),
+          status: 'Error',
+        },
+      },
+      render: (_, user) => (
+        <Switch
+          checked={user.status === 1}
+          loading={changingStatusFor === user.id}
+          disabled={
+            !hasPermission('system-manage:user-manage:change-status') ||
+            changingStatusFor !== undefined
+          }
+          checkedChildren={intl.formatMessage({
+            id: 'userManager.enabled',
+            defaultMessage: '正常',
+          })}
+          unCheckedChildren={intl.formatMessage({
+            id: 'userManager.disabled',
+            defaultMessage: '禁用',
+          })}
+          aria-label={intl.formatMessage(
+            {
+              id: 'userManager.changeStatusFor',
+              defaultMessage: '{username} 的用户状态',
+            },
+            { username: user.username || user.id },
+          )}
+          onChange={() => void handleChangeStatus(user)}
+        />
+      ),
     },
     {
       title: intl.formatMessage({
@@ -211,6 +278,41 @@ const UserManage = () => {
             </Button>
           </Popconfirm>
         </Access>,
+        <Access
+          key="delete-access"
+          accessible={hasPermission('system-manage:user-manage:delete')}
+        >
+          <Popconfirm
+            title={intl.formatMessage(
+              {
+                id: 'userManager.deleteConfirmTitle',
+                defaultMessage: '确定删除用户“{username}”？',
+              },
+              { username: user.username || user.id },
+            )}
+            description={intl.formatMessage({
+              id: 'userManager.deleteConfirmDescription',
+              defaultMessage: '该用户及其角色授权将被删除，且无法恢复。',
+            })}
+            onConfirm={() => handleDeleteUser(user)}
+            okText={intl.formatMessage({
+              id: 'userManager.confirmDelete',
+              defaultMessage: '确认删除',
+            })}
+            cancelText={intl.formatMessage({
+              id: 'userManager.cancel',
+              defaultMessage: '取消',
+            })}
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="primary" size="small" danger>
+              {intl.formatMessage({
+                id: 'userManager.delete',
+                defaultMessage: '删除',
+              })}
+            </Button>
+          </Popconfirm>
+        </Access>,
       ],
     },
   ];
@@ -225,6 +327,8 @@ const UserManage = () => {
       {contextHolder}
       <ProTable<User.SysUser>
         actionRef={actionRef}
+        dataSource={users}
+        onDataSourceChange={setUsers}
         rowKey="id"
         columns={columns}
         headerTitle={intl.formatMessage({

@@ -25,3 +25,11 @@ export async function authorizeUserRole(data: User.AuthorizeRole): Promise<boole
 export async function resetUserPassword(userId: string): Promise<string> {
   return doPost('/system/user/reset/password', { id: userId });
 }
+
+export async function deleteUser(userId: string): Promise<boolean> {
+  return doPost('/system/user/delete', { id: userId });
+}
+
+export async function changeUserStatus(userId: string): Promise<number> {
+  return doPost('/system/user/change/status', { id: userId });
+}
