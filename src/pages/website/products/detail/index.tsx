@@ -1,4 +1,5 @@
 import { Link, useIntl, useParams } from '@umijs/max';
+import { Carousel } from 'antd';
 import React, { useEffect, useState } from 'react';
 import {
   getWebsiteProductDetail,
@@ -117,7 +118,9 @@ const ProductDetailPage: React.FC = () => {
   const specifications = product.specifications ?? [];
   const applications = product.applications ?? [];
   const cases = product.cases ?? [];
-  const featureImageUrl = product.featureImageUrl ?? product.coverImageUrl;
+  const carouselImages = (product.carouselImages ?? [])
+    .filter((image) => image.imageUrl)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <main className="zhulv-site product-detail-page">
@@ -148,40 +151,52 @@ const ProductDetailPage: React.FC = () => {
       </section>
 
       <section className="product-detail-page__features detail-section">
+        <DetailSectionHeader
+          description={product.featureIntroduction ?? product.summary ?? ''}
+          eyebrow="PRODUCT FEATURES"
+          title={intl.formatMessage({
+            id: 'website.productDetail.feature.title',
+          })}
+        />
         <div className="product-detail-page__feature-layout">
-          <div className="product-detail-page__feature-image">
-            {featureImageUrl && (
-              <img
-                alt={intl.formatMessage(
-                  { id: 'website.productDetail.feature.imageAlt' },
-                  { productName: product.name },
-                )}
-                src={featureImageUrl}
-              />
+          <div className="product-detail-page__feature-carousel">
+            {carouselImages.length > 0 && (
+              <Carousel
+                arrows={carouselImages.length > 1}
+                dots={carouselImages.length > 1}
+                draggable
+                autoplay
+                infinite={false}
+              >
+                {carouselImages.map((image) => (
+                  <div
+                    className="product-detail-page__feature-image"
+                    key={image.imageAttachmentId}
+                  >
+                    <img
+                      alt={intl.formatMessage(
+                        { id: 'website.productDetail.feature.imageAlt' },
+                        { productName: product.name },
+                      )}
+                      height={1200}
+                      src={image.imageUrl}
+                      width={1200}
+                    />
+                  </div>
+                ))}
+              </Carousel>
             )}
           </div>
-          <div className="product-detail-page__feature-copy">
-            <span className="product-detail-page__eyebrow">
-              PRODUCT FEATURES
-            </span>
-            <h2>
-              {intl.formatMessage({
-                id: 'website.productDetail.feature.title',
-              })}
-            </h2>
-            <i aria-hidden="true" />
-            <p>{product.featureIntroduction ?? product.summary}</p>
-            <div className="product-detail-page__feature-list">
-              {features.map((feature, index) => (
-                <article key={`${feature.sortOrder}-${feature.title}`}>
-                  <span>0{index + 1}</span>
-                  <div>
-                    <h3>{feature.title}</h3>
-                    <p>{feature.content}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
+          <div className="product-detail-page__feature-list">
+            {features.map((feature, index) => (
+              <article key={`${feature.sortOrder}-${feature.title}`}>
+                <span>0{index + 1}</span>
+                <div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.content}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>

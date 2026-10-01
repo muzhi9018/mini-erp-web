@@ -60,8 +60,7 @@
   text-align: center;
 }
 
-.product-detail-page__section-header > span,
-.product-detail-page__eyebrow {
+.product-detail-page__section-header > span {
   display: block;
   color: var(--site-gold);
   font-size: 12px;
@@ -69,8 +68,7 @@
   letter-spacing: 0.22em;
 }
 
-.product-detail-page__section-header h2,
-.product-detail-page__feature-copy h2 {
+.product-detail-page__section-header h2 {
   margin: 16px 0 0;
   color: var(--site-deep);
   font-family: Georgia, "Songti SC", serif;
@@ -79,8 +77,7 @@
   letter-spacing: 0.04em;
 }
 
-.product-detail-page__section-header i,
-.product-detail-page__feature-copy > i {
+.product-detail-page__section-header i {
   display: block;
   width: 60px;
   height: 2px;
@@ -98,39 +95,33 @@
 
 .product-detail-page__feature-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(48px, 6.8vw, 80px);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: start;
+  gap: clamp(24px, 4vw, 48px);
 }
 
-.product-detail-page__feature-image {
-  height: 426px;
+.product-detail-page__feature-carousel {
+  min-width: 0;
+  aspect-ratio: 1;
   overflow: hidden;
   border-radius: 16px;
   background: #d9dfdb;
 }
 
+.product-detail-page__feature-image {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
 .product-detail-page__feature-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.product-detail-page__feature-copy > i {
-  margin: 20px 0;
-}
-
-.product-detail-page__feature-copy > p {
-  margin: 0;
-  color: var(--site-muted);
-  font-size: 14px;
-  line-height: 1.9;
+  object-fit: contain;
 }
 
 .product-detail-page__feature-list {
   display: grid;
   gap: 16px;
-  margin-top: 28px;
 }
 
 .product-detail-page__feature-list article {
@@ -433,10 +424,6 @@
     grid-template-columns: 1fr;
   }
 
-  .product-detail-page__feature-image {
-    height: 380px;
-  }
-
   .product-detail-page__application-grid,
   .product-detail-page__related-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -478,13 +465,11 @@
     margin-bottom: 32px;
   }
 
-  .product-detail-page__section-header h2,
-  .product-detail-page__feature-copy h2 {
+  .product-detail-page__section-header h2 {
     font-size: 29px;
   }
 
-  .product-detail-page__feature-image {
-    height: 270px;
+  .product-detail-page__feature-carousel {
     border-radius: 12px;
   }
 
