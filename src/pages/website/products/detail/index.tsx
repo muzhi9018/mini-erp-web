@@ -283,7 +283,7 @@ const ProductDetailPage: React.FC = () => {
       )}
 
       {relatedProducts.length > 0 && (
-        <section className="product-detail-page__related detail-section detail-section--sand">
+        <section className="product-detail-page__related detail-section">
           <DetailSectionHeader
             description={intl.formatMessage({
               id: 'website.productDetail.related.description',
