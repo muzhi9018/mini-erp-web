@@ -658,11 +658,32 @@ const ProductForm = ({
       <p className="text-sm text-gray-500">
         {t(
           'imageListHint',
-          '选填，可添加多张图片，并通过上移、下移调整展示顺序。支持 JPG、PNG 格式，每张不超过 5 MB。',
+          '至少上传 1 张图片，可添加多张，并通过上移、下移调整展示顺序。支持 JPG、PNG 格式，每张不超过 5 MB。',
         )}
+        <br />
+        {name === 'carouselImages'
+          ? t(
+              'carouselImageSizeHint',
+              '图片比例 1:1，建议尺寸 1200px × 1200px。',
+            )
+          : t('detailImageSizeHint', '请统一图片宽度，建议宽度保持 1200px。')}
       </p>
-      <Form.List name={name}>
-        {(fields, { add, remove, move }) => (
+      <Form.List
+        name={name}
+        rules={[
+          {
+            validator: async (
+              _: unknown,
+              items?: Partial<Website.ProductImageItem>[],
+            ) => {
+              if (!items?.some((item) => item?.imageAttachmentId != null)) {
+                throw new Error(t('minimumImages', '至少上传 1 张图片'));
+              }
+            },
+          },
+        ]}
+      >
+        {(fields, { add, remove, move }, { errors }) => (
           <div className={styles.itemGrid}>
             {fields.map((field, index) => (
               <Card
@@ -700,6 +721,7 @@ const ProductForm = ({
             >
               {t('addImage', '添加图片')}
             </Button>
+            <Form.ErrorList errors={errors} />
           </div>
         )}
       </Form.List>

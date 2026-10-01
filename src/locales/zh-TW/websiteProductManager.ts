@@ -2,8 +2,12 @@ export default {
   'productManager.carouselImages': '商品輪播圖',
   'productManager.detailImages': '商品詳情圖',
   'productManager.addImage': '新增圖片',
+  'productManager.minimumImages': '至少上傳 1 張圖片',
+  'productManager.carouselImageSizeHint':
+    '圖片比例 1:1，建議尺寸 1200px × 1200px。',
+  'productManager.detailImageSizeHint': '請統一圖片寬度，建議寬度保持 1200px。',
   'productManager.imageListHint':
-    '選填，可新增多張圖片，並透過上移、下移調整展示順序。支援 JPG、PNG 格式，每張不超過 5 MB。',
+    '至少上傳 1 張圖片，可新增多張，並透過上移、下移調整展示順序。支援 JPG、PNG 格式，每張不超過 5 MB。',
   'productManager.defaultLanguageHint':
     '新增商品固定使用系統預設語言，建立後可新增其他語言。',
   'productManager.languageUnavailable':

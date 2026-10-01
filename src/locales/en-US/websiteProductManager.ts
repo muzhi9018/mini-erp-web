@@ -2,8 +2,13 @@ export default {
   'productManager.carouselImages': 'Product carousel images',
   'productManager.detailImages': 'Product detail images',
   'productManager.addImage': 'Add image',
+  'productManager.minimumImages': 'Upload at least 1 image',
+  'productManager.carouselImageSizeHint':
+    'Use a 1:1 aspect ratio. Recommended dimensions: 1200px × 1200px.',
+  'productManager.detailImageSizeHint':
+    'Use a consistent image width. Recommended width: 1200px.',
   'productManager.imageListHint':
-    'Optional. Add multiple images and adjust their display order with Move up and Move down. Supports JPG and PNG images up to 5 MB each.',
+    'Upload at least 1 image. Add multiple images and adjust their display order with Move up and Move down. Supports JPG and PNG images up to 5 MB each.',
   'productManager.defaultLanguageHint':
     'New products use the system default language. Other languages can be added after creation.',
   'productManager.languageUnavailable':
