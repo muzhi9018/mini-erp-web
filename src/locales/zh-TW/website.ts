@@ -107,6 +107,8 @@ export default {
   'website.productDetail.specifications.title': '技術參數',
   'website.productDetail.specifications.description':
     '嚴格的品質管控，每項指標均達到或超過國家標準',
+  'website.productDetail.details.title': '圖文詳情',
+  'website.productDetail.details.imageAlt': '{productName}圖文詳情 {index}',
   'website.productDetail.applications.title': '應用場景',
   'website.productDetail.applications.description':
     '廣泛應用於各類戶外與室內空間，為設計師提供豐富的創作可能',

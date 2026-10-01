@@ -111,6 +111,8 @@ export default {
   'website.productDetail.specifications.title': 'Technical Specifications',
   'website.productDetail.specifications.description':
     'Rigorous quality control ensures every indicator meets or exceeds national standards.',
+  'website.productDetail.details.title': 'Product Details',
+  'website.productDetail.details.imageAlt': '{productName} details {index}',
   'website.productDetail.applications.title': 'Applications',
   'website.productDetail.applications.description':
     'Suitable for a wide range of indoor and outdoor spaces, opening up rich creative possibilities for designers.',

@@ -107,6 +107,8 @@ export default {
   'website.productDetail.specifications.title': '技术参数',
   'website.productDetail.specifications.description':
     '严格的品质管控，每项指标均达到或超过国家标准',
+  'website.productDetail.details.title': '图文详情',
+  'website.productDetail.details.imageAlt': '{productName}图文详情 {index}',
   'website.productDetail.applications.title': '应用场景',
   'website.productDetail.applications.description':
     '广泛应用于各类户外与室内空间，为设计师提供丰富的创作可能',

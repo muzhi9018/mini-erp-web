@@ -13,7 +13,7 @@ import './index.css';
 interface DetailSectionHeaderProps {
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
 }
 
 const DetailSectionHeader: React.FC<DetailSectionHeaderProps> = ({
@@ -25,7 +25,7 @@ const DetailSectionHeader: React.FC<DetailSectionHeaderProps> = ({
     <span>{eyebrow}</span>
     <h2>{title}</h2>
     <i aria-hidden="true" />
-    <p>{description}</p>
+    {description && <p>{description}</p>}
   </header>
 );
 
@@ -119,6 +119,9 @@ const ProductDetailPage: React.FC = () => {
   const applications = product.applications ?? [];
   const cases = product.cases ?? [];
   const carouselImages = (product.carouselImages ?? [])
+    .filter((image) => image.imageUrl)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const detailImages = (product.detailImages ?? [])
     .filter((image) => image.imageUrl)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -226,6 +229,30 @@ const ProductDetailPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+      )}
+
+      {detailImages.length > 0 && (
+        <section className="product-detail-page__details detail-section">
+          <DetailSectionHeader
+            eyebrow="PRODUCT DETAILS"
+            title={intl.formatMessage({
+              id: 'website.productDetail.details.title',
+            })}
+          />
+          <div className="product-detail-page__detail-images">
+            {detailImages.map((image, index) => (
+              <img
+                alt={intl.formatMessage(
+                  { id: 'website.productDetail.details.imageAlt' },
+                  { productName: product.name, index: index + 1 },
+                )}
+                key={image.imageAttachmentId}
+                src={image.imageUrl}
+                width={1200}
+              />
+            ))}
           </div>
         </section>
       )}

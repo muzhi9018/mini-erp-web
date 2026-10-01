@@ -208,6 +208,21 @@
   color: var(--site-muted);
 }
 
+.product-detail-page__detail-images {
+  width: 1200px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.product-detail-page__detail-images img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .product-detail-page__application-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
