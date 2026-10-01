@@ -1,4 +1,9 @@
 export default {
+  'productManager.carouselImages': '商品轮播图',
+  'productManager.detailImages': '商品详情图',
+  'productManager.addImage': '添加图片',
+  'productManager.imageListHint':
+    '选填，可添加多张图片，并通过上移、下移调整展示顺序。支持 JPG、PNG 格式，每张不超过 5 MB。',
   'productManager.defaultLanguageHint':
     '新增商品固定使用系统默认语言，创建后可添加其他语言。',
   'productManager.languageUnavailable':

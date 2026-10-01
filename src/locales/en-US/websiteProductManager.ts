@@ -1,4 +1,9 @@
 export default {
+  'productManager.carouselImages': 'Product carousel images',
+  'productManager.detailImages': 'Product detail images',
+  'productManager.addImage': 'Add image',
+  'productManager.imageListHint':
+    'Optional. Add multiple images and adjust their display order with Move up and Move down. Supports JPG and PNG images up to 5 MB each.',
   'productManager.defaultLanguageHint':
     'New products use the system default language. Other languages can be added after creation.',
   'productManager.languageUnavailable':

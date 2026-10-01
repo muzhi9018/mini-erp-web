@@ -39,6 +39,8 @@ declare namespace Website {
     specifications?: ProductDetailItem[];
     applications?: ProductMediaItem[];
     cases?: ProductMediaItem[];
+    carouselImages?: ProductImageItem[];
+    detailImages?: ProductImageItem[];
   };
 
   type ProductDetailItem = {
@@ -75,6 +77,15 @@ declare namespace Website {
     specifications: ProductDetailItem[];
     applications: ProductMediaItem[];
     cases: ProductMediaItem[];
+    carouselImages?: ProductImageItem[];
+    detailImages?: ProductImageItem[];
+  };
+
+  type ProductImageItem = {
+    itemType: 'CAROUSEL_IMAGE' | 'DETAIL_IMAGE';
+    imageAttachmentId: number | string;
+    imageUrl?: string;
+    sortOrder: number;
   };
 
   type CreateProduct = {

@@ -1,6 +1,11 @@
 export type ProductFormValues = Omit<
   Website.ProductI18n,
-  'features' | 'specifications' | 'applications' | 'cases'
+  | 'features'
+  | 'specifications'
+  | 'applications'
+  | 'cases'
+  | 'carouselImages'
+  | 'detailImages'
 > & {
   categoryId: Website.Category['id'];
   slug: string;
@@ -16,6 +21,14 @@ export type ProductFormValues = Omit<
   cases: Pick<
     Website.ProductMediaItem,
     'title' | 'imageAttachmentId' | 'description'
+  >[];
+  carouselImages?: Pick<
+    Website.ProductImageItem,
+    'imageAttachmentId' | 'imageUrl'
+  >[];
+  detailImages?: Pick<
+    Website.ProductImageItem,
+    'imageAttachmentId' | 'imageUrl'
   >[];
 };
 
@@ -43,6 +56,15 @@ export function toProductTranslation(
       itemType,
       sortOrder,
     }));
+  const images = (
+    items: ProductFormValues['carouselImages'],
+    itemType: Website.ProductImageItem['itemType'],
+  ) =>
+    (items ?? []).map((item, sortOrder) => ({
+      imageAttachmentId: item.imageAttachmentId,
+      itemType,
+      sortOrder,
+    }));
   return {
     locale: values.locale,
     name: values.name.trim(),
@@ -59,5 +81,7 @@ export function toProductTranslation(
     specifications: details(values.specifications, 'SPECIFICATION'),
     applications: media(values.applications, 'APPLICATION'),
     cases: media(values.cases, 'CASE'),
+    carouselImages: images(values.carouselImages, 'CAROUSEL_IMAGE'),
+    detailImages: images(values.detailImages, 'DETAIL_IMAGE'),
   };
 }

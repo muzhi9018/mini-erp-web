@@ -491,6 +491,7 @@ const ProductForm = ({
     length: number,
     move: (from: number, to: number) => void,
     remove: (index: number | number[]) => void,
+    minimumItems = 4,
   ) => (
     <div className={styles.cardActions}>
       <Button
@@ -513,7 +514,7 @@ const ProductForm = ({
         size="small"
         danger
         icon={<DeleteOutlined />}
-        disabled={busy || length <= 4}
+        disabled={busy || length <= minimumItems}
         onClick={() => remove(index)}
       >
         {t('remove', '删除')}
@@ -647,6 +648,62 @@ const ProductForm = ({
         </div>
       )}
     </Form.List>
+  );
+
+  const renderImageList = (
+    name: 'carouselImages' | 'detailImages',
+    title: string,
+  ) => (
+    <Card size="small" title={title} className="mb-4">
+      <p className="text-sm text-gray-500">
+        {t(
+          'imageListHint',
+          '选填，可添加多张图片，并通过上移、下移调整展示顺序。支持 JPG、PNG 格式，每张不超过 5 MB。',
+        )}
+      </p>
+      <Form.List name={name}>
+        {(fields, { add, remove, move }) => (
+          <div className={styles.itemGrid}>
+            {fields.map((field, index) => (
+              <Card
+                key={field.key}
+                size="small"
+                className={styles.itemCard}
+                title={`${title} ${String(index + 1).padStart(2, '0')}`}
+                extra={cardActions(index, fields.length, move, remove, 0)}
+              >
+                <Form.Item name={[field.name, 'imageUrl']} hidden>
+                  <Input />
+                </Form.Item>
+                <ImageField
+                  name={[field.name, 'imageAttachmentId']}
+                  label={t('itemImage', '上传图片')}
+                  initialUrl={form.getFieldValue([
+                    name,
+                    field.name,
+                    'imageUrl',
+                  ])}
+                  required
+                  disabled={busy}
+                  showError={(content) => messageApi.error(content)}
+                  onUploadingChange={handleUploadingChange}
+                />
+              </Card>
+            ))}
+            <Button
+              type="dashed"
+              block
+              className="col-span-full"
+              icon={<PlusOutlined />}
+              disabled={busy}
+              onClick={() => add({})}
+            >
+              {t('addImage', '添加图片')}
+            </Button>
+          </div>
+        )}
+      </Form.List>
+    </Card>
   );
 
   const collapseItems = panels.map((panel, index) => {
@@ -840,6 +897,8 @@ const ProductForm = ({
           <p className={styles.uploadHint}>
             {t('coverUploadHint', '支持 JPG、PNG 格式，大小不超过 5 MB。')}
           </p>
+          {renderImageList('carouselImages', t('carouselImages', '商品轮播图'))}
+          {renderImageList('detailImages', t('detailImages', '商品详情图'))}
         </>
       );
     } else {
@@ -911,6 +970,18 @@ const ProductForm = ({
         caseIntroduction: editProduct.caseIntroduction,
         coverImageAttachmentId: editProduct.coverImageAttachmentId,
         featureImageAttachmentId: editProduct.featureImageAttachmentId,
+        carouselImages:
+          editProduct.carouselImages?.map(
+            ({ imageAttachmentId, imageUrl }) => ({
+              imageAttachmentId,
+              imageUrl,
+            }),
+          ) ?? [],
+        detailImages:
+          editProduct.detailImages?.map(({ imageAttachmentId, imageUrl }) => ({
+            imageAttachmentId,
+            imageUrl,
+          })) ?? [],
         features: editProduct.features?.map(({ title, content }) => ({
           title,
           content,
@@ -937,6 +1008,8 @@ const ProductForm = ({
         sortOrder: 0,
         isShow: false,
         isRecommended: false,
+        carouselImages: [],
+        detailImages: [],
         features: Array.from({ length: 4 }, () => ({})),
         specifications: Array.from({ length: 4 }, () => ({})),
         applications: Array.from({ length: 4 }, () => ({})),
