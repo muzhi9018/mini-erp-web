@@ -1,10 +1,17 @@
 import {
+  AppstoreOutlined,
   ArrowDownOutlined,
   ArrowUpOutlined,
+  BulbOutlined,
   DeleteOutlined,
-  InfoCircleFilled,
+  EditOutlined,
+  FileTextOutlined,
+  GlobalOutlined,
   PictureOutlined,
   PlusOutlined,
+  ProfileOutlined,
+  SettingOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { PageContainer, ProFormSelect } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
@@ -20,7 +27,6 @@ import {
   message,
   Select,
   Spin,
-  Steps,
   Switch,
   Upload,
 } from 'antd';
@@ -40,6 +46,8 @@ import {
 import { listCategories } from '@/services/website/productCategory';
 import { type ProductFormValues, toProductTranslation } from './formValues';
 import { useStyles } from './index.style';
+import ProductCarouselImages from './ProductCarouselImages';
+import ProductDetailImages from './ProductDetailImages';
 
 const useText = () => {
   const intl = useIntl();
@@ -195,6 +203,7 @@ function ProductImageUpload({
           <button
             type="button"
             className={styles.uploadButton}
+            disabled={disabled}
             aria-label={t(
               'uploadImageLabel',
               label.startsWith('上传') ? label : `上传${label}`,
@@ -269,6 +278,7 @@ const ProductForm = ({
   const t = useText();
   const { styles } = useStyles();
   const [form] = Form.useForm<ProductFormValues>();
+  const selectedLocale = Form.useWatch('locale', form);
   const [modal, modalContext] = Modal.useModal();
   const [messageApi, messageContext] = message.useMessage();
   const [submitting, setSubmitting] = useState(false);
@@ -290,16 +300,24 @@ const ProductForm = ({
     ...productLocales.map(({ code }) => code),
   ]);
   const defaultLanguage = languages.find(({ defaultLocal }) => defaultLocal);
+  const selectedLanguage = languages.find(
+    ({ code }) => code === selectedLocale,
+  );
   const languageUnavailable =
     !languages.length || (isCreating && !defaultLanguage);
   const busy = submitting || uploadingImages > 0;
   const handleUploadingChange = (uploading: boolean) => {
     setUploadingImages((count) => Math.max(0, count + (uploading ? 1 : -1)));
   };
+  const featureSection = {
+    key: 'features',
+    title: t('features', '特点与优势'),
+  } as const;
   const panels = [
     {
       key: 'base',
       title: t('base', '基础设置'),
+      icon: <SettingOutlined />,
       description: t(
         'baseDescription',
         '设置商品的基础信息，用于页面标题和分类管理。',
@@ -308,21 +326,16 @@ const ProductForm = ({
     {
       key: 'card',
       title: t('card', '商品卡片与营销'),
+      icon: <ShoppingOutlined />,
       description: t(
         'cardDescription',
         '设置产品在列表和详情页内的基础营销信息。',
       ),
     },
     {
-      key: 'features',
-      title: t('features', '特点与优势'),
-      description: t('featuresDescription', '展示产品的核心优势与卖点。'),
-      intro: 'featureIntroduction',
-      media: false,
-    },
-    {
       key: 'specifications',
       title: t('specifications', '技术参数'),
+      icon: <ProfileOutlined />,
       description: t(
         'specificationsDescription',
         '展示产品的技术规格与详细参数。',
@@ -333,6 +346,7 @@ const ProductForm = ({
     {
       key: 'applications',
       title: t('applications', '应用场景'),
+      icon: <AppstoreOutlined />,
       description: t('applicationsDescription', '展示产品的典型应用场景。'),
       intro: 'applicationIntroduction',
       media: true,
@@ -340,6 +354,7 @@ const ProductForm = ({
     {
       key: 'cases',
       title: t('cases', '案例展示'),
+      icon: <FileTextOutlined />,
       description: t('casesDescription', '展示真实的客户案例与项目成果。'),
       intro: 'caseIntroduction',
       media: true,
@@ -412,6 +427,7 @@ const ProductForm = ({
     try {
       const productI18n = toProductTranslation({
         ...values,
+        featureImageAttachmentId: editProduct?.featureImageAttachmentId,
         locale: editProduct?.locale ?? language.code,
       });
       if (editProduct) {
@@ -467,13 +483,14 @@ const ProductForm = ({
       className={styles.panelLabel}
       onClick={() => setCurrentStep(index)}
     >
-      <span className={styles.panelTitle}>
-        <span className={styles.panelNumber}>
-          {String(index + 1).padStart(2, '0')}
-        </span>
-        {title}
+      <span className={styles.panelIcon}>{panels[index].icon}</span>
+      <span className={styles.panelHeading}>
+        <span className={styles.panelTitle}>{title}</span>
+        <span className={styles.panelDescription}>{description}</span>
       </span>
-      <span className={styles.panelDescription}>{description}</span>
+      <span className={styles.panelNumber}>
+        {String(index + 1).padStart(2, '0')}
+      </span>
     </div>
   );
 
@@ -497,37 +514,41 @@ const ProductForm = ({
       <Button
         size="small"
         icon={<ArrowUpOutlined />}
+        aria-label={t('moveUp', '上移')}
+        title={t('moveUp', '上移')}
         disabled={busy || index === 0}
         onClick={() => move(index, index - 1)}
-      >
-        {t('moveUp', '上移')}
-      </Button>
+      />
       <Button
         size="small"
         icon={<ArrowDownOutlined />}
+        aria-label={t('moveDown', '下移')}
+        title={t('moveDown', '下移')}
         disabled={busy || index === length - 1}
         onClick={() => move(index, index + 1)}
-      >
-        {t('moveDown', '下移')}
-      </Button>
+      />
       <Button
         size="small"
         danger
         icon={<DeleteOutlined />}
+        aria-label={t('remove', '删除')}
+        title={t('remove', '删除')}
         disabled={busy || length <= minimumItems}
         onClick={() => remove(index)}
-      >
-        {t('remove', '删除')}
-      </Button>
+      />
     </div>
   );
 
   const renderDetailList = (
-    section: (typeof panels)[2] | (typeof panels)[3],
+    section: typeof featureSection | (typeof panels)[2],
   ) => (
     <Form.List name={section.key} rules={listRules}>
       {(fields, { add, remove, move }, { errors }) => (
-        <div className={styles.itemGrid}>
+        <div
+          className={
+            section.key === 'features' ? styles.featureList : styles.itemGrid
+          }
+        >
           {fields.map((field, index) => (
             <Card
               key={field.key}
@@ -535,8 +556,10 @@ const ProductForm = ({
               className={styles.itemCard}
               title={
                 <span className={styles.cardTitle}>
-                  <PictureOutlined className={styles.cardIcon} />
-                  {section.title} {String(index + 1).padStart(2, '0')}
+                  <span className={styles.itemNumber}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  {section.title}
                 </span>
               }
               extra={cardActions(index, fields.length, move, remove)}
@@ -576,7 +599,7 @@ const ProductForm = ({
           <Button
             type="dashed"
             block
-            className="col-span-full"
+            className={styles.addButton}
             icon={<PlusOutlined />}
             onClick={() => add({})}
           >
@@ -589,7 +612,7 @@ const ProductForm = ({
   );
 
   const renderMediaList = (
-    section: (typeof panels)[4] | (typeof panels)[5],
+    section: (typeof panels)[3] | (typeof panels)[4],
   ) => (
     <Form.List name={section.key} rules={listRules}>
       {(fields, { add, remove, move }, { errors }) => (
@@ -601,8 +624,10 @@ const ProductForm = ({
               className={styles.itemCard}
               title={
                 <span className={styles.cardTitle}>
-                  <PictureOutlined className={styles.cardIcon} />
-                  {section.title} {String(index + 1).padStart(2, '0')}
+                  <span className={styles.itemNumber}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  {section.title}
                 </span>
               }
               extra={cardActions(index, fields.length, move, remove)}
@@ -638,7 +663,7 @@ const ProductForm = ({
           <Button
             type="dashed"
             block
-            className="col-span-full"
+            className={styles.addButton}
             icon={<PlusOutlined />}
             onClick={() => add({})}
           >
@@ -648,84 +673,6 @@ const ProductForm = ({
         </div>
       )}
     </Form.List>
-  );
-
-  const renderImageList = (
-    name: 'carouselImages' | 'detailImages',
-    title: string,
-  ) => (
-    <Card size="small" title={title} className="mb-4">
-      <p className="text-sm text-gray-500">
-        {t(
-          'imageListHint',
-          '至少上传 1 张图片，可添加多张，并通过上移、下移调整展示顺序。支持 JPG、PNG 格式，每张不超过 5 MB。',
-        )}
-        <br />
-        {name === 'carouselImages'
-          ? t(
-              'carouselImageSizeHint',
-              '图片比例 1:1，建议尺寸 1200px × 1200px。',
-            )
-          : t('detailImageSizeHint', '请统一图片宽度，建议宽度保持 1200px。')}
-      </p>
-      <Form.List
-        name={name}
-        rules={[
-          {
-            validator: async (
-              _: unknown,
-              items?: Partial<Website.ProductImageItem>[],
-            ) => {
-              if (!items?.some((item) => item?.imageAttachmentId != null)) {
-                throw new Error(t('minimumImages', '至少上传 1 张图片'));
-              }
-            },
-          },
-        ]}
-      >
-        {(fields, { add, remove, move }, { errors }) => (
-          <div className={styles.itemGrid}>
-            {fields.map((field, index) => (
-              <Card
-                key={field.key}
-                size="small"
-                className={styles.itemCard}
-                title={`${title} ${String(index + 1).padStart(2, '0')}`}
-                extra={cardActions(index, fields.length, move, remove, 0)}
-              >
-                <Form.Item name={[field.name, 'imageUrl']} hidden>
-                  <Input />
-                </Form.Item>
-                <ImageField
-                  name={[field.name, 'imageAttachmentId']}
-                  label={t('itemImage', '上传图片')}
-                  initialUrl={form.getFieldValue([
-                    name,
-                    field.name,
-                    'imageUrl',
-                  ])}
-                  required
-                  disabled={busy}
-                  showError={(content) => messageApi.error(content)}
-                  onUploadingChange={handleUploadingChange}
-                />
-              </Card>
-            ))}
-            <Button
-              type="dashed"
-              block
-              className="col-span-full"
-              icon={<PlusOutlined />}
-              disabled={busy}
-              onClick={() => add({})}
-            >
-              {t('addImage', '添加图片')}
-            </Button>
-            <Form.ErrorList errors={errors} />
-          </div>
-        )}
-      </Form.List>
-    </Card>
   );
 
   const collapseItems = panels.map((panel, index) => {
@@ -875,53 +822,99 @@ const ProductForm = ({
       );
     } else if (panel.key === 'card') {
       children = (
-        <>
-          <div className="grid gap-x-5 md:grid-cols-2">
+        <div className={styles.marketingLayout}>
+          <div className={styles.coverSection}>
+            <ImageField
+              name="coverImageAttachmentId"
+              label={t('coverImageUrl', '商品卡片封面')}
+              initialUrl={editProduct?.coverImageUrl}
+              disabled={busy}
+              showError={(content) => messageApi.error(content)}
+              onUploadingChange={handleUploadingChange}
+            />
+            <p className={styles.uploadHint}>
+              {t('coverUploadHint', '支持 JPG、PNG 格式，大小不超过 5 MB。')}
+            </p>
+          </div>
+          <div>
+            <div className="grid gap-x-5 md:grid-cols-2">
+              <TextField
+                name="name"
+                label={t('name', '商品名称')}
+                placeholder={t('namePlaceholder', '请输入商品名称')}
+                required
+                maxLength={128}
+              />
+              <TextField
+                name="subtitle"
+                label={t('subtitle', '副标题')}
+                placeholder={t('subtitlePlaceholder', '例如英文名称或营销短语')}
+                maxLength={128}
+              />
+            </div>
             <TextField
-              name="name"
-              label={t('name', '商品名称')}
-              placeholder={t('namePlaceholder', '请输入商品名称')}
-              required
-              maxLength={128}
+              name="summary"
+              label={t('summary', '卡片摘要')}
+              placeholder={t(
+                'summaryPlaceholder',
+                '用于商品列表及关联商品卡片的简短介绍',
+              )}
+              multiline
+              maxLength={300}
             />
             <TextField
-              name="subtitle"
-              label={t('subtitle', '副标题')}
-              placeholder={t('subtitlePlaceholder', '例如英文名称或营销短语')}
-              maxLength={128}
+              name="tagline"
+              label={t('tagline', '详情页首屏文案')}
+              placeholder={t('taglinePlaceholder', '展示在详情页商品名称下方')}
+              multiline
+              maxLength={500}
             />
           </div>
-          <TextField
-            name="summary"
-            label={t('summary', '卡片摘要')}
-            placeholder={t(
-              'summaryPlaceholder',
-              '用于商品列表及关联商品卡片的简短介绍',
-            )}
-            multiline
-            maxLength={300}
-          />
-          <TextField
-            name="tagline"
-            label={t('tagline', '详情页首屏文案')}
-            placeholder={t('taglinePlaceholder', '展示在详情页商品名称下方')}
-            multiline
-            maxLength={500}
-          />
-          <ImageField
-            name="coverImageAttachmentId"
-            label={t('coverImageUrl', '商品卡片封面')}
-            initialUrl={editProduct?.coverImageUrl}
-            disabled={busy}
-            showError={(content) => messageApi.error(content)}
-            onUploadingChange={handleUploadingChange}
-          />
-          <p className={styles.uploadHint}>
-            {t('coverUploadHint', '支持 JPG、PNG 格式，大小不超过 5 MB。')}
-          </p>
-          {renderImageList('carouselImages', t('carouselImages', '商品轮播图'))}
-          {renderImageList('detailImages', t('detailImages', '商品详情图'))}
-        </>
+          <div className={styles.imageSections}>
+            <div className={styles.productPresentation}>
+              <ProductCarouselImages
+                form={form}
+                disabled={busy}
+                showError={(content) => messageApi.error(content)}
+                onUploadingChange={handleUploadingChange}
+              />
+              <Card
+                size="small"
+                title={
+                  <span className={styles.cardTitle}>
+                    <BulbOutlined />
+                    {featureSection.title}
+                  </span>
+                }
+                className={styles.featureSection}
+              >
+                <TextField
+                  name="featureIntroduction"
+                  label={t('sectionIntroduction', '板块介绍')}
+                  placeholder={t(
+                    'sectionIntroductionPlaceholder',
+                    '请输入该模块的简要介绍',
+                  )}
+                  multiline
+                  maxLength={300}
+                />
+                <p className={styles.sectionHint}>
+                  {t(
+                    'itemsHint',
+                    '至少填写 4 条，可继续添加，并通过上移、下移调整官网展示顺序。',
+                  )}
+                </p>
+                {renderDetailList(featureSection)}
+              </Card>
+            </div>
+            <ProductDetailImages
+              form={form}
+              disabled={busy}
+              showError={(content) => messageApi.error(content)}
+              onUploadingChange={handleUploadingChange}
+            />
+          </div>
+        </div>
       );
     } else {
       children = (
@@ -936,33 +929,13 @@ const ProductForm = ({
             multiline
             maxLength={300}
           />
-          {panel.key === 'features' && (
-            <>
-              <ImageField
-                name="featureImageAttachmentId"
-                label={t('featureImageUrl', '特点区域配图')}
-                initialUrl={editProduct?.featureImageUrl}
-                disabled={busy}
-                showError={(content) => messageApi.error(content)}
-                onUploadingChange={handleUploadingChange}
-              />
-              <p className={styles.uploadHint}>
-                {t(
-                  'featureUploadHint',
-                  '支持 JPG、PNG 格式，大小不超过 5 MB。',
-                )}
-              </p>
-            </>
-          )}
-          <p className="text-sm text-gray-500">
+          <p className={styles.sectionHint}>
             {t(
               'itemsHint',
               '至少填写 4 条，可继续添加，并通过上移、下移调整官网展示顺序。',
             )}
           </p>
-          {panel.media
-            ? renderMediaList(panel as (typeof panels)[4])
-            : renderDetailList(panel as (typeof panels)[2])}
+          {panel.media ? renderMediaList(panel) : renderDetailList(panel)}
         </>
       );
     }
@@ -991,7 +964,6 @@ const ProductForm = ({
         applicationIntroduction: editProduct.applicationIntroduction,
         caseIntroduction: editProduct.caseIntroduction,
         coverImageAttachmentId: editProduct.coverImageAttachmentId,
-        featureImageAttachmentId: editProduct.featureImageAttachmentId,
         carouselImages:
           editProduct.carouselImages?.map(
             ({ imageAttachmentId, imageUrl }) => ({
@@ -1040,6 +1012,7 @@ const ProductForm = ({
 
   return (
     <PageContainer
+      className={styles.editorPage}
       title={
         isEditing
           ? t('edit', '修改商品')
@@ -1048,13 +1021,15 @@ const ProductForm = ({
             : t('create', '新增商品')
       }
       onBack={close}
+      footerToolBarProps={{ className: styles.editorFooter }}
       footer={[
-        <Button key="cancel" disabled={busy} onClick={close}>
+        <Button key="cancel" size="large" disabled={busy} onClick={close}>
           {t('cancel', '取消')}
         </Button>,
         <Button
           key="submit"
           type="primary"
+          size="large"
           loading={submitting}
           disabled={
             loadingLanguages || languageUnavailable || uploadingImages > 0
@@ -1077,8 +1052,10 @@ const ProductForm = ({
       {modalContext}
       {messageContext}
       <Form<ProductFormValues>
+        className={styles.editorForm}
         form={form}
         layout="vertical"
+        variant="outlined"
         onFinish={submit}
         disabled={busy}
         scrollToFirstError={{ block: 'center', focus: true }}
@@ -1093,7 +1070,13 @@ const ProductForm = ({
           aria-labelledby="editor-notice-title"
         >
           <span className={styles.noticeIcon} aria-hidden="true">
-            <InfoCircleFilled />
+            {isEditing ? (
+              <EditOutlined />
+            ) : isAddingLanguage ? (
+              <GlobalOutlined />
+            ) : (
+              <ShoppingOutlined />
+            )}
           </span>
           <div className={styles.noticeContent}>
             <h2 id="editor-notice-title" className={styles.noticeTitle}>
@@ -1120,17 +1103,31 @@ const ProductForm = ({
                     )}
             </p>
           </div>
+          <span className={styles.languageBadge}>
+            <GlobalOutlined />
+            {selectedLanguage?.nativeName ||
+              selectedLanguage?.name ||
+              t('language', '内容语言')}
+          </span>
         </section>
         <div className={styles.editorLayout}>
-          <aside className={styles.stepsCard}>
-            <Steps
-              current={currentStep}
-              orientation="vertical"
-              items={panels.map(({ title }) => ({ title }))}
-              onChange={goToPanel}
-              size="small"
-            />
-          </aside>
+          <nav
+            className={styles.sectionNavigation}
+            aria-label={t('sectionNavigation', '商品内容导航')}
+          >
+            {panels.map(({ key, title }, index) => (
+              <button
+                key={key}
+                type="button"
+                className={styles.navigationItem}
+                aria-current={currentStep === index ? 'step' : undefined}
+                onClick={() => goToPanel(index)}
+              >
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                {title}
+              </button>
+            ))}
+          </nav>
           <Collapse
             className={styles.collapse}
             activeKey={activeKeys}

@@ -1,6 +1,37 @@
 export default {
+  'productManager.sectionNavigation': 'Product content navigation',
   'productManager.carouselImages': 'Product carousel images',
+  'productManager.carouselEditorHint':
+    'Upload at least 1 image. Drag thumbnails to reorder, or click one to preview. JPG and PNG only, up to 5 MB per image.',
+  'productManager.carouselPreview': 'Carousel preview',
+  'productManager.carouselPreviewImage': 'Carousel preview image {index}',
+  'productManager.carouselPreviewEmpty':
+    'Upload images to preview the carousel here',
+  'productManager.carouselImageOrder': 'Carousel image order',
+  'productManager.selectCarouselImage': 'Preview carousel image {index}',
+  'productManager.carouselDragHint': 'Drag to reorder',
+  'productManager.previousImage': 'Previous image',
+  'productManager.nextImage': 'Next image',
   'productManager.detailImages': 'Product detail images',
+  'productManager.livePreview': 'Live preview',
+  'productManager.detailPreview': 'Detail preview',
+  'productManager.detailPreviewOrder': 'Shown in upload order',
+  'productManager.detailPreviewImage': 'Detail preview image {index}',
+  'productManager.detailPreviewEmpty':
+    'Upload images to preview the product details here',
+  'productManager.detailEditorHint':
+    'Upload at least 1 image. JPG and PNG only, up to 5 MB per image.',
+  'productManager.imageManagement': 'Image management',
+  'productManager.imageCount': '{count} images',
+  'productManager.detailManagementHint':
+    'Drag to reorder, or click a thumbnail to locate its preview',
+  'productManager.detailImageOrder': 'Detail image order',
+  'productManager.selectDetailImage': 'Preview detail image {index}',
+  'productManager.currentPreview': 'Current preview',
+  'productManager.uploadDetailImage': 'Upload detail image',
+  'productManager.addDetailImage': 'Add detail image',
+  'productManager.detailSyncHint':
+    'Uploading, reordering or deleting updates the preview immediately',
   'productManager.addImage': 'Add image',
   'productManager.minimumImages': 'Upload at least 1 image',
   'productManager.carouselImageSizeHint':
