@@ -121,6 +121,16 @@ declare namespace System {
 
 ## 命令与提交要求
 
+### 测试文件命名与 Git 管理
+
+- 单元测试、组件测试和集成测试统一命名为 `<被测文件名>.test.<扩展名>`，例如 `httpClient.test.ts`、`CategoryForm.test.tsx`、`dev-processes.test.mjs`；扩展名与使用的语言和模块格式保持一致。
+- 端到端测试统一命名为 `<业务场景名>.e2e.ts`，放在所属项目的 `tests/` 目录中，例如 `vault-web/tests/browser/vault.e2e.ts`。
+- 新增测试不再使用 `.spec.*` 或其他临时命名。已有 `.spec.*` 文件由忽略规则兼容，修改时再按上述规范命名，并同步更新测试配置或命令中的路径。
+- 测试辅助脚本、fixtures 等放在所属项目的 `tests/` 或 `__tests__/` 目录中；快照放在 `__snapshots__/` 中。
+- **测试文件及其辅助文件、快照、覆盖率和测试报告仅保留在本地，不加入 Git 管理**。根目录 `.gitignore` 统一维护忽略规则，适用于子项目；禁止使用 `git add -f` 强制添加这些文件。
+- 创建或重命名测试后，使用 `git check-ignore -v <文件路径>` 确认已被忽略。已跟踪的测试需要使用 `git rm --cached -- <文件路径>` 取消跟踪并保留本地文件，仅修改 `.gitignore` 不会取消已有跟踪。
+- 测试运行配置和 npm 测试命令仍纳入 Git 管理。
+
 ### 开发与维护命令
 
 | 命令 | 用途 |

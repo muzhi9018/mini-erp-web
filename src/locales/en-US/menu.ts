@@ -1,4 +1,5 @@
 export default {
+  'menu.personal-vault': 'Personal vault',
   'menu.welcome': 'Welcome',
   'menu.more-blocks': 'More Blocks',
   'menu.home': 'Home',

@@ -93,12 +93,58 @@ cd myapp
 npm install
 ```
 
+### Backend addresses
+
+Copy the address-free template before starting the app:
+
+```bash
+cp .env.example .env.local
+```
+
+Set actual addresses only in `.env.local` or your CI environment. All `.env` files are ignored by Git except `.env.example`. Umi loads `.env` and `.env.local`; this project uses separate variables for development and production:
+
+| Variable | Purpose |
+| --- | --- |
+| `DEV_API_BASE_URL` | ERP API base URL during development, including any gateway path |
+| `API_BASE_URL` | ERP API base URL for production builds |
+| `CHAT_API_URL` | Chat API endpoint |
+| `DEV_VAULT_SITE_URL` / `VAULT_SITE_URL` | Independent vault HTTPS site in development / production |
+| `TEST_API_PROXY_TARGET` / `PRE_API_PROXY_TARGET` | Optional proxies for `start:test` / `start:pre` |
+
+An explicitly empty API base URL uses same-origin requests; configure your web server to forward the API paths. Production builds reject a missing `API_BASE_URL` rather than using a development address. Set `DEV_API_BASE_URL` to empty when using the test/pre proxy. The vault app has its own [environment template](./vault-web/.env.example) and [setup instructions](./vault-web/README.md).
+
+Restart the development server or rebuild after changing variables. For CI builds, inject the production variables through the CI platform and do not copy local development environment files. Umi's local files override variables with the same names. Browser requests and bundled addresses remain visible to site visitors; environment files keep real addresses out of the repository. Earlier commits retain previously committed values unless Git history is separately cleaned.
+
 ### Development
 
 ```bash
 # Start development server (full version by default)
 npm start
 ```
+
+在本仓库根目录也可以启动 ERP 和个人密码库：
+
+```bash
+# 同时启动 ERP（8000）和密码库（8002），Ctrl+C 同时停止
+npm run dev:all
+
+# 或分开启动（使用两个终端）
+npm run dev
+npm run dev:vault
+```
+
+ERP 访问 `http://localhost:8000`，开发环境中的“个人密码库”入口由 `.env.local` 的 `DEV_VAULT_SITE_URL` 配置。ERP 的 Utoopack 开发服务使用 `8000` 和内部端口 `8001`，密码库使用 `8002`。密码库通过现有 NGINX 提供 HTTPS，首次配置和独立依赖安装见 [vault-web/README.md](./vault-web/README.md)。启动 `dev:all` 前先停止已在运行的 ERP 或密码库服务；任一服务退出时，启动脚本会同时停止另一项服务。
+
+Ctrl+C 会清理本次启动的全部 Umi 子进程，包括配置热重启后派生的服务；仍未退出的进程会在 3 秒后强制结束。
+
+若 ERP 启动时报 `TurbopackInternalError`，并包含 `tailwind.css.css`、`read was canceled`，可能是旧的 Umi / Utoopack 构建缓存恢复了已取消的任务。先停止所有前端开发进程，再在项目根目录清理生成缓存并重新启动：
+
+```bash
+rm -rf .turbopack src/.umi
+npm run dev:all
+```
+
+清理后首次启动需要重新编译。只有遇到该缓存错误时才需要清理。
 
 ### Simplify to Simple Version
 

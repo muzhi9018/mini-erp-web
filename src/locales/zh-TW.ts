@@ -3,6 +3,7 @@ import globalHeader from './zh-TW/globalHeader';
 import menu from './zh-TW/menu';
 import network from './zh-TW/network';
 import pages from './zh-TW/pages';
+import passwordVault from './zh-TW/passwordVault';
 import settingDrawer from './zh-TW/settingDrawer';
 import settings from './zh-TW/settings';
 import systemUserManager from './zh-TW/systemUserManager';
@@ -11,6 +12,7 @@ import websiteCategoryManager from './zh-TW/websiteCategoryManager';
 import websiteProductManager from './zh-TW/websiteProductManager';
 
 export default {
+  ...passwordVault,
   'navBar.lang': '語言',
   'layout.user.link.help': '幫助',
   'layout.user.link.privacy': '隱私',

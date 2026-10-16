@@ -259,7 +259,7 @@ const { initialState } = useModel('@@initialState');
 ```ts
 // File: src/app.tsx
 export const request: RequestConfig = {
-  baseURL: 'https://api.example.com',
+  baseURL: BASE_URL, // Configured through .env.local or CI variables.
   timeout: 10000,
   requestInterceptors: [],   // request interceptors
   responseInterceptors: [],  // response interceptors

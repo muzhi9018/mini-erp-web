@@ -14,6 +14,11 @@ _roadhog-api-doc
 npm-debug.log*
 yarn-error.log
 
+# environment variables (keep only address-free templates)
+.env
+.env.*
+!.env.example
+
 /coverage
 .idea
 yarn.lock
@@ -53,6 +58,16 @@ docs/superpowers
 .wrangler
 requestRecord.mock.js
 
-# TSX tests
-*.test.tsx
-*.test.ts
+# local tests (including legacy names), fixtures and snapshots
+*.test.*
+*.spec.*
+*.e2e.*
+tests/
+__tests__/
+__snapshots__/
+
+# test outputs (all projects)
+coverage/
+test-results/
+playwright-report/
+blob-report/

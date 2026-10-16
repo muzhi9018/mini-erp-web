@@ -8,6 +8,16 @@ import proxy from './proxy';
 import routes from './routes';
 
 const { UMI_ENV = 'dev' } = process.env;
+const isDev = process.env.NODE_ENV === 'development';
+const apiBaseURL = isDev
+  ? process.env.DEV_API_BASE_URL
+  : process.env.API_BASE_URL;
+
+if (process.env.NODE_ENV === 'production' && apiBaseURL === undefined) {
+  throw new Error(
+    '请在 .env.local 或构建环境中配置 API_BASE_URL；使用同源代理时请显式设为空字符串。',
+  );
+}
 
 // Compute commit hash: env vars take precedence, fall back to git at build time
 const commitHash =
@@ -227,6 +237,11 @@ export default defineConfig({
   requestRecord: {},
   exportStatic: {},
   define: {
+    BASE_URL: apiBaseURL ?? '',
+    VAULT_SITE_URL:
+      (isDev ? process.env.DEV_VAULT_SITE_URL : process.env.VAULT_SITE_URL) ??
+      '',
+    'process.env.CHAT_API_URL': process.env.CHAT_API_URL ?? '',
     'process.env.CI': process.env.CI,
     'process.env.COMMIT_HASH': commitHash,
     __APP_VERSION__: require('./../package.json').version,

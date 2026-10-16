@@ -92,6 +92,28 @@ cd myapp
 npm install
 ```
 
+### 后端地址配置
+
+首次启动前复制不含真实地址的模板：
+
+```bash
+cp .env.example .env.local
+```
+
+真实地址只填写在 `.env.local` 或 CI 环境变量中；除 `.env.example` 外，所有 `.env` 文件均已忽略提交。使用 Umi 内置的 `.env` 和 `.env.local` 加载规则，通过不同变量区分开发与生产：
+
+| 变量 | 用途 |
+| --- | --- |
+| `DEV_API_BASE_URL` | ERP 开发环境后端地址，包含所需的网关路径 |
+| `API_BASE_URL` | ERP 生产构建后端地址 |
+| `CHAT_API_URL` | 聊天接口地址 |
+| `DEV_VAULT_SITE_URL` / `VAULT_SITE_URL` | 开发 / 生产环境的独立密码库 HTTPS 站点 |
+| `TEST_API_PROXY_TARGET` / `PRE_API_PROXY_TARGET` | `start:test` / `start:pre` 使用的可选代理目标 |
+
+后端地址显式留空表示使用同源请求，需由部署服务器代理接口路径。生产构建未配置 `API_BASE_URL` 时会报错，不会自动使用开发地址。使用 test/pre 代理时，将 `DEV_API_BASE_URL` 留空。密码库应用有独立的[环境模板](./vault-web/.env.example)和[配置说明](./vault-web/README.md)。
+
+修改配置后需重启开发服务或重新构建。CI 构建时通过平台环境变量注入生产配置，不复制本机开发环境文件；Umi 的本地文件会覆盖同名环境变量。前端构建产物和浏览器网络请求中的地址仍可见，环境文件用于避免真实地址进入代码仓库。已提交的旧地址仍存在于 Git 历史中，需另行清理历史才能移除。
+
 ### 开发
 
 ```bash

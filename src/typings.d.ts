@@ -19,7 +19,7 @@ declare const __APP_VERSION__: string;
 declare const __UMI_VERSION__: string;
 declare const __UTOO_VERSION__: string;
 
-declare const BASE_URL: 'http' | 'https' | '';
+declare const BASE_URL: string;
 declare const CLIENT_BASIC_TOKEN: '';
 declare const LOCAL_TOKEN: string;
 declare const LOCAL_OSS_STORAGE_ID: string;

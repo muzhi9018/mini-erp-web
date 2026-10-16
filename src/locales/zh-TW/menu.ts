@@ -1,4 +1,5 @@
 export default {
+  'menu.personal-vault': '個人密碼庫',
   'menu.welcome': '歡迎',
   'menu.more-blocks': '更多區塊',
   'menu.home': '首頁',

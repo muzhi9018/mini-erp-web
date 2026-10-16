@@ -1,0 +1,16 @@
+{
+  "root": false,
+  "extends": ["../biome.json"],
+  "files": {
+    "includes": [
+      "**",
+      "!**/.umi",
+      "!**/.umi-production",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/test-results",
+      "!package-lock.json"
+    ]
+  },
+  "javascript": { "jsxRuntime": "transparent" }
+}

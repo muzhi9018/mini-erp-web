@@ -3,6 +3,7 @@ import globalHeader from './en-US/globalHeader';
 import menu from './en-US/menu';
 import network from './en-US/network';
 import pages from './en-US/pages';
+import passwordVault from './en-US/passwordVault';
 import settingDrawer from './en-US/settingDrawer';
 import settings from './en-US/settings';
 import systemUserManager from './en-US/systemUserManager';
@@ -11,6 +12,7 @@ import websiteCategoryManager from './en-US/websiteCategoryManager';
 import websiteProductManager from './en-US/websiteProductManager';
 
 export default {
+  ...passwordVault,
   'navBar.lang': 'Languages',
   'layout.user.link.help': 'Help',
   'layout.user.link.privacy': 'Privacy',

@@ -207,7 +207,7 @@ export const layout: RunTimeLayoutConfig = ({
  */
 export const request: RequestConfig = {
   ...errorConfig,
-  baseURL: isDev ? BASE_URL : 'https://pro-api.ant-design-demo.workers.dev',
+  baseURL: BASE_URL,
   // 请求拦截器
   requestInterceptors: [
     (config: RequestOptions) => {

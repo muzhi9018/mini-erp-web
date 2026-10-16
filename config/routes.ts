@@ -38,6 +38,12 @@ export default [
     component: './Welcome',
   },
   {
+    path: '/personal-vault',
+    name: 'personal-vault',
+    icon: 'SafetyCertificateOutlined',
+    component: './personal-vault',
+  },
+  {
     // 官网配置
     path: '/website-config',
     name: 'website-config',
