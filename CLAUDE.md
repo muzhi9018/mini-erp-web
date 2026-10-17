@@ -10,9 +10,15 @@ Ant Design Pro — 基于 Umi Max v4、antd v6 和 ProComponents v3 的 React �
 
 ## 修改边界与生成文件
 
-- **禁止修改后端 Java 项目的代码** — 后端项目路径为 `/Users/muzhi/WorkSpace/PersonalProject/Java/mini-erp-api`
+- **禁止修改后端 Java 项目的代码** — 后端项目位于本仓库相对路径 `../../Java/mini-erp-api`
 - **禁止编辑 `src/services/ant-design-pro/`** — 该目录由工具自动生成，请使用 `npm run openapi` 重新生成
 - **`.umi` 目录由工具自动生成** — 如果开发服务器出现异常，删除 `src/.umi` 后重启
+
+### 公开仓库与个人信息
+
+- 个人域名（包括开发域名）、个人账号标识、统计 ID、授权值和带用户名的本机路径不得写入代码、文档、日志示例或已跟踪配置中；实际运行值仅通过被 Git 忽略的 `.env.local` 或运行环境变量提供。
+- `.env.example` 仅保留变量名与用途说明，实际地址及个人配置值一律留空；个人域名及真实后端地址不得提供硬编码默认值。
+- NGINX 开发配置从环境变量生成到被 Git 忽略的本地文件，禁止提交生成后的真实配置。公开业务联系方式可以保留。
 
 ## 页面与国际化规范
 

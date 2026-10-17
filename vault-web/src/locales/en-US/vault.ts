@@ -80,7 +80,7 @@ export default {
   'vault.copied':
     'Password copied. Your system clipboard history may retain a copy.',
   'vault.lockHint':
-    'Locks after 5 minutes of inactivity or 60 seconds in the background. Keys stay only in this page’s memory.',
+    'Locks after {idleMinutes, plural, one {# minute} other {# minutes}} of inactivity or {backgroundSeconds, plural, one {# second} other {# seconds}} in the background. Keys stay only in this page’s memory.',
   'vault.conflict':
     'The vault changed. Sync before editing again to preserve changes from other devices.',
   'vault.writeLocked':

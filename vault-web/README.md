@@ -22,20 +22,26 @@
 
 首次启动前，在本目录执行 `cp .env.example .env.local`，并在 `.env.local` 中填写 `VAULT_API_TARGET`，包括后端网关所需的路径。真实后端地址仅保存在被 Git 忽略的本地文件或运行环境变量中，代码不提供默认目标。未配置该变量时不启用 Umi 开发代理；使用 Umi 内置的 `.env` 和 `.env.local` 加载规则；生产部署继续通过独立站点的同源反向代理访问后端。
 
-当前推荐复用已有 nginx 和证书：浏览器访问 `https://vault.local.muzhi.store`，nginx 将页面请求转发到 Umi 的 HTTP 开发服务 `127.0.0.1:8002`，认证与数据请求直接转发到 Java `127.0.0.1:8081`。现有证书覆盖 `*.local.muzhi.store`，此方案无需安装证书工具。
+使用已有 NGINX 和证书时，开发域名、证书路径和后端地址仅在本目录的 `.env.local` 或运行环境变量中配置，不写入代码或文档。NGINX 将页面请求转发到本机 Umi 开发服务，认证与数据请求转发到环境变量指定的后端。
 
 首次配置：
 
-1. 在 `/etc/hosts` 增加 `127.0.0.1 vault.local.muzhi.store`。
-2. 将 `deploy/nginx.dev.conf` 放入 `/opt/homebrew/etc/nginx/servers/vault-dev.conf`，执行 `nginx -t` 后 `nginx -s reload`。模板复用当前 Homebrew nginx 的证书路径；不会修改原有后端网关站点。
-3. 后端运行配置设置为：
+1. 在 `.env.local` 中填写以下变量。`VAULT_DEV_ORIGIN` 使用证书覆盖的完整 HTTPS Origin；将其主机名在本机 DNS 或 hosts 文件中解析到回环地址。
 
-```yaml
-vault:
-  enabled: true
-  origin: https://vault.local.muzhi.store
-  rp-id: vault.local.muzhi.store
+| 变量 | 用途 |
+| --- | --- |
+| `VAULT_DEV_ORIGIN` | 浏览器访问的 HTTPS Origin，使用默认 443 端口 |
+| `VAULT_NGINX_CERT` / `VAULT_NGINX_KEY` | 本机证书及私钥路径；相对路径从 `vault-web/` 解析 |
+| `VAULT_NGINX_API_TARGET` | NGINX 直连后端的 HTTP(S) Origin，不含网关路径 |
+
+2. 在本目录运行以下命令，从 `deploy/nginx.dev.conf` 模板生成本地配置：
+
+```sh
+npm run nginx:dev
 ```
+
+3. 在本机 NGINX 的 `http` 配置块中加载生成的 `deploy/nginx.dev.local.conf`，执行 `nginx -t` 后再重载。生成文件包含真实配置，已被 Git 忽略；不要直接加载尚未替换变量的模板。
+4. 由后端运行环境启用密码库，并将 `vault.origin` 设置为 `VAULT_DEV_ORIGIN` 的值，`vault.rp-id` 设置为该 Origin 的主机名。根目录 `.env.local` 中的 `DEV_VAULT_SITE_URL` 也使用同一个 Origin。
 
 之后可在仓库根目录同时启动 ERP 和密码库：
 
@@ -54,15 +60,15 @@ cd vault-web
 npm run dev
 ```
 
-浏览器打开 `https://vault.local.muzhi.store`，保留热更新、Worker 和源码断点调试能力。浏览器无需访问开发服务的 HTTP 地址。
+浏览器打开 `VAULT_DEV_ORIGIN` 配置的站点，保留热更新、Worker 和源码断点调试能力。浏览器无需访问开发服务的 HTTP 地址。
 
 | 浏览器请求 | nginx 上游 |
 | --- | --- |
 | 页面、静态资源及 HMR WebSocket | `http://127.0.0.1:8002` |
-| `/vault-auth/*` | Java `http://127.0.0.1:8081/vault-auth/*` |
-| `/api/v1/vault/*` | Java `http://127.0.0.1:8081/api/v1/vault/*` |
+| `/vault-auth/*` | `VAULT_NGINX_API_TARGET`，保留请求路径 |
+| `/api/v1/vault/*` | `VAULT_NGINX_API_TARGET`，保留请求路径 |
 
-这个新虚拟主机中的 API 路径直接保留，无需额外 `/api` 前缀；原有后端网关的重写规则保持原样。`vault.origin` / `vault.rp-id` 使用上述密码库浏览器域名。
+这个新虚拟主机中的 API 路径直接保留，无需额外 `/api` 前缀；原有后端网关的重写规则保持原样。修改环境变量后需重新生成并重载本地 NGINX 配置。
 
 以下是前端直接提供 HTTPS 的可选方式；使用现有 nginx 时跳过此部分。首次在本机准备可信开发证书（macOS）：
 
@@ -132,7 +138,16 @@ ERP 的 Utoopack 开发服务会占用 `8000` 和内部端口 `8001`，因此密
 
 开发环境的 effect 重放和热更新也执行完整清理，释放旧操作标记，再重新读取会话和密码库状态。状态尚未读取时显示加载或重试说明；读取失败后的“关闭提示 / 重新连接”会重新请求会话和状态，避免仅关闭错误后留下无法进入的页面。
 
-显示内容 20 秒后移除，进入后台立即关闭显示及编辑表单；闲置 5 分钟或后台 60 秒锁定。焦点恢复、pageshow、每次敏感操作和异步返回都会检查期限。复制不自动读取/覆写剪贴板，系统剪贴板历史可能保留副本。
+显示内容 20 秒后移除，进入后台立即关闭显示及编辑表单。自动锁定默认时限：开发环境无操作 1 分钟或后台 20 秒，生产环境无操作 5 分钟或后台 60 秒。焦点恢复、pageshow、每次敏感操作和异步返回都会检查期限。复制不自动读取/覆写剪贴板，系统剪贴板历史可能保留副本。
+
+可以在 `vault-web/.env.local` 或启动/构建命令的环境变量中配置自动锁定时限：
+
+```dotenv
+VAULT_IDLE_LOCK_MINUTES=1
+VAULT_BACKGROUND_LOCK_SECONDS=20
+```
+
+两个变量分别以分钟、秒为单位，必须是正整数；留空采用当前环境默认值。配置在启动或构建时读取，修改后重启开发服务，生产环境修改后须重新构建。环境变量的显式值在开发和生产构建中都会生效；发布构建时应清除仅用于本地测试的覆盖值。页面三种语言的锁定提示与实际时限使用同一份配置。后端 Passkey 近期认证的 5 分钟规则单独管理。
 
 初始化失败时保留已验证的材料和幂等键，重试前查询 meta。条目保存结果未确认时，重试复用原密文和幂等键；不允许在未确认请求上继续编辑。版本冲突需要关闭编辑并重新同步。离线刷新后没有秘密持久化，也没有自动恢复未提交编辑的功能。
 

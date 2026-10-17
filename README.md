@@ -110,6 +110,8 @@ Set actual addresses only in `.env.local` or your CI environment. All `.env` fil
 | `CHAT_API_URL` | Chat API endpoint |
 | `DEV_VAULT_SITE_URL` / `VAULT_SITE_URL` | Independent vault HTTPS site in development / production |
 | `TEST_API_PROXY_TARGET` / `PRE_API_PROXY_TARGET` | Optional proxies for `start:test` / `start:pre` |
+| `DEV_CLIENT_ID` / `DEV_CLIENT_BASIC_TOKEN` | Optional development client values; browser configuration cannot protect secrets |
+| `ANALYTICS_ID` | Optional Google Analytics ID; analytics is disabled when empty |
 
 An explicitly empty API base URL uses same-origin requests; configure your web server to forward the API paths. Production builds reject a missing `API_BASE_URL` rather than using a development address. Set `DEV_API_BASE_URL` to empty when using the test/pre proxy. The vault app has its own [environment template](./vault-web/.env.example) and [setup instructions](./vault-web/README.md).
 

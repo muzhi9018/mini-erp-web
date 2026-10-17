@@ -75,7 +75,7 @@ export default {
   'vault.logout': '登出密碼庫',
   'vault.copied': '密碼已複製。系統剪貼簿歷程可能保留副本。',
   'vault.lockHint':
-    '無操作 5 分鐘或背景 60 秒自動鎖定。金鑰僅儲存於本頁記憶體。',
+    '無操作 {idleMinutes} 分鐘或背景 {backgroundSeconds} 秒自動鎖定。金鑰僅儲存於本頁記憶體。',
   'vault.conflict': '資料已變更。請重新同步後再編輯，避免覆蓋其他裝置的變更。',
   'vault.writeLocked': '密碼庫有進行中的復原或輪替工作，暫時無法寫入。',
   'vault.reauthRequired':

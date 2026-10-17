@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:https": "node scripts/dev.mjs --https",
+    "nginx:dev": "node scripts/render-nginx.mjs",
     "build": "max build",
     "preview": "max preview --port 8002",
     "setup": "max setup",

@@ -109,6 +109,8 @@ cp .env.example .env.local
 | `CHAT_API_URL` | 聊天接口地址 |
 | `DEV_VAULT_SITE_URL` / `VAULT_SITE_URL` | 开发 / 生产环境的独立密码库 HTTPS 站点 |
 | `TEST_API_PROXY_TARGET` / `PRE_API_PROXY_TARGET` | `start:test` / `start:pre` 使用的可选代理目标 |
+| `DEV_CLIENT_ID` / `DEV_CLIENT_BASIC_TOKEN` | 可选的开发客户端配置；前端配置不能保护秘密 |
+| `ANALYTICS_ID` | 可选的 Google Analytics ID，留空时关闭统计 |
 
 后端地址显式留空表示使用同源请求，需由部署服务器代理接口路径。生产构建未配置 `API_BASE_URL` 时会报错，不会自动使用开发地址。使用 test/pre 代理时，将 `DEV_API_BASE_URL` 留空。密码库应用有独立的[环境模板](./vault-web/.env.example)和[配置说明](./vault-web/README.md)。
 

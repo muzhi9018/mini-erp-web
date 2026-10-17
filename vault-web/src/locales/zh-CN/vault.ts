@@ -75,7 +75,7 @@ export default {
   'vault.logout': '退出密码库',
   'vault.copied': '密码已复制。系统剪贴板历史可能保留副本。',
   'vault.lockHint':
-    '无操作 5 分钟或后台 60 秒自动锁定。密钥仅在本页内存中保存。',
+    '无操作 {idleMinutes} 分钟或后台 {backgroundSeconds} 秒自动锁定。密钥仅在本页内存中保存。',
   'vault.conflict':
     '数据已发生变化。请重新同步后再编辑，避免覆盖其他设备的修改。',
   'vault.writeLocked': '密码库存在进行中的恢复或轮换任务，暂时无法写入。',

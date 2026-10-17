@@ -1,9 +1,11 @@
-import { accessSync, constants } from 'node:fs';
+import { accessSync, constants, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runDevProcesses } from './dev-processes.mjs';
 
 const directory = fileURLToPath(new URL('../', import.meta.url));
+const environmentFile = resolve(directory, '.env.local');
+if (existsSync(environmentFile)) process.loadEnvFile(environmentFile);
 const localHTTPS = process.argv.includes('--https');
 const cert = resolve(
   directory,
@@ -21,8 +23,8 @@ try {
   }
 } catch {
   console.error(`缺少前端 HTTPS 证书。
-已有 nginx HTTPS 时，请使用 npm run dev 启动 HTTP 开发服务，并从 https://vault.local.muzhi.store 访问。
-nginx 配置见 deploy/nginx.dev.conf；该方式复用现有证书，无需额外证书工具。
+已有 nginx HTTPS 时，请使用 npm run dev 启动 HTTP 开发服务，并访问 VAULT_DEV_ORIGIN 配置的站点。
+通过 npm run nginx:dev 从本地环境变量生成 NGINX 配置，详见 README.md。
 
 如需前端独立提供 HTTPS，可用 VAULT_DEV_CERT / VAULT_DEV_KEY 指定证书，详见 README.md。`);
   process.exit(1);

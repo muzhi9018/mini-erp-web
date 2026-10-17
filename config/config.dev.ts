@@ -4,8 +4,8 @@ export default defineConfig({
   title: '筑绿新材',
 
   define: {
-    CLIENT_ID: 'muzhi-cloud',
-    CLIENT_BASIC_TOKEN: 'Basic bXV6aGktY2xvdWQ6bXV6aGktcGFzc3dvcmQ=',
+    CLIENT_ID: process.env.DEV_CLIENT_ID ?? '',
+    CLIENT_BASIC_TOKEN: process.env.DEV_CLIENT_BASIC_TOKEN ?? '',
     CONTEXT_PATH: '',
   },
 });

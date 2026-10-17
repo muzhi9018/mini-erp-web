@@ -5,3 +5,4 @@
 .env.local
 *.pem
 /.certs/
+/deploy/nginx.dev.local.conf

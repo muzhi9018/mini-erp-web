@@ -102,8 +102,10 @@ export default function VaultPage() {
   );
 
   const expired = () =>
-    Date.now() - lastActivity.current >= 300000 ||
-    (hiddenAt.current !== undefined && Date.now() - hiddenAt.current >= 60000);
+    Date.now() - lastActivity.current >= VAULT_AUTO_LOCK.idleMinutes * 60_000 ||
+    (hiddenAt.current !== undefined &&
+      Date.now() - hiddenAt.current >=
+        VAULT_AUTO_LOCK.backgroundSeconds * 1_000);
   function check() {
     if (active.current && expired()) {
       lock(true);
@@ -717,7 +719,7 @@ export default function VaultPage() {
         />
       )}
       <p className="mt-8 text-center text-xs text-slate-500">
-        {t('vault.lockHint')}
+        {t('vault.lockHint', VAULT_AUTO_LOCK)}
       </p>
     </main>
   );
