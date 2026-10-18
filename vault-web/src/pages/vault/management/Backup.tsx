@@ -171,7 +171,10 @@ function BackupFlow({ existing }: { existing: boolean }) {
                   disabled={busy}
                   onClick={() =>
                     authorize(t('manage.backupExport'), async () => {
-                      downloadFile('vault-encrypted-backup.json', exported);
+                      downloadFile(
+                        t('vault.encryptedBackupFilename'),
+                        exported,
+                      );
                       setStep(2);
                     })
                   }

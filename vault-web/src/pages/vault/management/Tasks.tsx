@@ -53,7 +53,9 @@ export default function Tasks({ initialId }: { initialId: string }) {
           <TaskFacts task={task} />
           <Note>{t('manage.taskFilePublic')}</Note>
           <div className={s.actions}>
-            <Button onClick={() => saveTask(task.rotationId)}>
+            <Button
+              onClick={() => saveTask(task.rotationId, t('vault.taskFilename'))}
+            >
               {t('vault.saveTask')}
             </Button>
             <Button disabled={busy} onClick={() => execute(query)}>

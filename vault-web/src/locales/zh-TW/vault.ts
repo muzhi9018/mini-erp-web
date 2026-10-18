@@ -34,6 +34,11 @@ export default {
     '請分別離線保管這兩份秘密檔案。下載後重新選取兩份檔案並驗證，才能提交初始化。主密碼不會寫入檔案。',
   'vault.downloadAccount': '下載帳戶金鑰檔案',
   'vault.downloadRecovery': '下載密碼庫復原檔案',
+  'vault.accountKeyFilename': '密碼庫-帳戶金鑰.json',
+  'vault.recoveryKeyFilename': '密碼庫-復原金鑰.json',
+  'vault.mfaRecoveryCodesFilename': '密碼庫-MFA復原碼.json',
+  'vault.encryptedBackupFilename': '密碼庫-加密備份.json',
+  'vault.taskFilename': '密碼庫-維護任務.json',
   'vault.reimportAccount': '重新匯入帳戶金鑰檔案',
   'vault.reimportRecovery': '重新匯入密碼庫復原檔案',
   'vault.filesVerified': '檔案已驗證',
@@ -94,6 +99,18 @@ export default {
   'vault.invalidRecoveryCode': 'MFA 復原碼無效或已使用，請核對後重試。',
   'vault.requestRejected':
     '請求來源或 CSRF 驗證失敗。請重新連線，並檢查密碼庫網域設定。',
+  'vault.passkeyExists':
+    '此驗證器已儲存該帳號的 Passkey。請在系統視窗選擇其他裝置、密碼管理器或安全金鑰；更改名稱無法重複綁定同一憑據。',
+  'vault.passkeyCancelled':
+    'Passkey 操作已取消、逾時或未獲授權。請重試，並在系統視窗完成驗證。',
+  'vault.passkeyUnsupported':
+    '目前驗證器不支援所需的 Passkey。請選擇其他裝置、密碼管理器或安全金鑰。',
+  'vault.passkeyOriginInvalid':
+    '無法在目前網站建立或使用 Passkey。請檢查 HTTPS 和 Passkey 網域設定。',
+  'vault.passkeyInvalid':
+    'Passkey 驗證未通過。請重新發起目前操作，並完成系統驗證。',
+  'vault.passkeyExpired':
+    'Passkey 驗證請求已失效或逾期。請重新點選目前操作開始驗證。',
   'vault.requestFailed': '操作未完成，請檢查連線或重新執行身分驗證後重試。',
   'vault.dismiss': '關閉提示 / 重新連線',
   'vault.connect': '連線密碼庫服務',

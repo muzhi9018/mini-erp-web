@@ -38,7 +38,12 @@ import {
   validateSlots,
   version,
 } from './protocol';
-import { encodeTotpURI, normalizeTotp, totpCode } from './totp';
+import {
+  encodeTotpURI,
+  normalizeTotp,
+  totpCode,
+  totpTransferLabels,
+} from './totp';
 
 /** Only instantiated inside the dedicated worker (and isolated crypto tests). */
 export class VaultEngine {
@@ -406,7 +411,10 @@ export class VaultEngine {
     assert(entry && authorized());
     const plain = await this.decrypt(entry.cipher);
     assert(authorized() && plain.totp);
-    return encodeTotpURI(plain.totp);
+    return encodeTotpURI({
+      ...plain.totp,
+      ...totpTransferLabels(plain.totp, plain),
+    });
   }
 
   async changeMaster(

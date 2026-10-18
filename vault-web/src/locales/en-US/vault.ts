@@ -35,6 +35,11 @@ export default {
     'Keep these secret files separately offline. Download and reimport both before creating the vault. The files do not contain your master password.',
   'vault.downloadAccount': 'Download account key file',
   'vault.downloadRecovery': 'Download vault recovery file',
+  'vault.accountKeyFilename': 'vault-account-key.json',
+  'vault.recoveryKeyFilename': 'vault-recovery-key.json',
+  'vault.mfaRecoveryCodesFilename': 'vault-mfa-recovery-codes.json',
+  'vault.encryptedBackupFilename': 'vault-encrypted-backup.json',
+  'vault.taskFilename': 'vault-task.json',
   'vault.reimportAccount': 'Reimport account key file',
   'vault.reimportRecovery': 'Reimport vault recovery file',
   'vault.filesVerified': 'Files verified',
@@ -101,6 +106,18 @@ export default {
     'The MFA recovery code is invalid or already used. Check it and try again.',
   'vault.requestRejected':
     'Origin or CSRF validation failed. Reconnect and check the vault domain configuration.',
+  'vault.passkeyExists':
+    'This authenticator already holds a passkey for this account. Choose another device, password manager or security key in the system dialog. Changing the label cannot register the same credential again.',
+  'vault.passkeyCancelled':
+    'The passkey operation was cancelled, timed out or denied. Try again and complete verification in the system dialog.',
+  'vault.passkeyUnsupported':
+    'This authenticator does not support the required passkey. Choose another device, password manager or security key.',
+  'vault.passkeyOriginInvalid':
+    'A passkey cannot be created or used on this site. Check HTTPS and the passkey domain configuration.',
+  'vault.passkeyInvalid':
+    'Passkey verification failed. Start the current action again and complete system verification.',
+  'vault.passkeyExpired':
+    'The passkey verification request is invalid or expired. Select the current action again to restart verification.',
   'vault.requestFailed':
     'The operation did not complete. Check the connection or verify your identity and try again.',
   'vault.dismiss': 'Dismiss / reconnect',

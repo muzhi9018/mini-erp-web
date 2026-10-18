@@ -474,7 +474,11 @@ export function NewFiles({
                 ? 'vault.newAccountFile'
                 : 'vault.newRecoveryFile',
             )}
-            name={`vault-${kind}-key.json`}
+            name={t(
+              kind === 'account'
+                ? 'vault.accountKeyFilename'
+                : 'vault.recoveryKeyFilename',
+            )}
             content={
               kind === 'account' ? draft.accountFile : draft.recoveryFile
             }

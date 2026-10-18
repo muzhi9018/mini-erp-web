@@ -91,7 +91,7 @@ export default function Credentials() {
                   <FileExport
                     key={codes.batchId}
                     label={t('vault.downloadCodes')}
-                    name="vault-mfa-recovery-codes.json"
+                    name={t('vault.mfaRecoveryCodesFilename')}
                     content={JSON.stringify(codes)}
                     onVerified={setVerified}
                   />

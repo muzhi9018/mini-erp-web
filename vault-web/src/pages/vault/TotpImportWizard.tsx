@@ -22,10 +22,10 @@ export default function TotpImportWizard(props: {
   const t = useText();
   const [method, setMethod] = useState('image');
   const [uri, setUri] = useState('');
-  const [manual, setManual] = useState<Vault.Totp>({
+  const [manual, setManual] = useState<
+    Omit<Vault.Totp, 'issuer' | 'accountName'>
+  >({
     secretBase32: '',
-    issuer: props.title,
-    accountName: props.username,
     algorithm: 'SHA1',
     digits: 6,
     period: 30,
@@ -81,30 +81,6 @@ export default function TotpImportWizard(props: {
     setUri('');
     setError(undefined);
   };
-  const controls = (
-    <>
-      <label className={styles.field} htmlFor="totp-issuer">
-        {t('vault.totpIssuer')}
-        <Input
-          id="totp-issuer"
-          value={manual.issuer}
-          maxLength={256}
-          onChange={(e) => setManual({ ...manual, issuer: e.target.value })}
-        />
-      </label>
-      <label className={styles.field} htmlFor="totp-account">
-        {t('vault.totpAccount')}
-        <Input
-          id="totp-account"
-          value={manual.accountName}
-          maxLength={256}
-          onChange={(e) =>
-            setManual({ ...manual, accountName: e.target.value })
-          }
-        />
-      </label>
-    </>
-  );
   const importFields = (
     <fieldset
       className={styles.importFields}
@@ -180,7 +156,6 @@ export default function TotpImportWizard(props: {
             />
           </label>
           <p className={styles.help}>{t('entries.keyHint')}</p>
-          <div className={styles.formGrid}>{controls}</div>
           <details className={styles.advanced}>
             <summary>{t('entries.advanced')}</summary>
             <div className={styles.formGrid}>
@@ -251,7 +226,13 @@ export default function TotpImportWizard(props: {
                   setError('entries.shortCodeError');
                   return;
                 }
-                setPending(normalizeTotp(manual));
+                setPending(
+                  normalizeTotp({
+                    ...manual,
+                    issuer: props.title,
+                    accountName: props.username,
+                  }),
+                );
                 setManual({ ...manual, secretBase32: '' });
               }
             } catch (value) {

@@ -10,6 +10,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { totpTransferLabels } from '@/security/vault/totp';
 import { trapDialogTab } from './dialog';
 import styles from './Entries.module.css';
 import TotpTransferDialog from './TotpTransferDialog';
@@ -328,7 +329,7 @@ export default function EntryDetail(
       {transfer && row.totpInfo && (
         <TotpTransferDialog
           itemId={row.itemId}
-          info={row.totpInfo}
+          info={{ ...row.totpInfo, ...totpTransferLabels(row.totpInfo, row) }}
           onClose={closeTransfer}
           onExport={props.onExport}
           onCode={props.onCode}

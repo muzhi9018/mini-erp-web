@@ -57,7 +57,8 @@ export default {
   'manage.lastPasskey':
     '至少保留一個可用 Passkey。僅有一個時無法撤銷，建議新增備用憑證。',
   'manage.revokeTitle': '撤銷此 Passkey？',
-  'manage.addPasskeyHint': '裝置名稱方便日後識別。建立前需要近期身分驗證。',
+  'manage.addPasskeyHint':
+    '名稱僅用於識別。備用 Passkey 請儲存到其他裝置或密碼管理器。建立前需要近期身分驗證。',
   'manage.mfaCodes': 'MFA 復原碼',
   'manage.codesTitle': '保留獨立的身分復原入口',
   'manage.updateCodes': '更新復原碼',

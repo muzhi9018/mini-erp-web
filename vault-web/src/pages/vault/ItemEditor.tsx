@@ -115,7 +115,13 @@ export default function ItemEditor(props: {
       const plain = {
         ...values,
         itemSchemaVersion: 2 as const,
-        totp,
+        totp: totp
+          ? {
+              ...totp,
+              issuer: totp.issuer.trim() || values.title,
+              accountName: totp.accountName.trim() || values.username || '',
+            }
+          : null,
         website: values.website || '',
         username: values.username || '',
         password: values.password || '',

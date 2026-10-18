@@ -103,6 +103,25 @@ export function parseTotpURI(text: string): Vault.Totp {
     period: Number(period),
   });
 }
+export function totpTransferLabels(
+  info: Pick<Vault.TotpInfo, 'issuer' | 'accountName'>,
+  item: Pick<Vault.PlainItem, 'title' | 'username'>,
+): Pick<Vault.TotpInfo, 'issuer' | 'accountName'> {
+  // Only generated labels are sanitized; an existing TOTP label takes precedence.
+  const label = (value: string) =>
+    value
+      .replace(/[:/?]|\p{Cc}/gu, ' ')
+      .trim()
+      .slice(0, 256)
+      .replace(/\p{Surrogate}/gu, '')
+      .trim();
+  const title = label(item.title) || 'TOTP';
+  return {
+    issuer: info.issuer.trim() || title,
+    accountName: info.accountName.trim() || label(item.username) || title,
+  };
+}
+
 /** Sensitive: called only by the explicit, recently authenticated export command. */
 export function encodeTotpURI(value: Vault.Totp): string {
   const config = normalizeTotp(value);

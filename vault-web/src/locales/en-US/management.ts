@@ -64,7 +64,7 @@ export default {
     'Keep at least one valid Passkey. The last Passkey cannot be revoked; add a backup credential.',
   'manage.revokeTitle': 'Revoke this Passkey?',
   'manage.addPasskeyHint':
-    'Name this credential for recognition. Recent identity verification is required.',
+    'The label only identifies the passkey. Save a backup passkey on another device or in another password manager. Recent verification is required before creation.',
   'manage.mfaCodes': 'MFA recovery codes',
   'manage.codesTitle': 'Keep an independent way to recover your identity',
   'manage.updateCodes': 'Update recovery codes',

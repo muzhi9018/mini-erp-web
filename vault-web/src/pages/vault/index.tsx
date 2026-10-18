@@ -36,7 +36,7 @@ import {
 } from './management/completion';
 import type { Completion } from './management/shared';
 import Setup from './Setup';
-import { useText } from './text';
+import { passkeyErrorKeys, useText } from './text';
 import Unlock from './Unlock';
 import styles from './Vault.module.css';
 import VaultTheme, { useVaultTheme } from './VaultTheme';
@@ -389,6 +389,8 @@ function VaultWorkspace() {
   }, []);
 
   const errorText = () => {
+    const passkeyError = passkeyErrorKeys[error];
+    if (passkeyError) return t(passkeyError);
     if (error === 'VAULT_COMPLETION_MISMATCH')
       return t('manage.completionMismatch');
     if (error === 'VAULT_ALREADY_INITIALIZED')

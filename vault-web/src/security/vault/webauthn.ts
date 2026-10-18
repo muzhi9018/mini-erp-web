@@ -1,15 +1,33 @@
 import { assert, decode, encode } from './protocol';
 
-function credential(value: Credential | null): PublicKeyCredential {
-  assert(value instanceof PublicKeyCredential && value.type === 'public-key');
-  return value;
+const failures = new Map([
+  ['InvalidStateError', 'VAULT_PASSKEY_EXISTS'],
+  ['NotAllowedError', 'VAULT_PASSKEY_CANCELLED'],
+  ['AbortError', 'VAULT_PASSKEY_CANCELLED'],
+  ['NotSupportedError', 'VAULT_PASSKEY_UNSUPPORTED'],
+  ['SecurityError', 'VAULT_PASSKEY_ORIGIN_INVALID'],
+]);
+
+async function requestPasskey(
+  action: () => Promise<Credential | null>,
+): Promise<PublicKeyCredential> {
+  try {
+    const value = await action();
+    assert(value instanceof PublicKeyCredential && value.type === 'public-key');
+    return value;
+  } catch (failure) {
+    const code =
+      failure instanceof DOMException ? failures.get(failure.name) : undefined;
+    if (code) throw new Error(code);
+    throw failure;
+  }
 }
 
 export async function createPasskey(
   options: Vault.RegistrationOptions,
 ): Promise<Vault.Credential> {
-  const key = credential(
-    await navigator.credentials.create({
+  const key = await requestPasskey(() =>
+    navigator.credentials.create({
       publicKey: {
         ...options,
         challenge: decode(options.challenge, 16, 128),
@@ -38,8 +56,8 @@ export async function getPasskey(
   options: Vault.AuthenticationOptions,
   signal?: AbortSignal,
 ): Promise<Vault.Credential> {
-  const key = credential(
-    await navigator.credentials.get({
+  const key = await requestPasskey(() =>
+    navigator.credentials.get({
       signal,
       publicKey: {
         ...options,

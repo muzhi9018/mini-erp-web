@@ -108,9 +108,11 @@ export default function Setup(props: Props) {
                   block
                   onClick={() => {
                     downloadFile(
-                      kind === 'account'
-                        ? 'vault-account-key.json'
-                        : 'vault-recovery-key.json',
+                      t(
+                        kind === 'account'
+                          ? 'vault.accountKeyFilename'
+                          : 'vault.recoveryKeyFilename',
+                      ),
                       kind === 'account'
                         ? draft.accountFile
                         : draft.recoveryFile,

@@ -27,7 +27,7 @@ import {
 } from './management/shared';
 import Tasks from './management/Tasks';
 import Transition from './management/Transition';
-import { useText } from './text';
+import { passkeyErrorKeys, useText } from './text';
 
 const pages = [
   ['credentials', 'manage.credentials', Fingerprint],
@@ -59,11 +59,13 @@ export default function Maintenance(props: {
   const dirty = useRef(false);
   const alive = useRef(true);
   const serial = useRef(0);
+  const authentication = useRef<AbortController | undefined>(undefined);
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
       serial.current++;
+      authentication.current?.abort();
       props.client.reset();
     };
   }, []);
@@ -96,6 +98,11 @@ export default function Maintenance(props: {
             : failure instanceof Error
               ? failure.message
               : '';
+        const passkeyError = passkeyErrorKeys[code];
+        if (passkeyError) {
+          setError(t(passkeyError));
+          return;
+        }
         setError(
           t(
             code === 'VAULT_DECRYPT_FAILED'
@@ -155,8 +162,13 @@ export default function Maintenance(props: {
       if (session.recentAuthentication) await protectedAction(name, action);
       else setGate({ name, action });
     });
+  const cancelAuthentication = () => {
+    authentication.current?.abort();
+    setGate(undefined);
+  };
   const move = (next?: Mode, id?: string) => {
     serial.current++;
+    authentication.current?.abort();
     props.client.reset();
     dirty.current = false;
     setGate(undefined);
@@ -278,17 +290,14 @@ export default function Maintenance(props: {
         open={!!gate}
         title={t('manage.authTitle')}
         footer={null}
-        closable={!props.busy}
         mask={{ closable: false }}
-        onCancel={() => setGate(undefined)}
+        onCancel={cancelAuthentication}
         destroyOnHidden
       >
         <p>{t('manage.authHint', { action: gate?.name || '' })}</p>
         <Note>{t('manage.authDistinct')}</Note>
         <div className={s.actions}>
-          <Button disabled={props.busy} onClick={() => setGate(undefined)}>
-            {t('vault.cancel')}
-          </Button>
+          <Button onClick={cancelAuthentication}>{t('vault.cancel')}</Button>
           <Button
             type="primary"
             loading={props.busy}
@@ -296,11 +305,24 @@ export default function Maintenance(props: {
               execute(async () => {
                 assert(gate);
                 const current = gate;
-                const options = await guard(auth.authenticateOptions());
-                const credential = await guard(getPasskey(options));
-                checkIdentity(await guard(auth.authenticate(credential)));
-                setGate(undefined);
-                await protectedAction(current.name, current.action);
+                const controller = new AbortController();
+                authentication.current = controller;
+                try {
+                  const options = await guard(auth.authenticateOptions());
+                  const credential = await guard(
+                    getPasskey(options, controller.signal),
+                  );
+                  if (controller.signal.aborted)
+                    throw new Error('VAULT_PASSKEY_CANCELLED');
+                  checkIdentity(await guard(auth.authenticate(credential)));
+                  if (controller.signal.aborted)
+                    throw new Error('VAULT_PASSKEY_CANCELLED');
+                  setGate(undefined);
+                  await protectedAction(current.name, current.action);
+                } finally {
+                  if (authentication.current === controller)
+                    authentication.current = undefined;
+                }
               })
             }
           >

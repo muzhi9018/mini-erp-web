@@ -34,6 +34,11 @@ export default {
     '分别离线保管这两份秘密文件。下载后重新选择两份文件并校验，才能提交初始化。主密码不会写入文件。',
   'vault.downloadAccount': '下载账户密钥文件',
   'vault.downloadRecovery': '下载密码库恢复文件',
+  'vault.accountKeyFilename': '密码库-账户密钥.json',
+  'vault.recoveryKeyFilename': '密码库-恢复密钥.json',
+  'vault.mfaRecoveryCodesFilename': '密码库-MFA恢复码.json',
+  'vault.encryptedBackupFilename': '密码库-加密备份.json',
+  'vault.taskFilename': '密码库-维护任务.json',
   'vault.reimportAccount': '重新导入账户密钥文件',
   'vault.reimportRecovery': '重新导入密码库恢复文件',
   'vault.filesVerified': '文件已验证',
@@ -94,6 +99,18 @@ export default {
   'vault.invalidRecoveryCode': 'MFA 恢复码无效或已使用，请核对后重试。',
   'vault.requestRejected':
     '请求来源或 CSRF 校验失败。请重新连接，并检查密码库域名配置。',
+  'vault.passkeyExists':
+    '此验证器已保存该账号的 Passkey。请在系统窗口选择其他设备、密码管理器或安全密钥；更改名称无法重复绑定同一凭据。',
+  'vault.passkeyCancelled':
+    'Passkey 操作已取消、超时或未获授权。请重试，并在系统窗口完成验证。',
+  'vault.passkeyUnsupported':
+    '当前验证器不支持所需的 Passkey。请选择其他设备、密码管理器或安全密钥。',
+  'vault.passkeyOriginInvalid':
+    '无法在当前网站创建或使用 Passkey。请检查 HTTPS 和 Passkey 域名配置。',
+  'vault.passkeyInvalid':
+    'Passkey 验证未通过。请重新发起当前操作，并完成系统验证。',
+  'vault.passkeyExpired':
+    'Passkey 验证请求已失效或过期。请重新点击当前操作开始验证。',
   'vault.requestFailed': '操作未完成，请检查连接或重新执行身份验证后重试。',
   'vault.dismiss': '关闭提示 / 重新连接',
   'vault.connect': '连接密码库服务',

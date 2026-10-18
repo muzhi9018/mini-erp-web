@@ -123,7 +123,7 @@ export default function Auth(props: Props) {
               disabled={props.busy}
               onClick={() => {
                 downloadFile(
-                  'vault-mfa-recovery-codes.json',
+                  t('vault.mfaRecoveryCodesFilename'),
                   JSON.stringify(props.codes),
                 );
                 setDownloaded(true);

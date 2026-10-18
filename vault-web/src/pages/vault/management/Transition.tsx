@@ -31,11 +31,8 @@ import {
   useManagement,
 } from './shared';
 
-export function saveTask(rotationId: string) {
-  downloadFile(
-    'vault-task.json',
-    JSON.stringify({ formatVersion: 1, rotationId }),
-  );
+export function saveTask(rotationId: string, filename: string) {
+  downloadFile(filename, JSON.stringify({ formatVersion: 1, rotationId }));
 }
 export function TaskFacts({
   task,
@@ -265,7 +262,7 @@ export default function Transition({
       };
       setTaskId(startRequest.current.rotationId);
       checkpoint(startRequest.current.rotationId);
-      saveTask(startRequest.current.rotationId);
+      saveTask(startRequest.current.rotationId, t('vault.taskFilename'));
     } else {
       // A lost start response must be resolved before retrying the identical request.
       try {
@@ -558,7 +555,9 @@ export default function Transition({
           <FlowFooter>
             {taskId && (
               <>
-                <Button onClick={() => saveTask(taskId)}>
+                <Button
+                  onClick={() => saveTask(taskId, t('vault.taskFilename'))}
+                >
                   {t('vault.saveTask')}
                 </Button>
                 <Button disabled={busy} onClick={() => execute(query)}>
@@ -620,7 +619,9 @@ export default function Transition({
           </Note>
           {uncertain && <Note warning>{t('manage.uncertain')}</Note>}
           <FlowFooter>
-            <Button onClick={() => saveTask(task.rotationId)}>
+            <Button
+              onClick={() => saveTask(task.rotationId, t('vault.taskFilename'))}
+            >
               {t('vault.saveTask')}
             </Button>
             <Button

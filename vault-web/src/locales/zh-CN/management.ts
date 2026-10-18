@@ -56,7 +56,8 @@ export default {
   'manage.lastPasskey':
     '至少保留一个可用 Passkey。仅有一个时不能撤销，建议添加备用凭据。',
   'manage.revokeTitle': '撤销这个 Passkey？',
-  'manage.addPasskeyHint': '设备名称方便以后识别。创建前需要近期身份验证。',
+  'manage.addPasskeyHint':
+    '名称仅用于识别。备用 Passkey 请保存到其他设备或密码管理器。创建前需要近期身份验证。',
   'manage.mfaCodes': 'MFA 恢复码',
   'manage.codesTitle': '留一条独立的身份恢复入口',
   'manage.updateCodes': '更新恢复码',
