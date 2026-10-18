@@ -1,3 +1,5 @@
+import { normalizeTotp } from './totp';
+
 export const PROFILE = 'ARGON2ID_V19_M65536_T3_P4_L32';
 export const encoder = new TextEncoder();
 export const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -146,13 +148,16 @@ export function validateItem(value: unknown): asserts value is Vault.Item {
   validateBox(item.encryptedItem, true);
 }
 
-export function validatePlain(
-  value: unknown,
-): asserts value is Vault.PlainItem {
+export function parsePlain(value: unknown): Vault.PlainItem {
   const item = object(value);
-  exact(item, ['title', 'website', 'username', 'password', 'notes', 'tags']);
-  for (const key of ['title', 'website', 'username', 'password', 'notes'])
-    assert(typeof item[key] === 'string');
+  const fields = ['title', 'website', 'username', 'password', 'notes', 'tags'];
+  if (item.itemSchemaVersion === undefined) exact(item, fields);
+  else {
+    if (item.itemSchemaVersion !== 2)
+      throw new Error('VAULT_CLIENT_UPGRADE_REQUIRED');
+    exact(item, [...fields, 'itemSchemaVersion', 'totp']);
+  }
+  for (const key of fields.slice(0, 5)) assert(typeof item[key] === 'string');
   assert((item.title as string).trim().length > 0);
   assert(
     Array.isArray(item.tags) &&
@@ -162,12 +167,54 @@ export function validatePlain(
   if (item.website) {
     const url = new URL(item.website as string);
     assert(
-      (url.protocol === 'https:' || url.protocol === 'http:') &&
+      ['https:', 'http:'].includes(url.protocol) &&
         !url.username &&
         !url.password,
     );
   }
-  assert(encoder.encode(JSON.stringify(item)).length <= 16384);
+  const totp =
+    item.itemSchemaVersion === undefined || item.totp === null
+      ? null
+      : normalizeTotp(item.totp);
+  const normalized = { ...item, itemSchemaVersion: 2, totp } as Vault.PlainItem;
+  assert(encoder.encode(JSON.stringify(normalized)).length <= 16384);
+  return normalized;
+}
+export function validatePlain(
+  value: unknown,
+): asserts value is Vault.PlainItem {
+  parsePlain(value);
+}
+export function normalizeSlots(value: unknown): Vault.Slot[] {
+  assert(Array.isArray(value));
+  const slots = value.map((slot) => ({
+    kdfProfile: null,
+    kdfSalt: null,
+    wrapSalt: null,
+    recoverySalt: null,
+    ...object(slot),
+  }));
+  validateSlots(slots);
+  return slots;
+}
+export const canonicalItems = (items: Vault.Item[]) =>
+  [...items]
+    .sort((a, b) => (a.itemId < b.itemId ? -1 : a.itemId > b.itemId ? 1 : 0))
+    .map((item) => [
+      item.itemId,
+      item.contentVersion,
+      item.keyEpoch,
+      item.wrappedDek.formatVersion,
+      item.wrappedDek.algorithm,
+      item.wrappedDek.iv,
+      item.wrappedDek.ciphertext,
+      item.encryptedItem.formatVersion,
+      item.encryptedItem.algorithm,
+      item.encryptedItem.iv,
+      item.encryptedItem.ciphertext,
+    ]);
+export async function digest(bytes: Uint8Array<ArrayBuffer>) {
+  return encode(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 }
 
 export function validatePassword(value: string) {
@@ -226,10 +273,12 @@ export function random(length: number) {
   return crypto.getRandomValues(new Uint8Array(length));
 }
 
-export function generatePassword(length = 24) {
+export function generatePassword(length = 24, symbols = true) {
   assert(Number.isInteger(length) && length >= 16 && length <= 128);
+  assert(typeof symbols === 'boolean');
   const alphabet =
-    'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*+-=?';
+    'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789' +
+    (symbols ? '!@#$%&*+-=?' : '');
   const threshold = 256 - (256 % alphabet.length);
   let result = '';
   while (result.length < length) {

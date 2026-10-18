@@ -48,6 +48,13 @@ declare namespace Vault {
     generation?: number;
     keyEpoch?: number;
     keySlots?: Slot[];
+    allowedFormatVersions: number[];
+    allowedAlgorithms: string[];
+    allowedKdfProfiles: string[];
+    readableItemSchemaVersions: number[];
+    writeItemSchemaVersion: number;
+    clientSchemaVersionHeader: string;
+    minimumClientSchemaVersion: number;
   };
   type Item = {
     itemId: string;
@@ -64,14 +71,29 @@ declare namespace Vault {
     nextCursor?: string | null;
   };
   type PlainItem = {
+    itemSchemaVersion: 2;
     title: string;
     website: string;
     username: string;
     password: string;
     notes: string;
     tags: string[];
+    totp: Totp | null;
   };
-  type Summary = Omit<PlainItem, 'password' | 'notes'> & {
+  type Totp = {
+    secretBase32: string;
+    issuer: string;
+    accountName: string;
+    algorithm: 'SHA1' | 'SHA256' | 'SHA512';
+    digits: 6 | 8;
+    period: 30 | 60;
+  };
+  type TotpCode = { code: string; validFrom: number; validUntil: number };
+  type TotpInfo = Omit<Totp, 'secretBase32'>;
+  type Summary = Pick<PlainItem, 'title' | 'website' | 'username' | 'tags'> & {
+    hasTotp: boolean;
+    hasPassword: boolean;
+    totpInfo: TotpInfo | null;
     itemId: string;
     rowVersion: number;
     contentVersion: number;
@@ -105,6 +127,61 @@ declare namespace Vault {
     itemId: string;
     rowVersion: number;
     collectionRevision: number;
+  };
+  type Snapshot = Meta & { ownerSubject: string; items: Item[] };
+  type Backup = {
+    formatVersion: 1;
+    backupId: string;
+    backupSalt: string;
+    snapshot: Snapshot;
+    manifest: string;
+    authentication: string;
+  };
+  type RotationStart = {
+    rotationId: string;
+    vaultId: string;
+    expectedMetaRevision: number;
+    expectedCollectionRevision: number;
+    keySlots: Slot[];
+    itemIds?: string[];
+    idempotencyKey: string;
+  };
+  type Rotation = {
+    rotationId: string;
+    status: 'UPLOADING' | 'COMMITTED' | 'CANCELLED' | 'EXPIRED';
+    generation: number;
+    keyEpoch: number;
+    expectedCollectionRevision: number;
+    expectedItemCount: number;
+    expiresAt: string;
+    mode: 'ROTATION' | 'RESTORE';
+    keySlots: Slot[];
+    expectedItems: { itemId: string; contentVersion: number }[];
+    receivedBatchIds: string[];
+    commitReceipt: RotationReceipt | null;
+  };
+  type RotationReceipt = {
+    rotationId: string;
+    generation: number;
+    keyEpoch: number;
+    metaRevision: number;
+    collectionRevision: number;
+  };
+  type RotationSummary = Pick<
+    Rotation,
+    | 'rotationId'
+    | 'status'
+    | 'generation'
+    | 'keyEpoch'
+    | 'expectedCollectionRevision'
+    | 'expectedItemCount'
+    | 'expiresAt'
+  >;
+  type RotationCommand = {
+    rotationId: string;
+    idempotencyKey: string;
+    expectedCollectionRevision?: number;
+    verifiedManifestDigest?: string;
   };
   type Credential = {
     id: string;

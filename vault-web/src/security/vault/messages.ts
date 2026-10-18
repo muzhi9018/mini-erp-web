@@ -24,15 +24,75 @@ export type Operations = {
     };
     output: boolean;
   };
+  unlockRecovery: {
+    input: { ownerSubject: string; meta: Vault.Meta; recovery: string };
+    output: boolean;
+  };
+  code: { input: { itemId: string }; output: Vault.TotpCode };
+  notes: { input: { itemId: string }; output: string };
+  draftCode: { input: { config: Vault.Totp }; output: Vault.TotpCode };
+  exportTotp: {
+    input: { itemId: string; session: Vault.Session; checkedAt: number };
+    output: string;
+  };
+  changeMaster: {
+    input: {
+      meta: Vault.Meta;
+      account: string;
+      oldPassword: string;
+      newPassword: string;
+    };
+    output: {
+      expectedMetaRevision: number;
+      normalSlot: Vault.Slot;
+      idempotencyKey: string;
+    };
+  };
+  exportBackup: { input: { snapshot: Vault.Snapshot }; output: string };
+  verifyBackup: {
+    input: { backup: string; file: string; password?: string };
+    output: number;
+  };
+  prepareTransition: {
+    input: {
+      ownerSubject: string;
+      meta: Vault.Meta;
+      password: string;
+      restore: boolean;
+    };
+    output: Vault.PreparedSetup;
+  };
+  verifyTransitionFiles: {
+    input: { account: string; recovery: string };
+    output: boolean;
+  };
+  transitionPayload: {
+    input: Record<string, never>;
+    output: { vaultId: string; keySlots: Vault.Slot[]; itemIds: string[] };
+  };
+  bindTransition: { input: { task: Vault.Rotation }; output: boolean };
+  transitionBatch: { input: { itemIds: string[] }; output: Vault.Item[] };
+  verifyStaged: { input: { items: Vault.Item[] }; output: string };
+  resumeTransition: {
+    input: {
+      ownerSubject: string;
+      meta: Vault.Meta;
+      task: Vault.Rotation;
+      account: string;
+      password: string;
+      recovery: string;
+    };
+    output: boolean;
+  };
   resetIndex: { input: Record<string, never>; output: boolean };
   ingest: { input: { items: Vault.Item[] }; output: boolean };
   search: { input: { query: string }; output: Vault.Summary[] };
   reveal: { input: { itemId: string }; output: Vault.PlainItem };
   encrypt: {
-    input: { plain: Vault.PlainItem; itemId?: string };
+    input: { plain: Vault.PlainItem; itemId?: string; preserveTotp?: boolean };
     output: Vault.ItemWrite;
   };
-  generate: { input: Record<string, never>; output: string };
+  generate: { input: { length?: number; symbols?: boolean }; output: string };
 };
 export type WorkerRequest = {
   [K in keyof Operations]: {
@@ -44,7 +104,9 @@ export type WorkerRequest = {
 
 export const WORKER_FAILURES = [
   'VAULT_INVALID_FORMAT',
+  'VAULT_QR_TOO_LONG',
   'VAULT_DECRYPT_FAILED',
   'VAULT_LOCKED',
   'VAULT_WORKER_FAILED',
+  'VAULT_CLIENT_UPGRADE_REQUIRED',
 ] as const;

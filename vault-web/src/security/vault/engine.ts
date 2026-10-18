@@ -1,4 +1,11 @@
 import {
+  backupManifest,
+  parseBackup,
+  signBackup,
+  validateSnapshot,
+  verifyBackupAuth,
+} from './backup';
+import {
   aesKey,
   itemAAD,
   makeSlots,
@@ -6,30 +13,47 @@ import {
   open,
   seal,
   slotAAD,
+  unlockMaterial,
 } from './crypto';
 import {
   assert,
+  canonicalItems,
   canonicalSlots,
+  context,
   decode,
   decoder,
+  digest,
   encode,
   encoder,
   generatePassword,
+  normalizeSlots,
+  PROFILE,
   parseAccountFile,
+  parsePlain,
   parseRecoveryFile,
   random,
+  uuid,
   validateContext,
   validateItem,
-  validatePlain,
   validateSlots,
   version,
 } from './protocol';
+import { encodeTotpURI, normalizeTotp, totpCode } from './totp';
 
 /** Only instantiated inside the dedicated worker (and isolated crypto tests). */
 export class VaultEngine {
   private ctx?: Vault.Context;
   private vmk?: CryptoKey;
   private generation?: number;
+  private backupRoot?: CryptoKey;
+  private sourceSnapshot?: Vault.Snapshot;
+  private transition?: {
+    target: VaultEngine;
+    restore: boolean;
+    task?: Vault.Rotation;
+    encrypted: Map<string, Vault.Item>;
+  };
+
   private draft?: Vault.PreparedSetup;
   private verified = false;
   private index = new Map<
@@ -38,6 +62,10 @@ export class VaultEngine {
   >();
 
   clear() {
+    this.transition?.target.clear();
+    this.transition = undefined;
+    this.sourceSnapshot = undefined;
+    this.backupRoot = undefined;
     this.ctx = undefined;
     this.vmk = undefined;
     this.generation = undefined;
@@ -50,10 +78,11 @@ export class VaultEngine {
     ownerSubject: string,
     password: string,
     existingVaultId?: string,
+    keyEpoch = 1,
   ): Promise<Vault.PreparedSetup> {
     this.clear();
     const vaultId = existingVaultId || crypto.randomUUID();
-    const ctx = { ownerSubject, vaultId, keyEpoch: 1 };
+    const ctx = { ownerSubject, vaultId, keyEpoch };
     validateContext(ctx);
     const account: Vault.AccountFile = {
       formatVersion: 1,
@@ -72,7 +101,7 @@ export class VaultEngine {
     const raw = random(32);
     try {
       const keySlots = await makeSlots(ctx, password, account, recovery, raw);
-      this.vmk = await aesKey(raw);
+      await this.material(raw);
       this.ctx = ctx;
       this.generation = 1;
       this.draft = {
@@ -151,29 +180,50 @@ export class VaultEngine {
     };
     validateContext(ctx);
     validateSlots(meta.keySlots);
-    const file = parseAccountFile(accountText);
-    const slot = meta.keySlots.find((entry) => entry.slotType === 'NORMAL');
-    assert(
-      slot &&
-        file.ownerSubject === ownerSubject &&
-        file.vaultId === ctx.vaultId &&
-        file.accountKeyId === slot.keyId,
-    );
-    const ak = decode(file.accountKey, 32);
+    const raw = await unlockMaterial(ctx, meta.keySlots, accountText, password);
     try {
-      const kek = await normalKey(ctx, slot, password, ak);
-      const raw = await open(kek, slot.wrappedVmk, slotAAD(ctx, slot));
-      try {
-        this.vmk = await aesKey(raw);
-      } finally {
-        raw.fill(0);
-      }
-      this.ctx = ctx;
-      this.generation = meta.generation;
-      return true;
+      await this.material(raw);
     } finally {
-      ak.fill(0);
+      raw.fill(0);
     }
+    this.ctx = ctx;
+    this.generation = meta.generation;
+    return true;
+  }
+
+  private async material(raw: Uint8Array<ArrayBuffer>) {
+    this.vmk = await aesKey(raw);
+    this.backupRoot = await crypto.subtle.importKey('raw', raw, 'HKDF', false, [
+      'deriveKey',
+    ]);
+  }
+  async unlockRecovery(
+    ownerSubject: string,
+    meta: Vault.Meta,
+    recovery: string,
+  ) {
+    this.clear();
+    assert(meta.initialized && meta.vaultId && meta.keyEpoch);
+    version(meta.generation);
+    const ctx = {
+      ownerSubject,
+      vaultId: meta.vaultId,
+      keyEpoch: meta.keyEpoch,
+    };
+    validateContext(ctx);
+    const raw = await unlockMaterial(
+      ctx,
+      normalizeSlots(meta.keySlots),
+      recovery,
+    );
+    try {
+      await this.material(raw);
+    } finally {
+      raw.fill(0);
+    }
+    this.ctx = ctx;
+    this.generation = meta.generation;
+    return true;
   }
 
   resetIndex() {
@@ -181,7 +231,7 @@ export class VaultEngine {
     return true;
   }
 
-  private async decrypt(item: Vault.Item): Promise<Vault.PlainItem> {
+  private async decryptRaw(item: Vault.Item): Promise<Uint8Array<ArrayBuffer>> {
     assert(this.ctx && this.vmk);
     validateItem(item);
     assert(item.keyEpoch === this.ctx.keyEpoch);
@@ -192,21 +242,23 @@ export class VaultEngine {
     );
     try {
       const key = await aesKey(raw);
-      const plain = await open(
+      return await open(
         key,
         item.encryptedItem,
         itemAAD(this.ctx, item, 'item-data'),
         true,
       );
-      try {
-        const value: unknown = JSON.parse(decoder.decode(plain));
-        validatePlain(value);
-        return value;
-      } finally {
-        plain.fill(0);
-      }
     } finally {
       raw.fill(0);
+    }
+  }
+
+  private async decrypt(item: Vault.Item): Promise<Vault.PlainItem> {
+    const bytes = await this.decryptRaw(item);
+    try {
+      return parsePlain(JSON.parse(decoder.decode(bytes)));
+    } finally {
+      bytes.fill(0);
     }
   }
 
@@ -229,12 +281,28 @@ export class VaultEngine {
           username: plain.username,
           website: plain.website,
           tags: plain.tags,
+          hasTotp: plain.totp !== null,
+          hasPassword: plain.password.length > 0,
+          totpInfo: plain.totp
+            ? {
+                issuer: plain.totp.issuer,
+                accountName: plain.totp.accountName,
+                algorithm: plain.totp.algorithm,
+                digits: plain.totp.digits,
+                period: plain.totp.period,
+              }
+            : null,
         };
         this.index.set(item.itemId, { summary, cipher: item });
       }
       return true;
-    } catch {
+    } catch (error) {
       this.index.clear();
+      if (
+        error instanceof Error &&
+        error.message === 'VAULT_CLIENT_UPGRADE_REQUIRED'
+      )
+        throw error;
       throw new Error('VAULT_DECRYPT_FAILED');
     }
   }
@@ -253,17 +321,22 @@ export class VaultEngine {
   async reveal(itemId: string) {
     const entry = this.index.get(itemId);
     assert(entry && this.vmk);
-    return this.decrypt(entry.cipher);
+    return { ...(await this.decrypt(entry.cipher)), totp: null };
   }
 
   async encrypt(
     plain: Vault.PlainItem,
     itemId?: string,
+    preserveTotp = false,
   ): Promise<Vault.ItemWrite> {
     assert(this.ctx && this.vmk && this.generation);
-    validatePlain(plain);
+    plain = parsePlain(plain);
     const previous = itemId ? this.index.get(itemId) : undefined;
     assert(itemId ? previous : this.index.size < 2000);
+    if (preserveTotp) {
+      assert(previous);
+      plain.totp = (await this.decrypt(previous.cipher)).totp;
+    }
     const identity = {
       itemId: itemId || crypto.randomUUID(),
       contentVersion: previous ? previous.cipher.contentVersion + 1 : 1,
@@ -296,8 +369,381 @@ export class VaultEngine {
     }
   }
 
-  generate() {
+  async code(itemId: string, now = Date.now()) {
+    const entry = this.index.get(itemId);
+    assert(entry && this.vmk);
+    const plain = await this.decrypt(entry.cipher);
+    assert(plain.totp);
+    return totpCode(plain.totp, now);
+  }
+
+  async notes(itemId: string) {
+    const entry = this.index.get(itemId);
+    assert(entry && this.vmk);
+    return (await this.decrypt(entry.cipher)).notes;
+  }
+
+  async draftCode(config: Vault.Totp) {
+    assert(this.ctx && this.vmk);
+    return totpCode(normalizeTotp(config));
+  }
+
+  async exportTotp(itemId: string, session: Vault.Session, checkedAt: number) {
+    const entry = this.index.get(itemId);
+    const key = this.vmk;
+    // The host supplies a fresh HTTPS session response. This gate is not an XSS boundary.
+    const authorized = () =>
+      this.ctx &&
+      key &&
+      this.vmk === key &&
+      session.ownerSubject === this.ctx.ownerSubject &&
+      session.stage === 'MFA' &&
+      session.mfa === true &&
+      session.recentAuthentication === true &&
+      Number.isSafeInteger(checkedAt) &&
+      Date.now() >= checkedAt &&
+      Date.now() - checkedAt < 5000;
+    assert(entry && authorized());
+    const plain = await this.decrypt(entry.cipher);
+    assert(authorized() && plain.totp);
+    return encodeTotpURI(plain.totp);
+  }
+
+  async changeMaster(
+    meta: Vault.Meta,
+    account: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    assert(
+      this.ctx &&
+        this.vmk &&
+        meta.vaultId === this.ctx.vaultId &&
+        meta.keyEpoch === this.ctx.keyEpoch,
+    );
+    const slots = normalizeSlots(meta.keySlots);
+    const old = slots.find((slot) => slot.slotType === 'NORMAL');
+    assert(old);
+    const file = parseAccountFile(account);
+    const raw = await unlockMaterial(this.ctx, slots, account, oldPassword);
+    const ak = decode(file.accountKey, 32);
+    try {
+      const slot: Vault.Slot = {
+        ...old,
+        slotId: crypto.randomUUID(),
+        kdfProfile: PROFILE,
+        kdfSalt: encode(random(16)),
+        wrapSalt: encode(random(32)),
+      };
+      const key = await normalKey(this.ctx, slot, newPassword, ak);
+      slot.wrappedVmk = await seal(key, raw, slotAAD(this.ctx, slot));
+      const test = await open(key, slot.wrappedVmk, slotAAD(this.ctx, slot));
+      try {
+        assert(encode(test) === encode(raw));
+      } finally {
+        test.fill(0);
+      }
+      return {
+        expectedMetaRevision: meta.metaRevision,
+        normalSlot: slot,
+        idempotencyKey: crypto.randomUUID(),
+      };
+    } finally {
+      raw.fill(0);
+      ak.fill(0);
+    }
+  }
+
+  async exportBackup(snapshot: Vault.Snapshot) {
+    const value = validateSnapshot(snapshot);
+    assert(
+      this.ctx &&
+        this.backupRoot &&
+        this.generation === value.generation &&
+        value.ownerSubject === this.ctx.ownerSubject &&
+        value.vaultId === this.ctx.vaultId &&
+        value.keyEpoch === this.ctx.keyEpoch,
+    );
+    // Authenticate every ciphertext while retaining unknown content schemas intact.
+    for (const item of value.items) (await this.decryptRaw(item)).fill(0);
+    const backup: Vault.Backup = {
+      formatVersion: 1,
+      backupId: crypto.randomUUID(),
+      backupSalt: encode(random(32)),
+      snapshot: value,
+      manifest: '',
+      authentication: '',
+    };
+    backup.manifest = await backupManifest(backup);
+    backup.authentication = await signBackup(this.backupRoot, backup);
+    await verifyBackupAuth(this.backupRoot, backup);
+    this.sourceSnapshot = value;
+    return JSON.stringify(backup);
+  }
+
+  async verifyBackup(text: string, file: string, password?: string) {
+    this.clear();
+    const backup = parseBackup(text);
+    const snapshot = backup.snapshot;
+    if (password === undefined)
+      await this.unlockRecovery(snapshot.ownerSubject, snapshot, file);
+    else await this.unlock(snapshot.ownerSubject, snapshot, file, password);
+    assert(this.backupRoot);
+    try {
+      await verifyBackupAuth(this.backupRoot, backup);
+      for (const item of snapshot.items) (await this.decryptRaw(item)).fill(0);
+      this.sourceSnapshot = snapshot;
+      return snapshot.items.length;
+    } catch (error) {
+      this.clear();
+      throw error;
+    }
+  }
+
+  async prepareTransition(
+    ownerSubject: string,
+    meta: Vault.Meta,
+    password: string,
+    restore: boolean,
+  ) {
+    assert(this.ctx && this.vmk && this.sourceSnapshot);
+    const source = this.sourceSnapshot;
+    // Reject unknown structures before generating or uploading any replacement.
+    for (const item of source.items) await this.decrypt(item);
+    if (!restore)
+      assert(
+        source.ownerSubject === ownerSubject &&
+          source.vaultId === meta.vaultId &&
+          source.metaRevision === meta.metaRevision &&
+          source.collectionRevision === meta.collectionRevision,
+      );
+    this.transition?.target.clear();
+    const target = new VaultEngine();
+    this.transition = { target, restore, encrypted: new Map() };
+    return target.prepare(
+      ownerSubject,
+      password,
+      meta.vaultId,
+      meta.keyEpoch ? meta.keyEpoch + 1 : 1,
+    );
+  }
+  verifyTransitionFiles(account: string, recovery: string) {
+    assert(this.transition);
+    return this.transition.target.verifyFiles(account, recovery);
+  }
+  transitionPayload() {
+    assert(this.transition && this.sourceSnapshot);
+    return {
+      ...this.transition.target.setupPayload(),
+      itemIds: this.sourceSnapshot.items.map((item) => item.itemId),
+    };
+  }
+  bindTransition(task: Vault.Rotation) {
+    const transition = this.transition;
+    assert(transition && this.sourceSnapshot && transition.target.ctx);
+    const target = transition.target;
+    uuid(task.rotationId);
+    version(task.generation);
+    version(task.keyEpoch);
+    assert(
+      Array.isArray(task.expectedItems) &&
+        task.expectedItems.length <= 2000 &&
+        task.expectedItemCount === task.expectedItems.length,
+    );
+    assert(
+      task.status === 'UPLOADING' &&
+        task.mode === (transition.restore ? 'RESTORE' : 'ROTATION') &&
+        task.keyEpoch === target.ctx?.keyEpoch,
+    );
+    assert(
+      JSON.stringify(canonicalSlots(normalizeSlots(task.keySlots))) ===
+        JSON.stringify(canonicalSlots(target.setupPayload().keySlots)),
+    );
+    const expected = [...task.expectedItems].sort((a, b) =>
+      a.itemId < b.itemId ? -1 : 1,
+    );
+    const source = [...this.sourceSnapshot.items].sort((a, b) =>
+      a.itemId < b.itemId ? -1 : 1,
+    );
+    assert(
+      expected.length === source.length &&
+        expected.every(
+          (item, index) =>
+            item.itemId === source[index].itemId &&
+            item.contentVersion ===
+              (transition.restore ? 1 : source[index].contentVersion),
+        ),
+    );
+    target.generation = task.generation;
+    transition.task = task;
+    return true;
+  }
+  async transitionBatch(itemIds: string[]) {
+    const transition = this.transition;
+    assert(
+      transition?.task &&
+        this.sourceSnapshot &&
+        itemIds.length > 0 &&
+        itemIds.length <= 40,
+    );
+    const target = transition.target;
+    assert(target.ctx && target.vmk);
+    const result: Vault.Item[] = [];
+    for (const itemId of itemIds) {
+      let encrypted = transition.encrypted.get(itemId);
+      if (!encrypted) {
+        const source = this.sourceSnapshot.items.find(
+          (item) => item.itemId === itemId,
+        );
+        assert(source);
+        const plain = await this.decrypt(source);
+        const identity = {
+          itemId,
+          contentVersion: transition.restore ? 1 : source.contentVersion,
+        };
+        const raw = random(32);
+        const bytes = encoder.encode(JSON.stringify(plain));
+        try {
+          const key = await aesKey(raw);
+          encrypted = {
+            ...identity,
+            rowVersion: 1,
+            keyEpoch: target.ctx.keyEpoch,
+            wrappedDek: await seal(
+              target.vmk,
+              raw,
+              itemAAD(target.ctx, identity, 'item-key'),
+            ),
+            encryptedItem: await seal(
+              key,
+              bytes,
+              itemAAD(target.ctx, identity, 'item-data'),
+            ),
+          };
+          transition.encrypted.set(itemId, encrypted);
+        } finally {
+          raw.fill(0);
+          bytes.fill(0);
+        }
+      }
+      result.push(encrypted);
+    }
+    return result;
+  }
+  async verifyStaged(items: Vault.Item[]) {
+    const transition = this.transition;
+    assert(transition?.task && this.sourceSnapshot && transition.target.ctx);
+    const task = transition.task;
+    assert(
+      items.length === task.expectedItemCount &&
+        new Set(items.map((item) => item.itemId)).size === items.length,
+    );
+    for (const staged of items) {
+      const source = this.sourceSnapshot.items.find(
+        (item) => item.itemId === staged.itemId,
+      );
+      assert(
+        source &&
+          staged.contentVersion ===
+            (transition.restore ? 1 : source.contentVersion),
+      );
+      const oldPlain = await this.decrypt(source);
+      const newPlain = await transition.target.decrypt(staged);
+      const canonical = (plain: Vault.PlainItem) =>
+        JSON.stringify([
+          plain.title,
+          plain.website,
+          plain.username,
+          plain.password,
+          plain.notes,
+          plain.tags,
+          plain.totp
+            ? [
+                plain.totp.secretBase32,
+                plain.totp.issuer,
+                plain.totp.accountName,
+                plain.totp.algorithm,
+                plain.totp.digits,
+                plain.totp.period,
+              ]
+            : null,
+        ]);
+      assert(canonical(oldPlain) === canonical(newPlain));
+    }
+    return digest(
+      context(
+        'staging-manifest',
+        transition.target.ctx.ownerSubject,
+        transition.target.ctx.vaultId,
+        task.rotationId,
+        task.generation,
+        task.keyEpoch,
+        canonicalSlots(task.keySlots),
+        canonicalItems(items),
+      ),
+    );
+  }
+  async resumeTransition(
+    ownerSubject: string,
+    meta: Vault.Meta,
+    task: Vault.Rotation,
+    account: string,
+    password: string,
+    recovery: string,
+  ) {
+    assert(this.sourceSnapshot && this.ctx);
+    const target = new VaultEngine();
+    const targetMeta = {
+      ...meta,
+      initialized: true,
+      vaultId: meta.vaultId,
+      generation: task.generation,
+      keyEpoch: task.keyEpoch,
+      keySlots: task.keySlots,
+    };
+    await target.unlock(ownerSubject, targetMeta, account, password);
+    const file = parseRecoveryFile(recovery);
+    const raw = await unlockMaterial(
+      target.ctx as Vault.Context,
+      task.keySlots,
+      recovery,
+    );
+    try {
+      const slot = task.keySlots.find((value) => value.slotType === 'RECOVERY');
+      assert(slot && file.recoveryKeyId === slot.keyId);
+      // Both target files must open the identical VMK.
+      const original = await unlockMaterial(
+        target.ctx as Vault.Context,
+        task.keySlots,
+        account,
+        password,
+      );
+      try {
+        assert(encode(raw) === encode(original));
+      } finally {
+        original.fill(0);
+      }
+    } finally {
+      raw.fill(0);
+    }
+    target.draft = {
+      vaultId: meta.vaultId as string,
+      keySlots: task.keySlots,
+      accountFile: account,
+      recoveryFile: recovery,
+    };
+    target.verified = true;
+    this.transition?.target.clear();
+    this.transition = {
+      target,
+      restore: task.mode === 'RESTORE',
+      encrypted: new Map(),
+    };
+    return this.bindTransition(task);
+  }
+
+  generate(length?: number, symbols?: boolean) {
     assert(this.vmk);
-    return generatePassword();
+    return generatePassword(length, symbols);
   }
 }

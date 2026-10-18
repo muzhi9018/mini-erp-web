@@ -36,6 +36,68 @@ async function execute(message: WorkerRequest) {
         message.payload.account,
         message.payload.password,
       );
+    case 'unlockRecovery':
+      return engine.unlockRecovery(
+        message.payload.ownerSubject,
+        message.payload.meta,
+        message.payload.recovery,
+      );
+    case 'code':
+      return engine.code(message.payload.itemId);
+    case 'notes':
+      return engine.notes(message.payload.itemId);
+    case 'draftCode':
+      return engine.draftCode(message.payload.config);
+    case 'exportTotp':
+      return engine.exportTotp(
+        message.payload.itemId,
+        message.payload.session,
+        message.payload.checkedAt,
+      );
+    case 'changeMaster':
+      return engine.changeMaster(
+        message.payload.meta,
+        message.payload.account,
+        message.payload.oldPassword,
+        message.payload.newPassword,
+      );
+    case 'exportBackup':
+      return engine.exportBackup(message.payload.snapshot);
+    case 'verifyBackup':
+      return engine.verifyBackup(
+        message.payload.backup,
+        message.payload.file,
+        message.payload.password,
+      );
+    case 'prepareTransition':
+      return engine.prepareTransition(
+        message.payload.ownerSubject,
+        message.payload.meta,
+        message.payload.password,
+        message.payload.restore,
+      );
+    case 'verifyTransitionFiles':
+      return engine.verifyTransitionFiles(
+        message.payload.account,
+        message.payload.recovery,
+      );
+    case 'transitionPayload':
+      return engine.transitionPayload();
+    case 'bindTransition':
+      return engine.bindTransition(message.payload.task);
+    case 'transitionBatch':
+      return engine.transitionBatch(message.payload.itemIds);
+    case 'verifyStaged':
+      return engine.verifyStaged(message.payload.items);
+    case 'resumeTransition':
+      return engine.resumeTransition(
+        message.payload.ownerSubject,
+        message.payload.meta,
+        message.payload.task,
+        message.payload.account,
+        message.payload.password,
+        message.payload.recovery,
+      );
     case 'resetIndex':
       return engine.resetIndex();
     case 'ingest':
@@ -45,9 +107,13 @@ async function execute(message: WorkerRequest) {
     case 'reveal':
       return engine.reveal(message.payload.itemId);
     case 'encrypt':
-      return engine.encrypt(message.payload.plain, message.payload.itemId);
+      return engine.encrypt(
+        message.payload.plain,
+        message.payload.itemId,
+        message.payload.preserveTotp,
+      );
     case 'generate':
-      return engine.generate();
+      return engine.generate(message.payload.length, message.payload.symbols);
     default:
       throw new Error('VAULT_INVALID_FORMAT');
   }
@@ -62,7 +128,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         message.id > 0 &&
         queued < 8,
     );
-    assert(encoder.encode(JSON.stringify(message)).length <= 4 * 1024 * 1024);
+    assert(encoder.encode(JSON.stringify(message)).length <= 64 * 1024 * 1024);
   } catch {
     self.postMessage({ id: message?.id, error: 'VAULT_INVALID_FORMAT' });
     return;

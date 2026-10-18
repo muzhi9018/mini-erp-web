@@ -20,6 +20,8 @@
     "@umijs/max": "4.6.75",
     "antd": "6.5.1",
     "hash-wasm": "4.12.0",
+    "jsqr": "1.4.0",
+    "lucide-react": "^1.59.0",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },

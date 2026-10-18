@@ -1,10 +1,15 @@
 :root {
   color-scheme: light;
-  background: #f3f6f5;
+  background: #eef4ff;
+}
+* {
+  box-sizing: border-box;
 }
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    sans-serif;
 }
 button,
 a,
@@ -18,8 +23,13 @@ input[type="file"] {
 input[type="file"]::file-selector-button {
   padding: 7px 12px;
   margin-right: 12px;
-  border: 1px solid #c9d6d1;
+  border: 1px solid #dde6f4;
   border-radius: 7px;
-  background: white;
+  background: #fff;
+  color: #1e2f4b;
   cursor: pointer;
+}
+:root[data-vault-theme="dark"] {
+  color-scheme: dark;
+  background: #111c31;
 }

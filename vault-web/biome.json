@@ -1,6 +1,7 @@
 {
   "root": false,
   "extends": ["../biome.json"],
+  "css": { "parser": { "cssModules": true } },
   "files": {
     "includes": [
       "**",

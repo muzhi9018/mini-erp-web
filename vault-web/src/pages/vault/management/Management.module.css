@@ -1,0 +1,641 @@
+.layout {
+  display: grid;
+  grid-template-columns: 193px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.side {
+  padding: 23px 12px 18px;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+}
+.group {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 0 11px 11px;
+}
+.groupSecond {
+  margin-top: 24px;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  width: 100%;
+  padding: 11px 12px;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.nav:hover {
+  background: var(--surface);
+}
+.selected {
+  background: var(--tint);
+  color: var(--blue);
+  font-weight: 500;
+}
+.localNote {
+  display: flex;
+  gap: 7px;
+  margin: 30px 9px 0;
+  padding-top: 15px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.main {
+  min-width: 0;
+  padding: 27px 30px 29px;
+  overflow-wrap: anywhere;
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 25px;
+}
+.head h1 {
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.head p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+  line-height: 1.8;
+  max-width: 540px;
+}
+.main h2 {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.main h3 {
+  font-size: 14px;
+  font-weight: 500;
+}
+.main :global(.ant-btn) {
+  font-size: 13px;
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 40px;
+  padding: 8px 14px;
+}
+.main :global(.ant-btn > span) {
+  overflow-wrap: anywhere;
+}
+.main :global(.ant-input-affix-wrapper),
+.main :global(.ant-input) {
+  font-size: 14px;
+}
+.mobileNav {
+  display: none;
+}
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--surface);
+  margin-bottom: 17px;
+}
+.section {
+  margin-top: 26px;
+}
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.sectionHead small,
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.device {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+.device + .device {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.deviceIcon {
+  width: 43px;
+  height: 45px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  color: var(--blue);
+  flex: none;
+}
+.deviceContent {
+  flex: 1;
+  min-width: 0;
+}
+.deviceContent p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.inlineForm {
+  padding: 18px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 17px 0;
+}
+.note svg {
+  flex: none;
+  margin-top: 3px;
+}
+.warning {
+  background: var(--alert);
+  color: var(--alert-text);
+  border-color: transparent;
+}
+.stage {
+  margin-bottom: 18px;
+}
+.stage h2 {
+  font-size: 18px;
+}
+.stage p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+  line-height: 1.8;
+}
+.formWidth {
+  max-width: 540px;
+  min-width: 0;
+}
+.field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.fileGroup {
+  min-width: 0;
+  margin-bottom: 17px;
+}
+.file {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  position: relative;
+  cursor: pointer;
+  min-width: 0;
+}
+.file:focus-within {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.file:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.file input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: inherit;
+}
+.fileIcon {
+  width: 33px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--blue);
+  flex: none;
+}
+.fileText {
+  flex: 1;
+  min-width: 0;
+}
+.fileText b {
+  display: block;
+  font-weight: 500;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.fileText small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.fileEnd {
+  font-size: 11px;
+  color: var(--blue);
+  flex: none;
+}
+.fileError {
+  border-color: var(--danger);
+}
+.methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 19px;
+}
+.selectedMethod {
+  background: var(--tint);
+  color: var(--blue);
+  border-color: var(--tint);
+}
+.tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.tab {
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.selectedTab {
+  border-bottom-color: var(--blue);
+  color: var(--blue);
+}
+.steps {
+  display: flex;
+  gap: 9px;
+  margin: 0 0 25px;
+  padding: 0;
+  list-style: none;
+}
+.steps li {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 11px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.steps li > span {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: inline-grid;
+  place-items: center;
+  margin-right: 6px;
+  font-size: 11px;
+  vertical-align: middle;
+}
+.steps .activeStep {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.steps .activeStep > span {
+  background: var(--blue);
+  color: var(--on-blue);
+}
+.steps .doneStep > span {
+  background: var(--tint);
+  color: var(--blue);
+}
+.flowFooter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  padding-top: 19px;
+  margin-top: 24px;
+}
+.flowFooter > :global(.ant-btn-primary) {
+  margin-left: auto;
+}
+.summary {
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px 16px;
+}
+.summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.summary > div:last-child {
+  border-bottom: 0;
+}
+.summary dt {
+  color: var(--muted);
+}
+.summary dd {
+  text-align: right;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.exportRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--line);
+}
+.exportRow:first-child {
+  padding-top: 0;
+}
+.exportRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.exportRow p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+}
+.exportControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.exportControls .fileGroup {
+  margin: 0;
+}
+.exportControls .file {
+  padding: 8px 10px;
+}
+.exportControls .fileIcon,
+.exportControls .fileEnd,
+.exportControls small {
+  display: none;
+}
+.result {
+  padding: 15px 0 22px;
+}
+.resultIcon {
+  width: 49px;
+  height: 49px;
+  border-radius: 14px;
+  background: var(--tint);
+  color: var(--blue);
+  display: grid;
+  place-items: center;
+  margin-bottom: 17px;
+}
+.result h2 {
+  font-size: 22px;
+}
+.result p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+  margin-top: 10px;
+  max-width: 540px;
+}
+.error {
+  color: var(--danger);
+  font-size: 12px;
+  padding-top: 10px;
+}
+.badge {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--tint);
+  color: var(--blue);
+  font-size: 11px;
+}
+.progressHead,
+.progressMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.progressTrack {
+  height: 6px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--tint);
+}
+.progressTrack > div {
+  height: 100%;
+  background: var(--blue);
+}
+.progressMeta {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 9px 0 0;
+}
+@media (min-width: 641px) {
+  .side {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    min-height: 100%;
+  }
+}
+@media (max-width: 850px) {
+  .layout {
+    grid-template-columns: 171px minmax(0, 1fr);
+  }
+  .main {
+    padding: 25px 22px;
+  }
+  .side {
+    padding: 22px 8px;
+  }
+  .nav {
+    padding: 10px;
+    font-size: 11px;
+  }
+  .head {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .steps {
+    gap: 6px;
+  }
+  .steps li > span {
+    display: grid;
+    margin: 0 0 6px;
+  }
+  .panel {
+    padding: 17px;
+  }
+  .exportRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 640px) {
+  .layout {
+    display: block;
+    overflow: visible;
+  }
+  .side {
+    display: none;
+  }
+  .mobileNav {
+    display: grid;
+    gap: 5px;
+    background: var(--bg);
+    padding: 12px 17px;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .mobileNav select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+  }
+  .main {
+    padding: 21px 19px 25px;
+  }
+  .head h1 {
+    font-size: 23px;
+  }
+  .steps li {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .steps li.activeStep {
+    position: static;
+    display: flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    gap: 7px;
+  }
+  .steps li > span {
+    display: inline-grid;
+    margin: 0 3px 0 0;
+  }
+  .device {
+    flex-wrap: wrap;
+    gap: 11px;
+  }
+  .device > button {
+    margin-left: 54px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .flowFooter > :global(.ant-btn-primary) {
+    width: 100%;
+    margin: 4px 0 0;
+  }
+  .progressMeta {
+    flex-direction: column;
+    gap: 3px;
+  }
+  .summary > div {
+    gap: 12px;
+  }
+}
+@media (pointer: coarse) {
+  .main :global(.ant-btn),
+  .nav {
+    min-height: 44px;
+  }
+  .main input,
+  .mobileNav select {
+    font-size: 16px;
+  }
+}
+fieldset.methods,
+fieldset.tabs {
+  padding: 0;
+  min-width: 0;
+  border: 0;
+}
+fieldset.tabs {
+  border-bottom: 1px solid var(--line);
+}
+.nav.selected,
+.nav.selected:hover {
+  background: var(--tint);
+  color: var(--blue);
+}

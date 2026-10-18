@@ -1,10 +1,15 @@
-import { Button, Card, Form, Input, Space } from 'antd';
+import { Button, Form } from 'antd';
+import { FileText } from 'lucide-react';
 import { useState } from 'react';
 import { validatePassword } from '@/security/vault/protocol';
+import { AuthTitle } from './AuthShell';
 import { downloadFile, readKeyFile } from './files';
+import PasswordInput from './PasswordInput';
 import { useText } from './text';
+import styles from './Vault.module.css';
 
 type Props = {
+  purpose?: 'rotation' | 'restore';
   busy: boolean;
   draft?: Vault.PreparedSetup;
   verified: boolean;
@@ -22,74 +27,85 @@ export default function Setup(props: Props) {
   const [exported, setExported] = useState({ account: false, recovery: false });
   const draft = props.draft;
   return (
-    <div className="mx-auto max-w-2xl">
-      <Card title={t('vault.setup')}>
-        <p className="mb-6 text-slate-600">{t('vault.setupHint')}</p>
-        {!draft ? (
-          <Form
-            layout="vertical"
-            form={form}
-            preserve={false}
-            clearOnDestroy
-            autoComplete="off"
-            onFinish={(values: { password: string }) => {
-              form.resetFields();
-              props.onPrepare(values.password);
-            }}
+    <>
+      <AuthTitle
+        title={t(
+          props.purpose === 'rotation'
+            ? 'vault.rotation'
+            : props.purpose === 'restore'
+              ? 'vault.restore'
+              : 'vault.setup',
+        )}
+        description={t('vault.setupHint')}
+      />
+      {!draft ? (
+        <Form
+          layout="vertical"
+          form={form}
+          preserve={false}
+          clearOnDestroy
+          autoComplete="off"
+          onFinish={(values: { password: string }) => {
+            form.resetFields();
+            props.onPrepare(values.password);
+          }}
+        >
+          <Form.Item
+            name="password"
+            label={t('vault.masterPassword')}
+            rules={[
+              {
+                validator: (_, value: string) => {
+                  try {
+                    validatePassword(value);
+                    return Promise.resolve();
+                  } catch {
+                    return Promise.reject(new Error(t('vault.passwordRule')));
+                  }
+                },
+              },
+            ]}
           >
-            <Form.Item
-              name="password"
-              label={t('vault.masterPassword')}
-              rules={[
-                {
-                  validator: (_, value: string) => {
-                    try {
-                      validatePassword(value);
-                      return Promise.resolve();
-                    } catch {
-                      return Promise.reject(new Error(t('vault.passwordRule')));
-                    }
-                  },
-                },
-              ]}
-            >
-              <Input.Password
-                autoComplete="new-password"
-                visibilityToggle={false}
-              />
-            </Form.Item>
-            <Form.Item
-              name="confirmation"
-              label={t('vault.confirmPassword')}
-              dependencies={['password']}
-              rules={[
-                { required: true, message: t('vault.required') },
-                {
-                  validator: (_, value: string) =>
-                    value === form.getFieldValue('password')
-                      ? Promise.resolve()
-                      : Promise.reject(new Error(t('vault.passwordMismatch'))),
-                },
-              ]}
-            >
-              <Input.Password
-                autoComplete="new-password"
-                visibilityToggle={false}
-              />
-            </Form.Item>
-            <Button htmlType="submit" type="primary" loading={props.busy}>
-              {t('vault.prepare')}
-            </Button>
-          </Form>
-        ) : (
-          <Space orientation="vertical" size="large" className="w-full">
-            <p>{t('vault.filesHint')}</p>
+            <PasswordInput autoComplete="new-password" />
+          </Form.Item>
+          <Form.Item
+            name="confirmation"
+            label={t('vault.confirmPassword')}
+            dependencies={['password']}
+            rules={[
+              { required: true, message: t('vault.required') },
+              {
+                validator: (_, value: string) =>
+                  value === form.getFieldValue('password')
+                    ? Promise.resolve()
+                    : Promise.reject(new Error(t('vault.passwordMismatch'))),
+              },
+            ]}
+          >
+            <PasswordInput autoComplete="new-password" />
+          </Form.Item>
+          <Button block htmlType="submit" type="primary" loading={props.busy}>
+            {t('vault.prepare')}
+          </Button>
+        </Form>
+      ) : (
+        <div className={styles.setupMaterials}>
+          <p className={styles.help}>{t('vault.filesHint')}</p>
+          <div className={styles.setupFiles}>
             {(['account', 'recovery'] as const).map((kind) => (
-              <div
-                key={kind}
-                className="grid gap-3 rounded-lg border border-slate-200 p-4"
-              >
+              <div key={kind} className={styles.setupFileCard}>
+                <h2>
+                  <span className={styles.fileIcon}>
+                    <FileText size={16} strokeWidth={1.5} />
+                  </span>
+                  {t(
+                    kind === 'account'
+                      ? 'vault.accountFile'
+                      : 'vault.recoveryFile',
+                  )}
+                </h2>
                 <Button
+                  block
                   onClick={() => {
                     downloadFile(
                       kind === 'account'
@@ -134,37 +150,38 @@ export default function Setup(props: Props) {
                 </label>
               </div>
             ))}
-            <Space wrap>
-              <Button
-                disabled={
-                  !files.account ||
-                  !files.recovery ||
-                  props.busy ||
-                  props.verified
-                }
-                onClick={() => {
-                  props.onVerify(files.account, files.recovery);
-                }}
-              >
-                {t(
-                  props.verified ? 'vault.filesVerified' : 'vault.verifyFiles',
-                )}
-              </Button>
-              <Button
-                type="primary"
-                disabled={!props.verified}
-                loading={props.busy}
-                onClick={props.onCommit}
-              >
-                {t('vault.finishSetup')}
-              </Button>
-              <Button disabled={props.busy} onClick={props.onCancel}>
-                {t('vault.cancel')}
-              </Button>
-            </Space>
-          </Space>
-        )}
-      </Card>
-    </div>
+          </div>
+          <div className={styles.setupActions}>
+            <Button
+              disabled={
+                !files.account ||
+                !files.recovery ||
+                props.busy ||
+                props.verified
+              }
+              onClick={() => {
+                props.onVerify(files.account, files.recovery);
+              }}
+            >
+              {t(props.verified ? 'vault.filesVerified' : 'vault.verifyFiles')}
+            </Button>
+            <Button
+              type="primary"
+              aria-label={t(
+                props.purpose ? 'vault.startRotation' : 'vault.finishSetup',
+              )}
+              disabled={!props.verified}
+              loading={props.busy}
+              onClick={props.onCommit}
+            >
+              {t(props.purpose ? 'vault.startRotation' : 'vault.finishSetup')}
+            </Button>
+            <Button disabled={props.busy} onClick={props.onCancel}>
+              {t('vault.cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

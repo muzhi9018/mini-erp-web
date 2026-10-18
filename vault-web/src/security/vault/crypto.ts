@@ -6,9 +6,12 @@ import {
   encode,
   encoder,
   PROFILE,
+  parseAccountFile,
+  parseRecoveryFile,
   random,
   validateBox,
   validatePassword,
+  validateSlots,
 } from './protocol';
 
 export const aesKey = (raw: Uint8Array<ArrayBuffer>) =>
@@ -218,3 +221,42 @@ export const itemAAD = (
         item.itemId,
         item.contentVersion,
       );
+
+export async function unlockMaterial(
+  ctx: Vault.Context,
+  slots: Vault.Slot[],
+  fileText: string,
+  password?: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  validateSlots(slots);
+  const recovery = password === undefined;
+  const file = recovery
+    ? parseRecoveryFile(fileText)
+    : parseAccountFile(fileText);
+  const keyId = 'accountKeyId' in file ? file.accountKeyId : file.recoveryKeyId;
+  const slot = slots.find(
+    (entry) => entry.slotType === (recovery ? 'RECOVERY' : 'NORMAL'),
+  );
+  assert(
+    slot &&
+      file.ownerSubject === ctx.ownerSubject &&
+      file.vaultId === ctx.vaultId &&
+      keyId === slot.keyId,
+  );
+  const raw = decode(
+    'accountKey' in file ? file.accountKey : file.recoveryKey,
+    32,
+  );
+  try {
+    const kek = recovery
+      ? await hkdf(
+          raw,
+          decode(slot.recoverySalt, 32),
+          context('recovery-wrap', ...identity(ctx)),
+        )
+      : await normalKey(ctx, slot, password as string, raw);
+    return await open(kek, slot.wrappedVmk, slotAAD(ctx, slot));
+  } finally {
+    raw.fill(0);
+  }
+}

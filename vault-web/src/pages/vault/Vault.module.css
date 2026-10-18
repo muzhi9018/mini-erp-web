@@ -1,0 +1,1302 @@
+.root {
+  --bg: #eef4ff;
+  --surface: #fff;
+  --soft: #edf3fe;
+  --text: #1e2f4b;
+  --muted: #60738e;
+  --line: #dde6f4;
+  --blue: #2563eb;
+  --on-blue: #fff;
+  --tint: #e8f0ff;
+  --alert: #fff5df;
+  --alert-text: #775a25;
+  --danger: #b44242;
+  --brand: #eaf3ff;
+  --brand-text: #173d75;
+  --brand-muted: #537199;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+:global(:where(html[data-vault-theme="dark"])) .root {
+  --bg: #111c31;
+  --surface: #19283f;
+  --soft: #223653;
+  --text: #e3ecfb;
+  --muted: #adbfdb;
+  --line: #334765;
+  --blue: #91bbff;
+  --on-blue: #0f2b57;
+  --tint: #213b63;
+  --alert: #3c3321;
+  --alert-text: #ead09b;
+  --danger: #ffa6a0;
+  --brand: #112a4d;
+  --brand-text: #e0eeff;
+  --brand-muted: #b1c9ed;
+}
+.root h1,
+.root h2,
+.root h3,
+.root p {
+  margin: 0;
+}
+.root h1 {
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+}
+.root h2 {
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+}
+.root small {
+  font-size: 12px;
+}
+.root svg {
+  flex-shrink: 0;
+}
+.shell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: clip;
+}
+.notice {
+  min-height: 32px;
+  padding: 7px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--alert);
+  color: var(--alert-text);
+  font-size: 12px;
+}
+.notice button {
+  margin-left: auto;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.testDetails {
+  padding: 12px 20px;
+  background: var(--alert);
+  color: var(--alert-text);
+  font-size: 12px;
+}
+.top {
+  min-height: 72px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  background: #f8faff;
+}
+.logo {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.logoMark {
+  width: 34px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--on-blue);
+  background: var(--blue);
+}
+.wordmark {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.7px;
+}
+.logoSub {
+  margin-left: 9px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.languageShort {
+  display: none;
+}
+.auth {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.15fr);
+  min-height: 640px;
+}
+.authBrand {
+  background: var(--brand);
+  color: var(--brand-text);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 230px;
+  position: relative;
+  isolation: isolate;
+}
+.authBrand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(
+      180deg,
+      #edf5fffa 0%,
+      #edf5ffeb 19%,
+      #edf5ff10 37%,
+      #edf5ff00 59%,
+      #edf5ffdd 80%,
+      var(--brand) 100%
+    ),
+    url("/images/vault-lock-tech-blue.jpg");
+  background-position:
+    center,
+    center 49%;
+  background-size:
+    100% 100%,
+    cover;
+  background-repeat: no-repeat;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+.authBrand h2 {
+  font-size: 30px;
+  line-height: 1.4;
+  font-weight: 400;
+  margin: 13px 0 9px;
+  letter-spacing: 0;
+}
+.authBrand p {
+  color: var(--brand-muted);
+  max-width: 260px;
+  line-height: 1.8;
+}
+.steps {
+  list-style: none;
+  padding: 15px 17px;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+  background: #f6faffd9;
+  border: 1px solid #ffffffbd;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+.step {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  color: var(--brand-muted);
+  font-size: 13px;
+}
+.stepActive {
+  color: var(--brand-text);
+}
+.stepNumber {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--brand-muted);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  flex: none;
+}
+.currentStep {
+  background: var(--brand-text);
+  color: var(--brand);
+  border-color: var(--brand-text);
+}
+.step small {
+  display: block;
+  color: var(--brand-muted);
+  margin-top: 2px;
+}
+.authMain {
+  min-width: 0;
+  padding: 44px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--surface) 55%, var(--bg));
+}
+.authContent {
+  width: 100%;
+  max-width: 360px;
+  margin: auto;
+}
+.authTitle {
+  margin-bottom: 27px;
+}
+.authTitle p {
+  color: var(--muted);
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.authFoot {
+  padding-top: 23px;
+  margin-top: 25px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.authFoot svg {
+  margin-top: 3px;
+}
+.passkeySymbol {
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  color: var(--blue);
+  background: var(--tint);
+  margin-bottom: 20px;
+}
+.passkeySymbol svg {
+  width: 27px;
+  height: 27px;
+}
+.statusLine {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--tint);
+  color: var(--blue);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+.fileCard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 17px 13px;
+  border: 1px dashed var(--line);
+  background: var(--bg);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.fileCard input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.fileCard:focus-within {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.fileCard b {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.fileCard small {
+  display: block;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.fileReady {
+  border-style: solid;
+}
+.fileIcon {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--blue);
+  flex: none;
+}
+.fileEnd {
+  margin-left: auto;
+  color: var(--blue);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.authLinks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.authLinks :global(.ant-btn) {
+  height: auto;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.help {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.setupMaterials,
+.setupFiles {
+  display: grid;
+  gap: 22px;
+}
+.setupFileCard {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg);
+}
+.setupFileCard h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+.setupFileCard label {
+  color: var(--muted);
+  font-size: 13px;
+}
+.setupFileCard input {
+  width: 100%;
+  min-width: 0;
+  color: var(--muted);
+  font: inherit;
+}
+.setupFileCard input::file-selector-button {
+  margin-right: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.setupFileCard input:disabled::file-selector-button {
+  opacity: 0.55;
+  cursor: default;
+}
+.setupActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.root .fieldError {
+  color: var(--danger);
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.pop {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 12px;
+  margin: 14px 0;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.pop p {
+  margin-bottom: 9px;
+}
+.errorBanner {
+  padding: 12px 20px;
+}
+.footer {
+  border-top: 1px solid var(--line);
+  padding: 9px 20px;
+  color: var(--muted);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  background: #f8faff;
+}
+.footerEnd {
+  margin-left: auto;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: 166px minmax(0, 1fr);
+  min-height: 680px;
+}
+.sidebar {
+  padding: 22px 12px 14px;
+  border-right: 1px solid var(--line);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px;
+  text-align: left;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.nav:hover {
+  background: var(--soft);
+}
+.nav.selected {
+  color: var(--blue);
+  background: var(--tint);
+  font-weight: 500;
+}
+.nav small {
+  margin-left: auto;
+}
+.navLabel {
+  margin: 26px 11px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.account {
+  padding: 16px 8px 0;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.avatar {
+  width: 29px;
+  height: 29px;
+  background: var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.main {
+  min-width: 0;
+}
+.mainHead {
+  min-height: 85px;
+  padding: 21px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+.mainHead h1 {
+  font-size: 22px;
+}
+.count {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 8px;
+}
+.sync {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.sync svg {
+  color: var(--blue);
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.85fr) minmax(0, 1.15fr);
+  min-height: 595px;
+}
+.list {
+  border-right: 1px solid var(--line);
+  min-width: 0;
+}
+.search {
+  margin: 17px 15px 12px;
+}
+.search :global(.ant-input-affix-wrapper) {
+  background: var(--bg);
+  font-size: 12px;
+}
+.listCaption {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 19px 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.entries {
+  max-height: 640px;
+  overflow-y: auto;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  width: calc(100% - 16px);
+  margin: 0 8px 4px;
+  padding: 12px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.item:hover {
+  background: var(--bg);
+}
+.item.selected {
+  background: var(--tint);
+  border-color: var(--tint);
+}
+.itemIcon {
+  width: 35px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 500;
+}
+.selected .itemIcon {
+  background: var(--surface);
+}
+.itemText {
+  min-width: 0;
+  flex: 1;
+}
+.itemText b {
+  font-weight: 500;
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.itemText small {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 3px;
+}
+.item > svg {
+  color: var(--muted);
+  width: 13px;
+}
+.detail {
+  padding: 26px 27px 21px;
+  min-width: 0;
+  background: var(--surface);
+}
+.detailHead {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  margin-bottom: 25px;
+}
+.detailHead .itemIcon {
+  width: 46px;
+  height: 48px;
+  font-size: 22px;
+  border: 1px solid var(--line);
+}
+.detailHead h2 {
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+.detailHead p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.detailHead > button {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.valueField {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+.valueLabel {
+  color: var(--muted);
+  font-size: 11px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.valueRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 9px;
+  min-height: 30px;
+}
+.valueText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+.secret {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 14px;
+  letter-spacing: 0.7px;
+  user-select: all;
+}
+.secretActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.secretActions :global(.ant-btn) {
+  font-size: 12px;
+  height: 35px;
+}
+.secretActions :global(.ant-btn-primary) {
+  flex: 1;
+}
+.revealTime {
+  color: var(--blue);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.revealTrack {
+  height: 3px;
+  background: var(--soft);
+  margin-top: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.revealFill {
+  height: 100%;
+  background: var(--blue);
+}
+.tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.tag {
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.detailBottom {
+  margin-top: 27px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.editorHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+.editorHead h2 {
+  font-size: 21px;
+}
+.editorFooter {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 17px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.editorFooter :global(.ant-btn-primary) {
+  margin-left: auto;
+}
+.back {
+  display: none;
+  margin-bottom: 20px;
+}
+.empty {
+  padding: 45px 20px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
+.empty p {
+  margin-bottom: 14px;
+}
+.security {
+  padding: 28px;
+  max-width: 650px;
+}
+.securityRow {
+  display: grid;
+  gap: 8px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.securityRow h2 {
+  font-size: 16px;
+}
+.securityRow p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.copyFallback {
+  user-select: all;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: monospace;
+}
+.root :global(.ant-form-item) {
+  margin-bottom: 19px;
+}
+.root :global(.ant-form-item-label > label) {
+  font-size: 12px;
+  font-weight: 500;
+}
+.root :global(.ant-btn) {
+  box-shadow: none;
+  font-weight: 500;
+}
+.root :global(.ant-input-affix-wrapper),
+.root :global(.ant-input),
+.root :global(.ant-select) {
+  min-width: 0;
+}
+.root :global(.ant-form-item-control-input-content > .ant-input),
+.root :global(.ant-input-affix-wrapper) {
+  padding: 10px 12px;
+}
+.root :global(.ant-input-affix-wrapper > .ant-input) {
+  padding: 0;
+}
+.root :global(.ant-select-selection-item) {
+  overflow-wrap: anywhere;
+}
+:global(:where(html[data-vault-theme="dark"])) .top,
+:global(:where(html[data-vault-theme="dark"])) .footer {
+  background: #16243a;
+}
+:global(:where(html[data-vault-theme="dark"])) .authBrand::before {
+  background-image:
+    linear-gradient(
+      180deg,
+      #112a4dfa 0%,
+      #112a4deb 19%,
+      #112a4d30 37%,
+      #112a4d30 59%,
+      #112a4deb 80%,
+      var(--brand) 100%
+    ),
+    linear-gradient(#0b214a88, #0b214a88),
+    url("/images/vault-lock-tech-blue.jpg");
+  background-position:
+    center,
+    center,
+    center 49%;
+  background-size:
+    100% 100%,
+    100% 100%,
+    cover;
+}
+:global(:where(html[data-vault-theme="dark"])) .steps {
+  background: #10294ce8;
+  border-color: #37547aa6;
+}
+@media (min-width: 621px) {
+  .root {
+    height: 100dvh;
+  }
+  .shell {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .notice,
+  .top,
+  .testDetails,
+  .errorBanner,
+  .footer,
+  .mainHead,
+  .search,
+  .listCaption {
+    flex-shrink: 0;
+  }
+  .auth,
+  .workspace {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+  .workspace {
+    grid-template-columns: 186px minmax(0, 1fr);
+  }
+  .main,
+  .list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .split {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: clamp(280px, 26vw, 420px) minmax(0, 1fr);
+  }
+  .entries {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+  .detail,
+  .sidebar,
+  .security {
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+@media (min-width: 1024px) {
+  .auth {
+    grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  }
+  .authBrand {
+    gap: clamp(48px, 16vh, 230px);
+  }
+  .authMain {
+    padding: 36px clamp(28px, 3vw, 72px);
+    justify-content: flex-start;
+    background:
+      radial-gradient(ellipse at 85% 12%, var(--tint), transparent 60%),
+      linear-gradient(145deg, var(--surface), var(--bg));
+  }
+  .authContent {
+    max-width: clamp(500px, 34vw, 780px);
+    padding: clamp(32px, 2.4vw, 56px);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: var(--surface);
+    box-shadow:
+      0 24px 72px -24px #3164ac38,
+      0 4px 16px -6px #3164ac14;
+  }
+  .authWide .authContent {
+    max-width: clamp(620px, 44vw, 1000px);
+  }
+  .authTitle {
+    margin-bottom: 32px;
+  }
+  .authTitle h1 {
+    font-size: clamp(28px, 1.6vw, 36px);
+  }
+  .authTitle p,
+  .authContent > .help,
+  .setupMaterials > .help {
+    font-size: 15px;
+  }
+  .authContent :global(.ant-form-item-label > label) {
+    font-size: 14px;
+  }
+  .authContent :global(.ant-input-affix-wrapper),
+  .authContent :global(.ant-form-item-control-input-content > .ant-input) {
+    min-height: 52px;
+    font-size: 16px;
+  }
+  .authContent :global(.ant-btn) {
+    min-height: 48px;
+    font-size: 15px;
+  }
+  .authContent .authLinks :global(.ant-btn) {
+    min-height: 0;
+    font-size: 14px;
+  }
+  .authContent .passkeySymbol {
+    width: 72px;
+    height: 72px;
+    border-radius: 21px;
+    margin-bottom: 26px;
+  }
+  .passkeySymbol svg {
+    width: 33px;
+    height: 33px;
+  }
+  .authFoot {
+    font-size: 13px;
+  }
+}
+@media (min-width: 1024px) {
+  :global(:where(html[data-vault-theme="dark"])) .authContent {
+    box-shadow:
+      0 24px 72px -24px #020b20b3,
+      0 4px 16px -6px #020b2059;
+  }
+}
+@media (min-width: 1280px) {
+  .setupFiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) and (max-height: 850px) {
+  .authMain {
+    padding-block: 24px;
+  }
+  .authWide .authContent {
+    padding: 24px;
+  }
+  .authWide .authTitle {
+    margin-bottom: 20px;
+  }
+  .authWide .authTitle p,
+  .setupMaterials > .help {
+    font-size: 14px;
+  }
+  .setupMaterials,
+  .setupFiles {
+    gap: 16px;
+  }
+  .setupFileCard {
+    gap: 14px;
+    padding: 18px;
+  }
+  .authWide :global(.ant-btn) {
+    min-height: 44px;
+  }
+  .setupActions {
+    padding-top: 18px;
+  }
+}
+@media (min-width: 1440px) {
+  .detailGrid,
+  .editorForm {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+    align-content: start;
+  }
+  .detailGrid > .detailHead,
+  .detailGrid > .detailBottom,
+  .detailGrid > .pop,
+  .detailGrid > .empty,
+  .editorForm > .pop {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 850px) {
+  .root {
+    padding: 16px;
+  }
+  .workspace {
+    grid-template-columns: 57px minmax(0, 1fr);
+  }
+  .sidebar {
+    padding: 20px 7px 14px;
+  }
+  .nav {
+    justify-content: center;
+    padding: 12px 8px;
+  }
+  .nav span,
+  .nav small,
+  .navLabel,
+  .account > span:last-child {
+    display: none;
+  }
+  .account {
+    padding-left: 6px;
+  }
+  .split {
+    grid-template-columns: minmax(215px, 0.82fr) minmax(0, 1.18fr);
+  }
+  .detail {
+    padding: 24px 20px 20px;
+  }
+  .authBrand {
+    padding: 35px 26px;
+  }
+  .authMain {
+    padding: 38px 30px;
+  }
+}
+@media (max-width: 620px) {
+  .root {
+    padding: 0;
+  }
+  .shell {
+    border-radius: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  .top {
+    padding: 13px 15px;
+    min-height: 65px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .logoSub {
+    display: none;
+  }
+  .top .actions {
+    gap: 3px;
+  }
+  .top :global(.ant-btn) {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+  .top :global(.ant-select) {
+    width: 62px;
+  }
+  .languageFull,
+  .lockLabel {
+    display: none;
+  }
+  .languageShort {
+    display: inline;
+  }
+  .auth {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 0;
+    flex: 1;
+  }
+  .authBrand {
+    padding: 18px 22px;
+    gap: 0;
+  }
+  .authBrand::before,
+  .brandCopy {
+    display: none;
+  }
+  .steps {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .step {
+    gap: 7px;
+    font-size: 11px;
+  }
+  .step small {
+    display: none;
+  }
+  .stepNumber {
+    width: 23px;
+    height: 23px;
+  }
+  .authMain {
+    padding: 30px 24px;
+    justify-content: flex-start;
+  }
+  .authContent {
+    margin: 0 auto;
+  }
+  .workspace {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    flex: 1;
+  }
+  .sidebar {
+    flex-direction: row;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .nav {
+    width: auto;
+    padding: 8px;
+    gap: 6px;
+  }
+  .nav span {
+    display: inline;
+    font-size: 11px;
+  }
+  .tagNav,
+  .account,
+  .navLabel {
+    display: none;
+  }
+  .mobileFilter {
+    padding: 0 17px 14px;
+  }
+  .mainHead {
+    padding: 18px 17px;
+    min-height: 76px;
+  }
+  .mainHead h1 {
+    font-size: 20px;
+  }
+  .split {
+    display: block;
+    min-height: 440px;
+  }
+  .list {
+    border: 0;
+  }
+  .detail {
+    display: none;
+    padding: 22px 22px 26px;
+  }
+  .mobileDetail .list {
+    display: none;
+  }
+  .mobileDetail .detail {
+    display: block;
+  }
+  .back {
+    display: inline-flex;
+    padding: 0;
+    font-size: 12px;
+  }
+  .footer {
+    padding: 10px 15px;
+    font-size: 10px;
+  }
+  .footerEnd {
+    width: 100%;
+    margin-left: 23px;
+  }
+  .notice {
+    padding: 8px 15px;
+    font-size: 11px;
+  }
+  .mainHead .sync {
+    display: none;
+  }
+  .security {
+    padding: 22px;
+  }
+  .root input,
+  .root textarea {
+    font-size: 16px;
+  }
+  .root :global(.ant-btn),
+  .notice button,
+  .nav {
+    min-height: 44px;
+  }
+}
+@media (min-width: 621px) {
+  .mobileFilter {
+    display: none;
+  }
+}
+.root button:focus-visible,
+.root a:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .item,
+  .nav {
+    transition: background 0.15s;
+  }
+}
+
+.root[data-management] {
+  --soft: #f6f9ff;
+}
+:global(:where(html[data-vault-theme="dark"])) .root[data-management] {
+  --bg: #101c30;
+  --soft: #142239;
+}
+.root[data-management] .top {
+  background: var(--soft);
+}
+@media (max-width: 640px) {
+  .root[data-management] .top {
+    flex-wrap: wrap;
+  }
+  .root[data-management] .actions {
+    gap: 6px;
+  }
+  .root[data-management] .actions :global(.ant-btn) {
+    padding-inline: 8px;
+  }
+}
+
+.root[data-workspace] {
+  max-width: 1632px;
+}
+.workspaceMenu {
+  display: none;
+}
+@media (max-width: 620px) {
+  .root[data-workspace] .workspaceExtra {
+    display: none;
+  }
+  .root[data-workspace] .workspaceMenu {
+    display: inline-flex;
+  }
+}

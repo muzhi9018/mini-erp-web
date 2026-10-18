@@ -2,6 +2,11 @@ import { getLocale, request } from '@umijs/max';
 
 let csrf: { token: string; header: string } | undefined;
 let sessionEpoch = 0;
+let dataWritesBlocked = false;
+
+export function blockDataWrites() {
+  dataWritesBlocked = true;
+}
 
 export class VaultHttpError extends Error {
   constructor(
@@ -51,6 +56,12 @@ async function send<T>(
   const epoch = sessionEpoch;
   if (!url.startsWith('/vault-auth/') && !url.startsWith('/api/v1/vault/'))
     throw new VaultHttpError(400, 'VAULT_INVALID_REQUEST');
+  if (
+    method === 'POST' &&
+    url.startsWith('/api/v1/vault/') &&
+    dataWritesBlocked
+  )
+    throw new VaultHttpError(409, 'VAULT_CLIENT_UPGRADE_REQUIRED');
   if (method === 'POST' && !csrf)
     throw new VaultHttpError(403, 'VAULT_CSRF_INVALID');
   try {
@@ -63,6 +74,9 @@ async function send<T>(
       skipErrorHandler: true,
       headers: {
         'Accept-Language': getLocale(),
+        ...(method === 'POST' && url.startsWith('/api/v1/vault/')
+          ? { 'X-Vault-Item-Schema-Version': '2' }
+          : {}),
         ...(method === 'POST' && csrf ? { [csrf.header]: csrf.token } : {}),
       },
     });
@@ -89,6 +103,7 @@ async function send<T>(
             failure?.errorCode || 'VAULT_REQUEST_FAILED',
             failure?.requestId,
           );
+    if (safe.code === 'VAULT_CLIENT_UPGRADE_REQUIRED') blockDataWrites();
     if (
       safe.status === 401 &&
       safe.code !== 'VAULT_INVALID_CREDENTIALS' &&

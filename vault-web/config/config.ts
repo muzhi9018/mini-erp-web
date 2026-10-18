@@ -20,6 +20,8 @@ export default defineConfig({
   title: 'Personal vault',
   npmClient: 'npm',
   hash: true,
+  // Isolate minifier helpers across the app and Worker chunks.
+  esbuildMinifyIIFE: true,
   mfsu: false,
   devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
   https: localHTTPS
@@ -44,7 +46,7 @@ export default defineConfig({
     appConfig: {},
     configProvider: {
       button: { autoInsertSpace: false },
-      theme: { token: { colorPrimary: '#167566', borderRadius: 10 } },
+      theme: { token: { colorPrimary: '#2563eb', borderRadius: 10 } },
     },
   },
   request: {},

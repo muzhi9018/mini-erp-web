@@ -1,5 +1,5 @@
 import { useIntl } from '@umijs/max';
-import messages from '@/locales/en-US/vault';
+import messages from '@/locales/en-US';
 
 export type MessageKey = keyof typeof messages;
 export function useText() {

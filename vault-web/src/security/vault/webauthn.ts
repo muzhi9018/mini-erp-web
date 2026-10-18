@@ -36,9 +36,11 @@ export async function createPasskey(
 
 export async function getPasskey(
   options: Vault.AuthenticationOptions,
+  signal?: AbortSignal,
 ): Promise<Vault.Credential> {
   const key = credential(
     await navigator.credentials.get({
+      signal,
       publicKey: {
         ...options,
         challenge: decode(options.challenge, 16, 128),
