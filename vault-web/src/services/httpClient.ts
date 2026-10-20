@@ -75,7 +75,7 @@ async function send<T>(
       headers: {
         'Accept-Language': getLocale(),
         ...(method === 'POST' && url.startsWith('/api/v1/vault/')
-          ? { 'X-Vault-Item-Schema-Version': '2' }
+          ? { 'X-Vault-Item-Schema-Version': '3' }
           : {}),
         ...(method === 'POST' && csrf ? { [csrf.header]: csrf.token } : {}),
       },

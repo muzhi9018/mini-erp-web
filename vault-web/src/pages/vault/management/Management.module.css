@@ -1,13 +1,13 @@
 .layout {
   display: grid;
-  grid-template-columns: 193px minmax(0, 1fr);
+  grid-template-columns: var(--navigation-width) minmax(0, 1fr);
   flex: 1;
   min-height: 0;
   overflow: auto;
 }
 .side {
   padding: 23px 12px 18px;
-  background: var(--bg);
+  background: var(--navigation);
   border-right: 1px solid var(--line);
 }
 .group {
@@ -54,8 +54,15 @@
 }
 .main {
   min-width: 0;
-  padding: 27px 30px 29px;
+  min-height: 0;
+  padding: 34px 40px 40px;
+  overflow-y: auto;
   overflow-wrap: anywhere;
+}
+.content {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
 }
 .breadcrumb {
   display: flex;
@@ -70,10 +77,10 @@
   justify-content: space-between;
   gap: 16px;
   align-items: flex-start;
-  margin-bottom: 25px;
+  margin-bottom: 36px;
 }
 .head h1 {
-  font-size: 25px;
+  font-size: 22px;
   font-weight: 500;
   line-height: 1.4;
 }
@@ -85,7 +92,7 @@
   max-width: 540px;
 }
 .main h2 {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
   letter-spacing: 0;
 }
@@ -114,22 +121,32 @@
 .panel {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
   background: var(--surface);
   margin-bottom: 17px;
 }
 .section {
-  margin-top: 26px;
+  margin-top: 36px;
 }
 .sectionHead {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
-.sectionHead small,
+.sectionHead > button {
+  margin-left: auto;
+}
+.sectionHead small {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--tint);
+  color: var(--blue);
+  font-size: 12px;
+  line-height: 1.8;
+}
 .muted {
   color: var(--muted);
   font-size: 12px;
@@ -160,6 +177,9 @@
   flex: 1;
   min-width: 0;
 }
+.deviceContent h3 {
+  overflow-wrap: anywhere;
+}
 .deviceContent p {
   color: var(--muted);
   font-size: 11px;
@@ -173,6 +193,7 @@
   margin-top: 16px;
 }
 .inlineForm {
+  max-width: 640px;
   padding: 18px;
   background: var(--bg);
   border: 1px solid var(--line);
@@ -214,7 +235,8 @@
   line-height: 1.8;
 }
 .formWidth {
-  max-width: 540px;
+  width: 100%;
+  max-width: 640px;
   min-width: 0;
 }
 .field {
@@ -500,12 +522,10 @@
     top: 0;
     align-self: start;
     min-height: 100%;
+    min-width: 0;
   }
 }
 @media (max-width: 850px) {
-  .layout {
-    grid-template-columns: 171px minmax(0, 1fr);
-  }
   .main {
     padding: 25px 22px;
   }

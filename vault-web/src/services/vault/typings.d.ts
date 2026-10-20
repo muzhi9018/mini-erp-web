@@ -71,7 +71,8 @@ declare namespace Vault {
     nextCursor?: string | null;
   };
   type PlainItem = {
-    itemSchemaVersion: 2;
+    itemSchemaVersion: 3;
+    itemType: 'LOGIN';
     title: string;
     website: string;
     username: string;
@@ -79,7 +80,18 @@ declare namespace Vault {
     notes: string;
     tags: string[];
     totp: Totp | null;
+    platform: string | null;
+    boundEmail: string | null;
+    emailItemId: string | null;
   };
+  type PlainGroup = {
+    itemSchemaVersion: 3;
+    itemType: 'ACCOUNT_GROUP';
+    name: string;
+    defaultBoundEmail?: string | null;
+    memberItemIds: string[];
+  };
+  type PlainRecord = PlainItem | PlainGroup;
   type Totp = {
     secretBase32: string;
     issuer: string;
@@ -90,13 +102,53 @@ declare namespace Vault {
   };
   type TotpCode = { code: string; validFrom: number; validUntil: number };
   type TotpInfo = Omit<Totp, 'secretBase32'>;
-  type Summary = Pick<PlainItem, 'title' | 'website' | 'username' | 'tags'> & {
+  type Summary = Pick<
+    PlainItem,
+    | 'title'
+    | 'website'
+    | 'username'
+    | 'tags'
+    | 'platform'
+    | 'boundEmail'
+    | 'emailItemId'
+    | 'itemType'
+  > & {
     hasTotp: boolean;
     hasPassword: boolean;
     totpInfo: TotpInfo | null;
     itemId: string;
     rowVersion: number;
     contentVersion: number;
+  };
+  type GroupSummary = PlainGroup & {
+    itemId: string;
+    rowVersion: number;
+    contentVersion: number;
+  };
+  type RecordChange = {
+    itemId?: string;
+    plain: PlainRecord;
+    preserveTotp?: boolean;
+  };
+  type BatchChange = {
+    action: 'CREATE' | 'UPDATE' | 'DELETE';
+    itemId: string;
+    expectedRowVersion: number | null;
+    contentVersion: number | null;
+    wrappedDek: Box | null;
+    encryptedItem: Box | null;
+  };
+  type ItemBatch = {
+    generation: number;
+    keyEpoch: number;
+    expectedCollectionRevision: number;
+    changes: BatchChange[];
+    idempotencyKey: string;
+  };
+  type BatchReceipt = {
+    generation: number;
+    collectionRevision: number;
+    results: (WriteReceipt & { contentVersion?: number; deleted?: boolean })[];
   };
   type AccountFile = {
     formatVersion: 1;

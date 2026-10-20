@@ -148,14 +148,53 @@ export function validateItem(value: unknown): asserts value is Vault.Item {
   validateBox(item.encryptedItem, true);
 }
 
-export function parsePlain(value: unknown): Vault.PlainItem {
+export function parsePlain(value: unknown): Vault.PlainRecord {
   const item = object(value);
+  if (
+    item.itemSchemaVersion !== undefined &&
+    ![2, 3].includes(item.itemSchemaVersion as number)
+  )
+    throw new Error('VAULT_CLIENT_UPGRADE_REQUIRED');
+  if (
+    item.itemSchemaVersion === 3 &&
+    item.itemType !== 'LOGIN' &&
+    item.itemType !== 'ACCOUNT_GROUP'
+  )
+    throw new Error('VAULT_CLIENT_UPGRADE_REQUIRED');
+  assert(encoder.encode(JSON.stringify(item)).length <= 16384);
+  if (item.itemType === 'ACCOUNT_GROUP') {
+    assert(item.itemSchemaVersion === 3);
+    exact(item, [
+      'itemSchemaVersion',
+      'itemType',
+      'name',
+      'memberItemIds',
+      ...(Object.hasOwn(item, 'defaultBoundEmail')
+        ? ['defaultBoundEmail']
+        : []),
+    ]);
+    assert(typeof item.name === 'string' && item.name.trim().length > 0);
+    assert(
+      item.defaultBoundEmail === undefined ||
+        item.defaultBoundEmail === null ||
+        typeof item.defaultBoundEmail === 'string',
+    );
+    assert(Array.isArray(item.memberItemIds));
+    item.memberItemIds.forEach(uuid);
+    assert(new Set(item.memberItemIds).size === item.memberItemIds.length);
+    return item as Vault.PlainGroup;
+  }
   const fields = ['title', 'website', 'username', 'password', 'notes', 'tags'];
   if (item.itemSchemaVersion === undefined) exact(item, fields);
   else {
-    if (item.itemSchemaVersion !== 2)
-      throw new Error('VAULT_CLIENT_UPGRADE_REQUIRED');
-    exact(item, [...fields, 'itemSchemaVersion', 'totp']);
+    exact(item, [
+      ...fields,
+      'itemSchemaVersion',
+      'totp',
+      ...(item.itemSchemaVersion === 3
+        ? ['itemType', 'platform', 'boundEmail', 'emailItemId']
+        : []),
+    ]);
   }
   for (const key of fields.slice(0, 5)) assert(typeof item[key] === 'string');
   assert((item.title as string).trim().length > 0);
@@ -176,13 +215,26 @@ export function parsePlain(value: unknown): Vault.PlainItem {
     item.itemSchemaVersion === undefined || item.totp === null
       ? null
       : normalizeTotp(item.totp);
-  const normalized = { ...item, itemSchemaVersion: 2, totp } as Vault.PlainItem;
+  const normalized = {
+    ...item,
+    itemSchemaVersion: 3,
+    itemType: 'LOGIN',
+    totp,
+    platform: item.itemSchemaVersion === 3 ? item.platform : null,
+    boundEmail: item.itemSchemaVersion === 3 ? item.boundEmail : null,
+    emailItemId: item.itemSchemaVersion === 3 ? item.emailItemId : null,
+  } as Vault.PlainItem;
+  for (const field of ['platform', 'boundEmail', 'emailItemId'] as const)
+    assert(normalized[field] === null || typeof normalized[field] === 'string');
+  if (normalized.emailItemId !== null) {
+    uuid(normalized.emailItemId);
+  }
   assert(encoder.encode(JSON.stringify(normalized)).length <= 16384);
   return normalized;
 }
 export function validatePlain(
   value: unknown,
-): asserts value is Vault.PlainItem {
+): asserts value is Vault.PlainRecord {
   parsePlain(value);
 }
 export function normalizeSlots(value: unknown): Vault.Slot[] {

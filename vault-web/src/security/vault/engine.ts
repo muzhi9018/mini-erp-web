@@ -63,8 +63,10 @@ export class VaultEngine {
   private verified = false;
   private index = new Map<
     string,
-    { summary: Vault.Summary; cipher: Vault.Item }
+    { summary: Vault.Summary | Vault.GroupSummary; cipher: Vault.Item }
   >();
+
+  private collectionRevision?: number;
 
   clear() {
     this.transition?.target.clear();
@@ -77,6 +79,7 @@ export class VaultEngine {
     this.draft = undefined;
     this.verified = false;
     this.index.clear();
+    this.collectionRevision = undefined;
   }
 
   async prepare(
@@ -233,6 +236,7 @@ export class VaultEngine {
 
   resetIndex() {
     this.index.clear();
+    this.collectionRevision = undefined;
     return true;
   }
 
@@ -258,7 +262,7 @@ export class VaultEngine {
     }
   }
 
-  private async decrypt(item: Vault.Item): Promise<Vault.PlainItem> {
+  private async decrypt(item: Vault.Item): Promise<Vault.PlainRecord> {
     const bytes = await this.decryptRaw(item);
     try {
       return parsePlain(JSON.parse(decoder.decode(bytes)));
@@ -274,35 +278,49 @@ export class VaultEngine {
         items.length <= 100 &&
         this.index.size + items.length <= 2000,
     );
+    this.collectionRevision = undefined;
     try {
       for (const item of items) {
         assert(!this.index.has(item.itemId));
         const plain = await this.decrypt(item);
-        const summary: Vault.Summary = {
-          itemId: item.itemId,
-          contentVersion: item.contentVersion,
-          rowVersion: item.rowVersion,
-          title: plain.title,
-          username: plain.username,
-          website: plain.website,
-          tags: plain.tags,
-          hasTotp: plain.totp !== null,
-          hasPassword: plain.password.length > 0,
-          totpInfo: plain.totp
+        const summary: Vault.Summary | Vault.GroupSummary =
+          plain.itemType === 'ACCOUNT_GROUP'
             ? {
-                issuer: plain.totp.issuer,
-                accountName: plain.totp.accountName,
-                algorithm: plain.totp.algorithm,
-                digits: plain.totp.digits,
-                period: plain.totp.period,
+                ...plain,
+                itemId: item.itemId,
+                contentVersion: item.contentVersion,
+                rowVersion: item.rowVersion,
               }
-            : null,
-        };
+            : {
+                itemType: 'LOGIN',
+                platform: plain.platform,
+                boundEmail: plain.boundEmail,
+                emailItemId: plain.emailItemId,
+                itemId: item.itemId,
+                contentVersion: item.contentVersion,
+                rowVersion: item.rowVersion,
+                title: plain.title,
+                username: plain.username,
+                website: plain.website,
+                tags: plain.tags,
+                hasTotp: plain.totp !== null,
+                hasPassword: plain.password.length > 0,
+                totpInfo: plain.totp
+                  ? {
+                      issuer: plain.totp.issuer,
+                      accountName: plain.totp.accountName,
+                      algorithm: plain.totp.algorithm,
+                      digits: plain.totp.digits,
+                      period: plain.totp.period,
+                    }
+                  : null,
+              };
         this.index.set(item.itemId, { summary, cipher: item });
       }
       return true;
     } catch (error) {
       this.index.clear();
+      this.collectionRevision = undefined;
       if (
         error instanceof Error &&
         error.message === 'VAULT_CLIENT_UPGRADE_REQUIRED'
@@ -312,27 +330,73 @@ export class VaultEngine {
     }
   }
 
+  completeIndex(meta: Vault.Meta, count: number) {
+    assert(
+      meta.vaultId === this.ctx?.vaultId &&
+        meta.generation === this.generation &&
+        meta.keyEpoch === this.ctx?.keyEpoch,
+    );
+    assert(count === this.index.size && count <= 2000);
+    version(meta.collectionRevision);
+    this.collectionRevision = meta.collectionRevision;
+    return true;
+  }
+
+  groups(): Vault.GroupSummary[] {
+    assert(this.vmk);
+    return Array.from(this.index.values(), ({ summary }) => summary).filter(
+      (item): item is Vault.GroupSummary => item.itemType === 'ACCOUNT_GROUP',
+    );
+  }
+
   search(query: string): Vault.Summary[] {
     assert(this.vmk && typeof query === 'string' && query.length <= 1024);
     const needle = query.toLocaleLowerCase();
-    return Array.from(this.index.values(), ({ summary }) => summary).filter(
-      (item) =>
-        [item.title, item.username, item.website, ...item.tags].some((text) =>
-          text.toLocaleLowerCase().includes(needle),
-        ),
+    const logins = Array.from(
+      this.index.values(),
+      ({ summary }) => summary,
+    ).filter((item): item is Vault.Summary => item.itemType === 'LOGIN');
+    const matched = new Set(
+      logins
+        .filter((item) =>
+          [
+            item.title,
+            item.username,
+            item.website,
+            item.platform || '',
+            ...item.tags,
+          ].some((text) => text.toLocaleLowerCase().includes(needle)),
+        )
+        .map((item) => item.itemId),
     );
+    for (const group of this.groups()) {
+      if (
+        group.name.toLocaleLowerCase().includes(needle) ||
+        group.memberItemIds.some((id) => matched.has(id))
+      ) {
+        for (const id of group.memberItemIds) matched.add(id);
+      }
+    }
+    return logins.filter((item) => matched.has(item.itemId));
+  }
+
+  private async login(item: Vault.Item): Promise<Vault.PlainItem> {
+    const plain = await this.decrypt(item);
+    assert(plain.itemType === 'LOGIN');
+    return plain;
   }
 
   async reveal(itemId: string) {
     const entry = this.index.get(itemId);
     assert(entry && this.vmk);
-    return { ...(await this.decrypt(entry.cipher)), totp: null };
+    return { ...(await this.login(entry.cipher)), totp: null };
   }
 
   async encrypt(
-    plain: Vault.PlainItem,
+    plain: Vault.PlainRecord,
     itemId?: string,
     preserveTotp = false,
+    newItemId?: string,
   ): Promise<Vault.ItemWrite> {
     assert(this.ctx && this.vmk && this.generation);
     plain = parsePlain(plain);
@@ -340,10 +404,12 @@ export class VaultEngine {
     assert(itemId ? previous : this.index.size < 2000);
     if (preserveTotp) {
       assert(previous);
-      plain.totp = (await this.decrypt(previous.cipher)).totp;
+      assert(plain.itemType === 'LOGIN');
+      plain.totp = (await this.login(previous.cipher)).totp;
     }
+    plain = parsePlain(plain);
     const identity = {
-      itemId: itemId || crypto.randomUUID(),
+      itemId: itemId || newItemId || crypto.randomUUID(),
       contentVersion: previous ? previous.cipher.contentVersion + 1 : 1,
     };
     version(identity.contentVersion);
@@ -374,10 +440,173 @@ export class VaultEngine {
     }
   }
 
+  private batchEnvelope(
+    changes: Vault.BatchChange[],
+    collectionRevision: number,
+  ): Vault.ItemBatch {
+    if (
+      this.collectionRevision === undefined ||
+      this.collectionRevision !== collectionRevision
+    )
+      throw new Error('VAULT_INDEX_INCOMPLETE');
+    assert(this.ctx && this.vmk && this.generation && changes.length <= 100);
+    return {
+      generation: this.generation,
+      keyEpoch: this.ctx.keyEpoch,
+      expectedCollectionRevision: collectionRevision,
+      changes,
+      idempotencyKey: crypto.randomUUID(),
+    };
+  }
+
+  async batch(
+    changes: Vault.RecordChange[],
+    collectionRevision: number,
+  ): Promise<Vault.ItemBatch> {
+    if (
+      this.collectionRevision === undefined ||
+      this.collectionRevision !== collectionRevision
+    )
+      throw new Error('VAULT_INDEX_INCOMPLETE');
+    if (!Array.isArray(changes) || !changes.length || changes.length > 100)
+      throw new Error('VAULT_BATCH_TOO_LARGE');
+    const normalized = changes.map((change) => {
+      if (
+        change.plain?.itemType === 'ACCOUNT_GROUP' &&
+        encoder.encode(JSON.stringify(change.plain)).length > 16384
+      )
+        throw new Error('VAULT_GROUP_TOO_LARGE');
+      return {
+        ...change,
+        itemId: change.itemId || crypto.randomUUID(),
+        plain: parsePlain(change.plain),
+      };
+    });
+    assert(
+      new Set(normalized.map((change) => change.itemId)).size ===
+        normalized.length,
+    );
+    assert(
+      this.index.size +
+        normalized.filter((change) => !this.index.has(change.itemId)).length <=
+        2000,
+    );
+    const types = new Map(
+      Array.from(this.index, ([id, entry]) => [id, entry.summary.itemType]),
+    );
+    for (const change of normalized) {
+      uuid(change.itemId);
+      const previous = types.get(change.itemId);
+      assert(!previous || previous === change.plain.itemType);
+      types.set(change.itemId, change.plain.itemType);
+    }
+    for (const change of normalized) {
+      const plain = change.plain;
+      if (plain.itemType !== 'ACCOUNT_GROUP') continue;
+      const previous = this.index.get(change.itemId)?.summary;
+      for (const id of plain.memberItemIds) {
+        const retained =
+          previous?.itemType === 'ACCOUNT_GROUP'
+            ? previous.memberItemIds.includes(id)
+            : false;
+        if (
+          id === change.itemId ||
+          (types.get(id) !== 'LOGIN' && !(retained && !types.has(id)))
+        )
+          throw new Error('VAULT_RELATION_INVALID');
+      }
+    }
+    const encrypted: Vault.BatchChange[] = [];
+    for (const change of normalized) {
+      const exists = this.index.has(change.itemId);
+      const value = await this.encrypt(
+        change.plain,
+        exists ? change.itemId : undefined,
+        change.preserveTotp,
+        exists ? undefined : change.itemId,
+      );
+      encrypted.push({
+        action: exists ? 'UPDATE' : 'CREATE',
+        itemId: value.itemId,
+        expectedRowVersion: value.expectedRowVersion ?? null,
+        contentVersion: value.contentVersion,
+        wrappedDek: value.wrappedDek,
+        encryptedItem: value.encryptedItem,
+      });
+    }
+    const batch = this.batchEnvelope(encrypted, collectionRevision);
+    if (encoder.encode(JSON.stringify(batch)).length > 1024 * 1024)
+      throw new Error('VAULT_BATCH_TOO_LARGE');
+    return batch;
+  }
+
+  async deleteBatch(itemId: string, collectionRevision: number) {
+    const target = this.index.get(itemId);
+    assert(target);
+    const repairs: Vault.RecordChange[] = [];
+    if (target.summary.itemType === 'LOGIN') {
+      for (const [id, entry] of this.index) {
+        if (id === itemId) continue;
+        const summary = entry.summary;
+        if (
+          summary.itemType === 'ACCOUNT_GROUP' &&
+          summary.memberItemIds.includes(itemId)
+        ) {
+          repairs.push({
+            itemId: id,
+            plain: {
+              itemSchemaVersion: 3,
+              itemType: 'ACCOUNT_GROUP',
+              name: summary.name,
+              memberItemIds: summary.memberItemIds.filter(
+                (member) => member !== itemId,
+              ),
+            },
+          });
+        }
+      }
+    }
+    // Large fan-outs are unlinked in explicit batches; the target remains until the final transaction.
+    const selected = repairs.slice(0, 99);
+    let batch: Vault.ItemBatch;
+    while (true) {
+      try {
+        batch = selected.length
+          ? await this.batch(selected, collectionRevision)
+          : this.batchEnvelope([], collectionRevision);
+        break;
+      } catch (error) {
+        if (
+          !(error instanceof Error) ||
+          error.message !== 'VAULT_BATCH_TOO_LARGE' ||
+          selected.length <= 1
+        )
+          throw error;
+        selected.splice(Math.max(1, Math.floor(selected.length / 2)));
+      }
+    }
+    let final = selected.length === repairs.length;
+    if (final)
+      batch.changes.push({
+        action: 'DELETE',
+        itemId,
+        expectedRowVersion: target.cipher.rowVersion,
+        contentVersion: null,
+        wrappedDek: null,
+        encryptedItem: null,
+      });
+    if (encoder.encode(JSON.stringify(batch)).length > 1024 * 1024) {
+      batch.changes.pop();
+      final = false;
+    }
+    assert(batch.changes.length > 0);
+    return { batch, final };
+  }
+
   async code(itemId: string, now = Date.now()) {
     const entry = this.index.get(itemId);
     assert(entry && this.vmk);
-    const plain = await this.decrypt(entry.cipher);
+    const plain = await this.login(entry.cipher);
     assert(plain.totp);
     return totpCode(plain.totp, now);
   }
@@ -385,7 +614,7 @@ export class VaultEngine {
   async notes(itemId: string) {
     const entry = this.index.get(itemId);
     assert(entry && this.vmk);
-    return (await this.decrypt(entry.cipher)).notes;
+    return (await this.login(entry.cipher)).notes;
   }
 
   async draftCode(config: Vault.Totp) {
@@ -409,7 +638,7 @@ export class VaultEngine {
       Date.now() >= checkedAt &&
       Date.now() - checkedAt < 5000;
     assert(entry && authorized());
-    const plain = await this.decrypt(entry.cipher);
+    const plain = await this.login(entry.cipher);
     assert(authorized() && plain.totp);
     return encodeTotpURI({
       ...plain.totp,
@@ -657,25 +886,36 @@ export class VaultEngine {
       );
       const oldPlain = await this.decrypt(source);
       const newPlain = await transition.target.decrypt(staged);
-      const canonical = (plain: Vault.PlainItem) =>
-        JSON.stringify([
-          plain.title,
-          plain.website,
-          plain.username,
-          plain.password,
-          plain.notes,
-          plain.tags,
-          plain.totp
-            ? [
-                plain.totp.secretBase32,
-                plain.totp.issuer,
-                plain.totp.accountName,
-                plain.totp.algorithm,
-                plain.totp.digits,
-                plain.totp.period,
-              ]
-            : null,
-        ]);
+      const canonical = (plain: Vault.PlainRecord) =>
+        plain.itemType === 'ACCOUNT_GROUP'
+          ? JSON.stringify([
+              plain.itemType,
+              plain.name,
+              plain.defaultBoundEmail,
+              plain.memberItemIds,
+            ])
+          : JSON.stringify([
+              plain.itemType,
+              plain.title,
+              plain.website,
+              plain.username,
+              plain.password,
+              plain.notes,
+              plain.tags,
+              plain.platform,
+              plain.boundEmail,
+              plain.emailItemId,
+              plain.totp
+                ? [
+                    plain.totp.secretBase32,
+                    plain.totp.issuer,
+                    plain.totp.accountName,
+                    plain.totp.algorithm,
+                    plain.totp.digits,
+                    plain.totp.period,
+                  ]
+                : null,
+            ]);
       assert(canonical(oldPlain) === canonical(newPlain));
     }
     return digest(

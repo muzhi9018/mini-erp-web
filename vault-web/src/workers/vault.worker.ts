@@ -102,6 +102,20 @@ async function execute(message: WorkerRequest) {
       return engine.resetIndex();
     case 'ingest':
       return engine.ingest(message.payload.items);
+    case 'completeIndex':
+      return engine.completeIndex(message.payload.meta, message.payload.count);
+    case 'groups':
+      return engine.groups();
+    case 'batch':
+      return engine.batch(
+        message.payload.changes,
+        message.payload.collectionRevision,
+      );
+    case 'deleteBatch':
+      return engine.deleteBatch(
+        message.payload.itemId,
+        message.payload.collectionRevision,
+      );
     case 'search':
       return engine.search(message.payload.query);
     case 'reveal':

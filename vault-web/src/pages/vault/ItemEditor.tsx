@@ -19,6 +19,7 @@ import { useText } from './text';
 
 export type Editor = {
   itemId?: string;
+  groupId?: string;
   plain: Vault.PlainItem;
   hasTotp?: boolean;
   totpInfo?: Vault.TotpInfo | null;
@@ -34,6 +35,8 @@ export default function ItemEditor(props: {
   onClose: () => void;
   onReload: () => void;
   onSave: (plain: Vault.PlainItem, preserveTotp: boolean) => void;
+  groupName?: string;
+  deleteImpact: string;
   onDelete: (id: string) => void;
   onDraftCode: (config: Vault.Totp) => Promise<Vault.TotpCode>;
   onGenerate: (
@@ -113,8 +116,10 @@ export default function ItemEditor(props: {
       const values = validated || (await form.validateFields());
       if (!alive.current) return;
       const plain = {
+        ...props.editor.plain,
         ...values,
-        itemSchemaVersion: 2 as const,
+        itemSchemaVersion: 3 as const,
+        itemType: 'LOGIN' as const,
         totp: totp
           ? {
               ...totp,
@@ -179,6 +184,11 @@ export default function ItemEditor(props: {
             icon={<X size={18} />}
           />
         </div>
+        {props.groupName && (
+          <p className={styles.help}>
+            {t('groups.newInGroup', { name: props.groupName })}
+          </p>
+        )}
         <Form
           id="vault-item-editor"
           form={form}
@@ -416,6 +426,7 @@ export default function ItemEditor(props: {
                 : 'vault.discardConfirm',
             )}
           </p>
+          {confirmation === 'delete' && <p>{props.deleteImpact}</p>}
         </Modal>
       )}
     </>

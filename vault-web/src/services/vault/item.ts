@@ -55,3 +55,35 @@ export const deleteItem = (value: {
     '/api/v1/vault/items/delete',
     value,
   );
+
+export async function batch(value: Vault.ItemBatch) {
+  const receipt = await doPost<Vault.BatchReceipt>(
+    '/api/v1/vault/items/batch',
+    value,
+  );
+  try {
+    assert(receipt.generation === value.generation);
+    assert(
+      receipt.collectionRevision ===
+        value.expectedCollectionRevision + value.changes.length,
+    );
+    assert(
+      Array.isArray(receipt.results) &&
+        receipt.results.length === value.changes.length,
+    );
+    receipt.results.forEach((result, index) => {
+      const change = value.changes[index];
+      assert(
+        result.itemId === change.itemId &&
+          result.collectionRevision === receipt.collectionRevision,
+      );
+      assert(result.rowVersion === (change.expectedRowVersion ?? 0) + 1);
+      if (change.action === 'DELETE') assert(result.deleted === true);
+      else assert(result.contentVersion === change.contentVersion);
+    });
+    return receipt;
+  } catch {
+    // The transaction may have committed. Keep the exact request available for retry.
+    throw new VaultHttpError(0, 'VAULT_INVALID_RESPONSE');
+  }
+}

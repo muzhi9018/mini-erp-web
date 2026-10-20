@@ -86,6 +86,19 @@ export type Operations = {
   };
   resetIndex: { input: Record<string, never>; output: boolean };
   ingest: { input: { items: Vault.Item[] }; output: boolean };
+  completeIndex: {
+    input: { meta: Vault.Meta; count: number };
+    output: boolean;
+  };
+  groups: { input: Record<string, never>; output: Vault.GroupSummary[] };
+  batch: {
+    input: { changes: Vault.RecordChange[]; collectionRevision: number };
+    output: Vault.ItemBatch;
+  };
+  deleteBatch: {
+    input: { itemId: string; collectionRevision: number };
+    output: { batch: Vault.ItemBatch; final: boolean };
+  };
   search: { input: { query: string }; output: Vault.Summary[] };
   reveal: { input: { itemId: string }; output: Vault.PlainItem };
   encrypt: {
@@ -109,4 +122,8 @@ export const WORKER_FAILURES = [
   'VAULT_LOCKED',
   'VAULT_WORKER_FAILED',
   'VAULT_CLIENT_UPGRADE_REQUIRED',
+  'VAULT_BATCH_TOO_LARGE',
+  'VAULT_GROUP_TOO_LARGE',
+  'VAULT_RELATION_INVALID',
+  'VAULT_INDEX_INCOMPLETE',
 ] as const;

@@ -32,10 +32,10 @@ function parseMeta(result: Vault.Meta): Vault.Meta {
         result.allowedKdfProfiles?.includes(PROFILE),
     );
     if (
-      result.writeItemSchemaVersion !== 2 ||
-      result.minimumClientSchemaVersion > 2 ||
+      result.writeItemSchemaVersion !== 3 ||
+      result.minimumClientSchemaVersion > 3 ||
       result.clientSchemaVersionHeader !== 'X-Vault-Item-Schema-Version' ||
-      ![1, 2].every((v) => result.readableItemSchemaVersions?.includes(v))
+      ![1, 2, 3].every((v) => result.readableItemSchemaVersions?.includes(v))
     ) {
       blockDataWrites();
       throw new VaultHttpError(409, 'VAULT_CLIENT_UPGRADE_REQUIRED');
@@ -64,7 +64,9 @@ export async function initialize(setup: {
   keySlots: Vault.Slot[];
   idempotencyKey: string;
 }) {
-  return parseMeta(await doPost<Vault.Meta>('/api/v1/vault/initialize', setup));
+  // An idempotent receipt can contain an older compatibility declaration.
+  // The caller reads GET meta before accepting the initialized state.
+  return doPost<Vault.Meta>('/api/v1/vault/initialize', setup);
 }
 
 export const changeMaster = (value: {

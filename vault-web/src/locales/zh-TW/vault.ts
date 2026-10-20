@@ -120,7 +120,7 @@ export default {
   'vault.loginIntro': '登入你的個人密碼庫。',
   'vault.usernamePlaceholder': '輸入系統帳號',
   'vault.loginPasswordPlaceholder': '輸入系統登入密碼',
-  'vault.continue': '繼續',
+  'vault.continue': '登入並繼續',
   'vault.loginFoot': '使用 MINI ERP 系統帳號登入。主密碼將在解鎖時輸入。',
   'vault.brandLine1': '你的密碼，',
   'vault.brandLine2': '妥善收好。',

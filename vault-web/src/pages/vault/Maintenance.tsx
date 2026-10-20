@@ -250,40 +250,42 @@ export default function Maintenance(props: {
           </div>
         </aside>
         <section className={s.main} key={revision} aria-label={t(selected[1])}>
-          <div className={s.breadcrumb}>
-            {t('manage.title')}
-            <ChevronRight size={13} />
-            {t(selected[1])}
-          </div>
-          <div className={s.head}>
-            <div>
-              <h1>{t(selected[1])}</h1>
-              <p>{t(`manage.${mode}Hint`)}</p>
+          <div className={s.content}>
+            <div className={s.breadcrumb}>
+              {t('manage.title')}
+              <ChevronRight size={13} />
+              {t(selected[1])}
             </div>
-            <Button
-              type="text"
-              disabled={props.busy}
-              onClick={() => (dirty.current ? setLeaving({}) : move())}
-            >
-              {t('manage.backVault')}
-            </Button>
-          </div>
-          {error && (
-            <div role="alert" className="mb-5">
-              <Alert type="error" showIcon title={error} />
+            <div className={s.head}>
+              <div>
+                <h1>{t(selected[1])}</h1>
+                <p>{t(`manage.${mode}Hint`)}</p>
+              </div>
+              <Button
+                type="text"
+                disabled={props.busy}
+                onClick={() => (dirty.current ? setLeaving({}) : move())}
+              >
+                {t('manage.backVault')}
+              </Button>
             </div>
-          )}
-          {mode === 'credentials' ? (
-            <Credentials />
-          ) : mode === 'backup' ? (
-            <Backup />
-          ) : mode === 'master' ? (
-            <Master />
-          ) : mode === 'task' ? (
-            <Tasks initialId={taskId} />
-          ) : (
-            <Transition restore={mode === 'restore'} />
-          )}
+            {error && (
+              <div role="alert" className="mb-5">
+                <Alert type="error" showIcon title={error} />
+              </div>
+            )}
+            {mode === 'credentials' ? (
+              <Credentials />
+            ) : mode === 'backup' ? (
+              <Backup />
+            ) : mode === 'master' ? (
+              <Master />
+            ) : mode === 'task' ? (
+              <Tasks initialId={taskId} />
+            ) : (
+              <Transition restore={mode === 'restore'} />
+            )}
+          </div>
         </section>
       </div>
       <Modal

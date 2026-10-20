@@ -26,6 +26,7 @@ import * as auth from '@/services/vault/session';
 import * as vaultAPI from '@/services/vault/vault';
 import Auth, { type AuthMode } from './Auth';
 import AuthShell from './AuthShell';
+import { emptyItem, type GroupEditorDraft, groupPlain } from './groups';
 import type { EditorHandle } from './ItemEditor';
 import Items, { type Editor } from './Items';
 import Maintenance from './Maintenance';
@@ -40,17 +41,6 @@ import { passkeyErrorKeys, useText } from './text';
 import Unlock from './Unlock';
 import styles from './Vault.module.css';
 import VaultTheme, { useVaultTheme } from './VaultTheme';
-
-const emptyItem = (): Vault.PlainItem => ({
-  itemSchemaVersion: 2,
-  totp: null,
-  title: '',
-  website: '',
-  username: '',
-  password: '',
-  notes: '',
-  tags: [],
-});
 
 function VaultWorkspace() {
   const t = useText();
@@ -75,6 +65,9 @@ function VaultWorkspace() {
   const [completionVerified, setCompletionVerified] = useState(false);
   const [limitations, setLimitations] = useState(false);
   const [allRows, setAllRows] = useState<Vault.Summary[]>([]);
+  const [groups, setGroups] = useState<Vault.GroupSummary[]>([]);
+  const [groupEditor, setGroupEditor] = useState<GroupEditorDraft>();
+  const [deleting, setDeleting] = useState(false);
   const [selected, setSelected] = useState<string>();
   const selectedRef = useRef<string | undefined>(undefined);
   const exposure = useRef(0);
@@ -87,9 +80,16 @@ function VaultWorkspace() {
   const [editor, setEditor] = useState<Editor>();
   const editorRef = useRef<EditorHandle>(null);
   const [uncertain, setUncertain] = useState(false);
-  const pendingWrite = useRef<Vault.ItemWrite | undefined>(undefined);
+  const pendingWrite = useRef<
+    | {
+        batch: Vault.ItemBatch;
+        prefer?: string;
+        deleting?: string;
+        final?: boolean;
+      }
+    | undefined
+  >(undefined);
   const setupKey = useRef<string | undefined>(undefined);
-  const deleteKeys = useRef(new Map<string, string>());
   const epoch = useRef(0);
   const owner = useRef<string | undefined>(undefined);
   const active = useRef(false);
@@ -112,6 +112,7 @@ function VaultWorkspace() {
     setCopyFallback(undefined);
     setRevealUntil(0);
     setEditor(undefined);
+    setGroupEditor(undefined);
     pendingWrite.current = undefined;
     setUncertain(false);
     clearTimeout(revealTimer.current);
@@ -133,6 +134,8 @@ function VaultWorkspace() {
       setCodes(undefined);
       setRows([]);
       setAllRows([]);
+      setGroups([]);
+      setDeleting(false);
       setSelected(undefined);
       selectedRef.current = undefined;
       setSyncFailed(false);
@@ -142,7 +145,6 @@ function VaultWorkspace() {
       setUncertain(false);
       pendingWrite.current = undefined;
       setupKey.current = undefined;
-      deleteKeys.current.clear();
       setRevision((value) => value + 1);
       if (broadcast) channel.current?.postMessage('lock');
     },
@@ -184,7 +186,8 @@ function VaultWorkspace() {
         if (
           current === epoch.current &&
           failure instanceof VaultHttpError &&
-          failure.status !== 0
+          failure.status >= 400 &&
+          failure.status < 500
         ) {
           pendingWrite.current = undefined;
           setUncertain(false);
@@ -272,7 +275,12 @@ function VaultWorkspace() {
         await guard(
           client.call('ingest', { items: items.slice(offset, offset + 100) }),
         );
+      await guard(
+        client.call('completeIndex', { meta: fresh, count: items.length }),
+      );
       const summaries = await guard(client.call('search', { query: '' }));
+      const currentGroups = await guard(client.call('groups', {}));
+      setGroups(currentGroups);
       setRows(summaries);
       setAllRows(summaries);
       const receipt = readCompletion();
@@ -282,7 +290,7 @@ function VaultWorkspace() {
           if (
             fresh.generation !== receipt.generation ||
             fresh.keyEpoch !== receipt.keyEpoch ||
-            summaries.length !== receipt.count
+            items.length !== receipt.count
           )
             throw new Error('VAULT_COMPLETION_MISMATCH');
           setCompletion(receipt);
@@ -297,11 +305,12 @@ function VaultWorkspace() {
         }
       }
       const next =
-        summaries.find((item) => item.itemId === selection)?.itemId ||
-        summaries[0]?.itemId;
+        [...summaries, ...currentGroups].find(
+          (item) => item.itemId === selection,
+        )?.itemId || summaries[0]?.itemId;
       selectedRef.current = next;
       setSelected(next);
-      deleteKeys.current.clear();
+      return { rows: summaries, groups: currentGroups };
     } catch (failure) {
       setSyncFailed(true);
       throw failure;
@@ -398,6 +407,10 @@ function VaultWorkspace() {
     if (error === 'VAULT_ROTATION_EXPIRED') return t('vault.taskExpired');
     if (error === 'VAULT_CLIENT_UPGRADE_REQUIRED')
       return t('vault.upgradeRequired');
+    if (error === 'VAULT_BATCH_TOO_LARGE') return t('groups.batchLimit');
+    if (error === 'VAULT_GROUP_TOO_LARGE') return t('groups.groupTooLarge');
+    if (error === 'VAULT_RELATION_INVALID') return t('groups.relationInvalid');
+    if (error === 'VAULT_INDEX_INCOMPLETE') return t('groups.conflict');
     if (error === 'VAULT_VERSION_CONFLICT') return t('vault.conflict');
     if (error === 'VAULT_WRITE_LOCKED') return t('vault.writeLocked');
     if (error === 'VAULT_REAUTH_REQUIRED') return t('vault.reauthRequired');
@@ -419,11 +432,12 @@ function VaultWorkspace() {
   const closeEditor = () => {
     exposure.current++;
     setEditor(undefined);
+    setGroupEditor(undefined);
     pendingWrite.current = undefined;
     setUncertain(false);
   };
   const navigate = (action: () => void) => {
-    if (editor)
+    if (editor || groupEditor)
       editorRef.current?.leave(() => {
         closeEditor();
         action();
@@ -480,6 +494,54 @@ function VaultWorkspace() {
       revealTimer.current = setTimeout(hideDetail, 20000);
     }
   };
+
+  async function submitPending() {
+    let pending = pendingWrite.current;
+    assert(pending);
+    while (pending) {
+      pendingWrite.current = pending;
+      setUncertain(true);
+      await guard(itemAPI.batch(pending.batch));
+      const nextDelete: string | undefined =
+        pending.deleting && !pending.final ? pending.deleting : undefined;
+      const prefer = pending.prefer;
+      pendingWrite.current = undefined;
+      setUncertain(false);
+      closeEditor();
+      await sync(undefined, prefer);
+      if (!nextDelete) {
+        setDeleting(false);
+        message.success(t(pending.deleting ? 'vault.deleted' : 'vault.saved'));
+        return;
+      }
+      const fresh = await loadMeta();
+      const next: { batch: Vault.ItemBatch; final: boolean } = await guard(
+        client.call('deleteBatch', {
+          itemId: nextDelete,
+          collectionRevision: fresh.collectionRevision,
+        }),
+      );
+      pending = { ...next, deleting: nextDelete };
+    }
+  }
+  function saveChanges(changes: Vault.RecordChange[], prefer?: string) {
+    run(async () => {
+      if (!pendingWrite.current) {
+        assert(meta && !syncFailed);
+        const batch = await guard(
+          client.call('batch', {
+            changes,
+            collectionRevision: meta.collectionRevision,
+          }),
+        );
+        pendingWrite.current = {
+          batch,
+          prefer: prefer || batch.changes[0].itemId,
+        };
+      }
+      await submitPending();
+    });
+  }
 
   return (
     <main
@@ -584,7 +646,7 @@ function VaultWorkspace() {
               <Button
                 className={styles.workspaceExtra}
                 type="text"
-                disabled={busy || !!editor}
+                disabled={busy || !!editor || !!groupEditor || uncertain}
                 aria-label={t('vault.refresh')}
                 onClick={() =>
                   run(async () => {
@@ -644,7 +706,7 @@ function VaultWorkspace() {
                     {
                       key: 'refresh',
                       label: t('vault.refresh'),
-                      disabled: busy,
+                      disabled: busy || uncertain,
                     },
                     { key: 'logout', label: t('vault.logout') },
                   ],
@@ -750,7 +812,6 @@ function VaultWorkspace() {
         )}
         {!unlocked && !maintenance && (
           <AuthShell
-            wide={!!draft}
             step={session?.stage === 'MFA' ? 2 : session?.stage ? 1 : 0}
           >
             {!session && (
@@ -969,6 +1030,32 @@ function VaultWorkspace() {
               )}
           </AuthShell>
         )}
+        {unlocked && (deleting || (uncertain && !editor && !groupEditor)) && (
+          <div className={styles.errorBanner}>
+            <Alert
+              type="info"
+              title={t(
+                uncertain ? 'vault.uncertainWrite' : 'groups.unlinkProgress',
+              )}
+              action={
+                <Button
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      if (pendingWrite.current) await submitPending();
+                      else {
+                        setDeleting(false);
+                        await sync();
+                      }
+                    })
+                  }
+                >
+                  {t(uncertain ? 'vault.retrySave' : 'vault.refresh')}
+                </Button>
+              }
+            />
+          </div>
+        )}
         {unlocked && (
           <Items
             key={revision}
@@ -1046,6 +1133,10 @@ function VaultWorkspace() {
                 {t('manage.title')}
               </Button>
             }
+            groups={groups}
+            groupEditor={groupEditor}
+            onGroupEditor={setGroupEditor}
+            onSaveChanges={saveChanges}
             rows={rows}
             allRows={allRows}
             selected={selected}
@@ -1080,11 +1171,11 @@ function VaultWorkspace() {
                   .catch(() => {});
               }, 120);
             }}
-            onNew={() => {
+            onNew={(groupId) => {
               try {
                 check();
                 hideDetail();
-                setEditor({ plain: emptyItem() });
+                setEditor({ plain: emptyItem(), groupId });
               } catch {
                 /* The expiry check already locked the page. */
               }
@@ -1146,19 +1237,27 @@ function VaultWorkspace() {
             onReload={() =>
               run(async () => {
                 const itemId = editor?.itemId;
-                closeEditor();
-                await sync();
-                if (itemId && selectedRef.current === itemId) {
-                  const serial = exposure.current;
+                const groupId = groupEditor?.itemId;
+                const refreshed = await sync();
+                const serial = exposure.current;
+                const group = refreshed.groups.find(
+                  (group) => group.itemId === groupId,
+                );
+                if (group && !document.hidden)
+                  setGroupEditor({
+                    itemId: group.itemId,
+                    group: groupPlain(group),
+                    isNew: false,
+                  });
+                const row = refreshed.rows.find((row) => row.itemId === itemId);
+                if (itemId && row) {
                   const plain = await guard(client.call('reveal', { itemId }));
                   if (serial === exposure.current && !document.hidden)
                     setEditor({
                       itemId,
                       plain,
-                      hasTotp: allRows.find((row) => row.itemId === itemId)
-                        ?.hasTotp,
-                      totpInfo: allRows.find((row) => row.itemId === itemId)
-                        ?.totpInfo,
+                      hasTotp: row.hasTotp,
+                      totpInfo: row.totpInfo,
                     });
                 }
               })
@@ -1173,49 +1272,51 @@ function VaultWorkspace() {
                   set(password);
               });
             }}
-            onSave={(plain, preserveTotp) =>
-              run(async () => {
-                assert(editor);
-                const value =
-                  pendingWrite.current ||
-                  (await guard(
-                    client.call('encrypt', {
-                      plain,
-                      itemId: editor.itemId,
-                      preserveTotp,
-                    }),
-                  ));
-                pendingWrite.current = value;
-                setUncertain(true);
-                await guard(
-                  editor.itemId
-                    ? itemAPI.updateItem(value)
-                    : itemAPI.createItem(value),
+            onSave={(plain, preserveTotp) => {
+              if (!editor?.groupId || editor.itemId) {
+                saveChanges(
+                  [{ plain, itemId: editor?.itemId, preserveTotp }],
+                  editor?.itemId,
                 );
-                closeEditor();
-                message.success(t('vault.saved'));
-                await sync(undefined, value.itemId);
-              })
-            }
+                return;
+              }
+              const group = groups.find(
+                (group) => group.itemId === editor.groupId,
+              );
+              if (!group) {
+                setError('VAULT_RELATION_INVALID');
+                return;
+              }
+              const itemId = crypto.randomUUID();
+              saveChanges(
+                [
+                  { plain, itemId, preserveTotp },
+                  {
+                    itemId: group.itemId,
+                    plain: {
+                      ...groupPlain(group),
+                      memberItemIds: [...group.memberItemIds, itemId],
+                    },
+                  },
+                ],
+                itemId,
+              );
+            }}
             onDelete={(itemId) =>
               run(async () => {
-                assert(meta?.generation);
-                const row = rows.find((value) => value.itemId === itemId);
-                assert(row);
-                const idempotencyKey =
-                  deleteKeys.current.get(itemId) || crypto.randomUUID();
-                deleteKeys.current.set(itemId, idempotencyKey);
-                await guard(
-                  itemAPI.deleteItem({
-                    itemId,
-                    generation: meta.generation,
-                    expectedRowVersion: row.rowVersion,
-                    idempotencyKey,
-                  }),
-                );
-                closeEditor();
-                message.success(t('vault.deleted'));
-                await sync();
+                if (!pendingWrite.current) {
+                  assert(meta && !syncFailed);
+                  const next: { batch: Vault.ItemBatch; final: boolean } =
+                    await guard(
+                      client.call('deleteBatch', {
+                        itemId,
+                        collectionRevision: meta.collectionRevision,
+                      }),
+                    );
+                  pendingWrite.current = { ...next, deleting: itemId };
+                  setDeleting(true);
+                }
+                await submitPending();
               })
             }
           />

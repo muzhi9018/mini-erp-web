@@ -128,7 +128,7 @@ export default {
   'vault.loginIntro': 'Sign in to your personal vault.',
   'vault.usernamePlaceholder': 'Enter your system username',
   'vault.loginPasswordPlaceholder': 'Enter your sign-in password',
-  'vault.continue': 'Continue',
+  'vault.continue': 'Log in and continue',
   'vault.loginFoot':
     'Sign in with your MINI ERP account. Enter your master password when unlocking.',
   'vault.brandLine1': 'Your passwords,',

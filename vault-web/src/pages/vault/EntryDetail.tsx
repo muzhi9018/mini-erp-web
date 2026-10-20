@@ -31,6 +31,7 @@ export type DetailActions = {
 export default function EntryDetail(
   props: DetailActions & {
     row: Vault.Summary;
+    deleteImpact: string;
     busy: boolean;
     detail?: Vault.PlainItem;
     revealUntil: number;
@@ -414,6 +415,7 @@ export default function EntryDetail(
               )}
             </p>
           )}
+          {dialog === 'delete' && <p>{props.deleteImpact}</p>}
         </Modal>
       )}
     </div>
