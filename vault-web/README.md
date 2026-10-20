@@ -26,11 +26,27 @@
 - 组内新建账号通过 `/api/v1/vault/items/batch` 原子提交账号 CREATE 与组 UPDATE，其他组操作只提交组变更。单批最多 100 条、1 MiB；组明文按 UTF-8 检查 16 KiB 上限，超限提示拆组。网络结果不确定时重试完全相同的请求；版本冲突保留草稿，由用户核对后刷新重编，不自动合并或覆盖。
 - 加密备份、恢复和完整轮换包含全部 LOGIN 与 ACCOUNT_GROUP，保留原 UUID 及兼容元数据。继续使用现有 v3 接口；已执行账号组增量 SQL 的环境无需为本次简化再做迁移。后端接入契约见后端仓库 `docs/password-vault-account-groups.md`。
 
+## 生产构建与接口地址
+
+在 `vault-web/.env.local` 或构建环境中配置 `VAULT_API_BASE_URL` 为生产 HTTPS 接口地址，然后在仓库根目录执行：
+
+```sh
+npm --prefix vault-web run build
+```
+
+上传 `vault-web/dist/` 内的全部内容到密码库前端站点。生产包会直接向配置的 API 地址发送请求，并保留 Cookie、CSRF 和内容版本请求头。该配置只影响生产构建，本地开发继续使用下文的代理配置；修改接口地址后需重新构建。
+
+`VAULT_API_BASE_URL` 不提供硬编码默认地址。必须显式配置，留空表示沿用同源代理；可包含网关路径，构建时会去除末尾斜杠。客户端会保留前缀并追加 `/vault-auth/*` 或 `/api/v1/vault/*`，不会自动删除或补充网关路径。`.env.example` 只保留空变量，真实地址仅保存在被忽略的本地文件或运行环境中。
+
+跨域部署时，前端站点的 CSP `connect-src` 必须允许 API Origin；API 服务端必须允许密码库页面的精确 HTTPS Origin、携带凭据的 CORS 请求，以及 Cookie/CSRF 的完整流程。后端 `vault.origin` 和 `vault.rp-id` 仍对应前端页面地址。具体要求见 [跨域后端接入约定](docs/cross-origin-backend-contract.md)。只修改前端地址不代表服务端跨域配置已生效。
+
+`VAULT_DEV_ORIGIN`、`VAULT_NGINX_CERT`、`VAULT_NGINX_KEY` 和 `VAULT_NGINX_API_TARGET` 用于生成本机开发 NGINX 配置，不是生产构建的接口配置。
+
 ## 本地运行与后端配置
 
 需要 Node >=22，使用本目录自己的 package-lock.json；不是 npm workspace。
 
-首次启动前，在本目录执行 `cp .env.example .env.local`，并在 `.env.local` 中填写 `VAULT_API_TARGET`，包括后端网关所需的路径。真实后端地址仅保存在被 Git 忽略的本地文件或运行环境变量中，代码不提供默认目标。未配置该变量时不启用 Umi 开发代理；使用 Umi 内置的 `.env` 和 `.env.local` 加载规则；生产部署继续通过独立站点的同源反向代理访问后端。
+首次启动前，在本目录执行 `cp .env.example .env.local`，并在 `.env.local` 中填写 `VAULT_API_TARGET`，包括后端网关所需的路径。真实后端地址仅保存在被 Git 忽略的本地文件或运行环境变量中，代码不提供默认目标。未配置该变量时不启用 Umi 开发代理；使用 Umi 内置的 `.env` 和 `.env.local` 加载规则。生产请求地址由上文的 `VAULT_API_BASE_URL` 决定。
 
 使用已有 NGINX 和证书时，开发域名、证书路径和后端地址仅在本目录的 `.env.local` 或运行环境变量中配置，不写入代码或文档。NGINX 将页面请求转发到本机 Umi 开发服务，认证与数据请求转发到环境变量指定的后端。
 
@@ -128,7 +144,7 @@ npm run setup
 npm run dev
 ```
 
-`npm run dev` 默认监听 `http://localhost:8002`，`npm run dev:https` 则使用本地证书直接监听 HTTPS。也可将独立 HTTPS 域名的页面请求反向代理至 HTTP 开发服务器，或构建后使用下方的独立站点部署模板。不设置跨域 API 地址，不读取 ERP localStorage token。开发代理保留浏览器 Origin。
+`npm run dev` 默认监听 `http://localhost:8002`，`npm run dev:https` 则使用本地证书直接监听 HTTPS。也可将独立 HTTPS 域名的页面请求反向代理至 HTTP 开发服务器。开发请求使用本地同源代理，不读取 ERP localStorage token。开发代理保留浏览器 Origin。
 
 ERP 的 Utoopack 开发服务会占用 `8000` 和内部端口 `8001`，因此密码库避开这两个端口。两条开发命令均通过 Umi 的 `PORT` / `STRICT_PORT` 固定端口 `8002`；端口占用时会报错退出，避免自动切换端口后与后端精确 Origin 配置不一致。
 
@@ -171,13 +187,13 @@ npm run build
 npm run test:browser
 ```
 
-浏览器测试使用本机 Chrome，在独立的 `18002` 端口启动生产构建预览，避免占用正在使用的 `8002` 开发服务。接口由测试契约模拟器拦截，并模拟 Java 响应省略 null 字段的行为；WebAuthn 使用 Chrome 虚拟认证器；Worker、WASM 和 Web Crypto 则在真实浏览器执行。测试覆盖首次登录/MFA、文件验证、密文 CRUD、提交后响应丢失的幂等重试、搜索、短暂显示、刷新、后台/闲置/pageshow 锁定、401 清理和秘密不进入请求/持久存储；生产脚本及 Worker 同时应用部署模板的 CSP。它不证明 Java 后端的权限、事务或真实身份恢复已通过验收。
+浏览器测试使用本机 Chrome，在独立的 `18002` 端口启动生产构建预览，避免占用正在使用的 `8002` 开发服务。该测试构建显式将 `VAULT_API_BASE_URL` 留空，接口由测试契约模拟器拦截，并模拟 Java 响应省略 null 字段的行为；WebAuthn 使用 Chrome 虚拟认证器；Worker、WASM 和 Web Crypto 则在真实浏览器执行。测试覆盖首次登录/MFA、文件验证、密文 CRUD、提交后响应丢失的幂等重试、搜索、短暂显示、刷新、后台/闲置/pageshow 锁定、401 清理和秘密不进入请求/持久存储。它不证明真实 API 的 CORS、Cookie、Java 权限、事务或身份恢复已通过验收。
 
 固定 KDF 样本由 Node 24 的独立 OpenSSL Argon2id 实现生成，参数和 secret 输入与 hash-wasm 4.12.0 对照。单元测试仍使用 Node 环境；真实浏览器测试不能由这些单元测试替代。
 
 ## 部署
 
-仅发布本目录 `dist/`，不要混入 ERP 构建产物。`deploy/nginx.conf.example` 是独立站点模板，没有修改现有 nginx 配置。所有静态脚本/WASM 同源，禁止请求录制、统计脚本、第三方字体和 source map 发布。
+仅发布本目录 `dist/`，不要混入 ERP 构建产物。`deploy/nginx.conf.example` 是跨域 API 模式下的静态前端站点模板，没有修改现有 nginx 配置。替换站点、证书、静态目录以及 `connect-src` 中的 API Origin 占位值；API Origin 不含网关路径。使用空 API 地址的同源模式时，另行配置两个 API 路径的反向代理。所有静态脚本/WASM 同源，禁止请求录制、统计脚本、第三方字体和 source map 发布。
 
 CSP 允许 `wasm-unsafe-eval`，不允许 `unsafe-eval`；样式暂允许 antd 所需的内联样式。模板仍需在预发布中验证 CSP、代理、Cookie 和安全响应头，再完成专项发布评审。各目标浏览器、手机性能及新设备恢复演练尚需后续验收。
 

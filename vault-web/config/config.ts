@@ -1,6 +1,7 @@
 import type { ClientRequest, IncomingMessage } from 'node:http';
 import { resolve } from 'node:path';
 import { defineConfig } from '@umijs/max';
+import { readApiBaseURL } from './api';
 import { readAutoLockConfig } from './autoLock';
 
 const localHTTPS = process.env.VAULT_DEV_HTTPS === '1';
@@ -51,7 +52,10 @@ export default defineConfig({
   },
   request: {},
   tailwindcss: {},
-  define: { VAULT_AUTO_LOCK: readAutoLockConfig(process.env) },
+  define: {
+    VAULT_API_BASE_URL: readApiBaseURL(process.env),
+    VAULT_AUTO_LOCK: readAutoLockConfig(process.env),
+  },
   proxy: apiTarget
     ? {
         '/vault-auth': {

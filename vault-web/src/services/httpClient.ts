@@ -65,7 +65,7 @@ async function send<T>(
   if (method === 'POST' && !csrf)
     throw new VaultHttpError(403, 'VAULT_CSRF_INVALID');
   try {
-    const response = await request<Envelope<T>>(url, {
+    const response = await request<Envelope<T>>(`${VAULT_API_BASE_URL}${url}`, {
       method,
       data,
       params,

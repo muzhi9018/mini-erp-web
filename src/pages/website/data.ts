@@ -13,7 +13,6 @@ export interface Product {
   summary: string;
   tagline: string;
   featureIntroduction?: string;
-  image: string;
   features: Array<{ title: string; description: string }>;
   specifications: Array<[string, string]>;
   applications: string[];
@@ -55,7 +54,6 @@ export const products: Product[] = [
       '环保木塑复合材料，兼具天然木质纹理与塑料耐用性能，开启户外装饰新纪元。',
     featureIntroduction:
       '筑绿塑木材料以高密度木纤维与食品级树脂为原料，经高温高压挤出成型，完美融合木材的自然质感与塑料耐用性能。',
-    image: image('product-wpc'),
     features: [
       {
         title: '环保可持续',
@@ -110,7 +108,6 @@ export const products: Product[] = [
     category: 'wall',
     summary: '轻质柔性饰面材料，可弯曲贴合弧形墙面，再现天然石材纹理与质感。',
     tagline: '一片轻盈软石，赋予墙面天然石材的细腻纹理与自由曲线。',
-    image: image('product-flexible-stone'),
     features: standardFeatures('柔性软石', [
       '轻薄可弯曲',
       '可贴合圆柱、弧墙等复杂基层，为设计提供更大的造型自由度。',
@@ -139,7 +136,6 @@ export const products: Product[] = [
     summary:
       '聚氨酯仿石材饰面板，轻质安装便捷，纹理逼真，广泛用于室内背景墙装饰。',
     tagline: '以轻盈材质还原立体石材质感，让空间效果快速呈现。',
-    image: image('product-pu-stone'),
     features: standardFeatures('PU石材', [
       '立体纹理逼真',
       '多层压制工艺塑造自然凹凸和石材色泽，兼顾视觉效果与触感。',
@@ -163,7 +159,6 @@ export const products: Product[] = [
     summary:
       '石塑复合墙板，防水防潮、零甲醛，锁扣式安装快速便捷，适合全屋墙面装饰。',
     tagline: '稳定防潮的整墙方案，让简洁利落的空间快速落地。',
-    image: image('product-spc-wall-panel'),
     features: standardFeatures('SPC墙板', [
       '防水防潮',
       '石塑复合基材稳定耐用，适合厨卫、阳台等对防潮有要求的空间。',
@@ -187,7 +182,6 @@ export const products: Product[] = [
     summary:
       '超大尺寸超薄瓷质板材，高温烧制而成，硬度高、耐污蚀，适合台面与墙面应用。',
     tagline: '以大规格连纹效果塑造纯粹、坚韧而高级的现代空间。',
-    image: image('case-slab-living'),
     features: standardFeatures('岩板', [
       '耐污耐磨',
       '高温烧制形成致密表面，耐刮耐热且易于清洁，适合高频使用区域。',
@@ -211,7 +205,6 @@ export const products: Product[] = [
     summary:
       '高精密度铝合金装饰型材，多种表面处理工艺，适合门窗、幕墙、收边等装饰应用。',
     tagline: '以精确的金属线条收束空间边界，成就细节处的品质感。',
-    image: image('product-aluminum-profile'),
     features: standardFeatures('铝合金型材', [
       '尺寸精确稳定',
       '精密挤压成型，线条挺拔、收口平整，适配现代空间的细节控制。',
@@ -235,7 +228,6 @@ export const products: Product[] = [
     summary:
       '天然与仿藤编织材料，质感自然细腻，适合家具、屏风、墙面装饰等东南亚及侘寂风格。',
     tagline: '用自然编织的呼吸感，为空间带来松弛而温暖的表情。',
-    image: image('product-rattan'),
     features: standardFeatures('藤编材料', [
       '自然透气质感',
       '细腻编织肌理带来光影与空气流动，让家具和立面更富呼吸感。',
@@ -259,7 +251,6 @@ export const products: Product[] = [
     summary:
       '树脂基水洗石地坪材料，整体无缝、颜色丰富，适合商业空间与别墅地面装饰。',
     tagline: '以无缝颗粒地面，打造兼具耐用性与艺术感的行走体验。',
-    image: image('product-resin-washed-stone'),
     features: standardFeatures('树脂水洗石', [
       '整体无缝成型',
       '现场摊铺成型，减少缝隙藏污，呈现连续舒展的地面视觉效果。',
@@ -283,7 +274,6 @@ export const products: Product[] = [
     summary:
       '金属质感装饰板材，表面鎏金工艺处理，华丽低奢，为空间增添精致质感与层次。',
     tagline: '让克制的金属光泽成为空间的点睛之笔。',
-    image: image('product-gold-foil-board'),
     features: standardFeatures('鎏金板', [
       '金属光泽层次',
       '独特鎏金工艺让光线在表面自然游走，营造精致而不过度张扬的氛围。',
@@ -307,7 +297,6 @@ export const products: Product[] = [
     summary:
       '柜体、柜门、弧形板、格栅、旋转格栅、格栅星空墙，六大系列打造个性化整体家居。',
     tagline: '从一处柜体到一整套空间系统，为生活方式定制理想居所。',
-    image: image('product-custom-furniture'),
     features: standardFeatures('全屋定制', [
       '空间一体化设计',
       '柜体、门墙、格栅与灯光系统协同设计，统一材质、尺度与空间秩序。',
@@ -330,7 +319,6 @@ export const products: Product[] = [
     category: 'cabinet',
     summary: '无门开放式衣帽间系统，收纳展示一体，营造轻奢时尚的更衣体验。',
     tagline: '将收纳变成展示，以轻盈开放的结构整理日常。',
-    image: image('product-open-wardrobe'),
     features: standardFeatures('开放式衣柜', [
       '收纳展示一体',
       '开放式层板、挂衣区与灯光系统共同呈现，拿取直观，展示有序。',
@@ -353,7 +341,6 @@ export const products: Product[] = [
     category: 'cabinet',
     summary: '工业风金属框架衣柜系统，结构稳固、防虫防潮，演绎现代工业美学。',
     tagline: '纤细而稳固的金属框架，定义利落通透的衣帽空间。',
-    image: image('product-metal-wardrobe'),
     features: standardFeatures('金属衣柜', [
       '结构稳固耐用',
       '金属框架承重可靠，耐潮防虫，满足长期高频使用的收纳需求。',

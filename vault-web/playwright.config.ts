@@ -16,6 +16,7 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run build && npx --no-install max preview --port 18002',
+    env: { VAULT_API_BASE_URL: '' },
     url: 'http://localhost:18002',
     reuseExistingServer: false,
     timeout: 120000,
