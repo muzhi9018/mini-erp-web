@@ -22,6 +22,10 @@ export default {
   'vault.downloadCodes': 'Download MFA recovery codes',
   'vault.reimportCodes': 'Reimport the downloaded MFA codes file',
   'vault.confirmCodes': 'Confirm and continue',
+  'vault.recoveryReauthHint':
+    'If recent authentication expires, verify your passkey here, then retry generating or confirming codes. Verification does not generate new codes, and the imported file is kept.',
+  'vault.recoveryReauthComplete':
+    'Passkey verified. Retry generating recovery codes or confirming them with the current file.',
   'vault.setup': 'Create your vault',
   'vault.setupHint':
     'Use a master password of at least 16 characters, preferably random words, different from your system password. Decryption requires your master password and account key, or your recovery file. If both paths are lost, administrators cannot recover the vault.',

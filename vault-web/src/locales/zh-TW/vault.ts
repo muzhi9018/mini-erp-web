@@ -21,6 +21,10 @@ export default {
   'vault.downloadCodes': '下載 MFA 復原碼檔案',
   'vault.reimportCodes': '重新匯入剛下載的 MFA 復原碼檔案',
   'vault.confirmCodes': '確認保管並繼續',
+  'vault.recoveryReauthHint':
+    '近期認證過期時，請在此驗證 Passkey 後重試產生或確認。驗證不會重新產生復原碼，已匯入的檔案會保留。',
+  'vault.recoveryReauthComplete':
+    'Passkey 驗證成功，請重試產生或使用目前檔案確認復原碼。',
   'vault.setup': '建立密碼庫',
   'vault.setupHint':
     '主密碼至少 16 個字元，建議使用隨機詞組。請使用與系統登入密碼不同的主密碼。解密需要主密碼與帳戶金鑰，或獨立復原檔案；兩種途徑均遺失時，管理員也無法復原。',

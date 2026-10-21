@@ -175,16 +175,22 @@ export default function Auth(props: Props) {
               type="primary"
               disabled={!reimport}
               loading={props.busy}
-              onClick={() => {
-                props.onConfirm(reimport);
-                setReimport('');
-                if (fileInput.current) fileInput.current.value = '';
-              }}
+              onClick={() => props.onConfirm(reimport)}
             >
               {t('vault.confirmCodes')}
             </Button>
           </div>
         )}
+        <Button
+          block
+          className="mt-4"
+          loading={props.busy}
+          onClick={props.onAuthenticate}
+        >
+          <KeyRound size={16} strokeWidth={1.5} />
+          {t('vault.authenticate')}
+        </Button>
+        <p className={`${styles.help} mt-2`}>{t('vault.recoveryReauthHint')}</p>
         <AuthFoot>{t('vault.codesFoot')}</AuthFoot>
       </>
     );

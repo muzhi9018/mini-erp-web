@@ -21,6 +21,10 @@ export default {
   'vault.downloadCodes': '下载 MFA 恢复码文件',
   'vault.reimportCodes': '重新导入刚下载的 MFA 恢复码文件',
   'vault.confirmCodes': '确认保管并继续',
+  'vault.recoveryReauthHint':
+    '近期认证过期时，请在此验证 Passkey 后重试生成或确认。验证不会重新生成恢复码，已导入的文件会保留。',
+  'vault.recoveryReauthComplete':
+    'Passkey 验证成功，请重试生成或使用当前文件确认恢复码。',
   'vault.setup': '创建密码库',
   'vault.setupHint':
     '主密码至少 16 个字符，建议使用随机词组。请使用不同于系统登录密码的主密码。解密需要主密码和账户密钥，或独立恢复文件；两种路径都丢失时，管理员也无法恢复。',

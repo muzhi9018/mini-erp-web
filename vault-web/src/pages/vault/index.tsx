@@ -550,19 +550,25 @@ function VaultWorkspace() {
       data-workspace={unlocked || undefined}
     >
       <div className={styles.shell}>
-        <div className={styles.notice}>
-          <FileText size={16} strokeWidth={1.5} />
-          <span>{t('vault.testNotice')}</span>
-          <button
-            type="button"
-            onClick={() => setLimitations(!limitations)}
-            aria-expanded={limitations}
-          >
-            {t('vault.viewLimitations')}
-          </button>
-        </div>
-        {limitations && (
-          <div className={styles.testDetails}>{t('vault.previewNotice')}</div>
+        {process.env.NODE_ENV !== 'production' && (
+          <>
+            <div className={styles.notice}>
+              <FileText size={16} strokeWidth={1.5} />
+              <span>{t('vault.testNotice')}</span>
+              <button
+                type="button"
+                onClick={() => setLimitations(!limitations)}
+                aria-expanded={limitations}
+              >
+                {t('vault.viewLimitations')}
+              </button>
+            </div>
+            {limitations && (
+              <div className={styles.testDetails}>
+                {t('vault.previewNotice')}
+              </div>
+            )}
+          </>
         )}
         <header className={styles.top}>
           <div className={styles.logo}>
@@ -763,7 +769,11 @@ function VaultWorkspace() {
                   onClick={() => {
                     if (
                       !session ||
-                      (session.stage !== 'MFA' && !authMode) ||
+                      (session.stage !== 'MFA' &&
+                        session.stage !== 'RECOVERY_SETUP' &&
+                        !authMode) ||
+                      (session.stage === 'RECOVERY_SETUP' &&
+                        error === 'VAULT_VERSION_CONFLICT') ||
                       (session.stage === 'MFA' && !meta) ||
                       error.includes('CSRF') ||
                       error === 'VAULT_ORIGIN_REJECTED'
@@ -844,7 +854,9 @@ function VaultWorkspace() {
                 }
                 onAuthenticate={() =>
                   run(async () => {
-                    await authenticate();
+                    const current = await authenticate();
+                    if (current.stage === 'RECOVERY_SETUP')
+                      message.success(t('vault.recoveryReauthComplete'));
                   })
                 }
                 onRegister={(label) =>
