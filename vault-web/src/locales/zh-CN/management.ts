@@ -72,7 +72,7 @@ export default {
   'manage.backupUnlockTitle': '确认本次备份的解锁材料',
   'manage.localMaterials': '主密码和密钥文件仅在浏览器本地使用。',
   'manage.backupExcludes':
-    '不包含主密码、账户密钥、恢复密钥、密码库 Passkey 或 MFA 恢复码。',
+    '不包含已删除密码、主密码、账户密钥、恢复密钥、密码库 Passkey 或 MFA 恢复码。',
   'manage.snapshotChecked': '备份内容已检查',
   'manage.snapshotAuth':
     '读取一致性快照需要近期身份验证；当前快照已在本地逐项验证。',

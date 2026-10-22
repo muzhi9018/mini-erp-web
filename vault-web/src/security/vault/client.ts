@@ -28,6 +28,16 @@ export class VaultClient {
     this.pending.clear();
   }
 
+  lock() {
+    this.epoch++;
+    for (const pending of this.pending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(new Error('VAULT_LOCKED'));
+    }
+    this.pending.clear();
+    return this.call('lock', {});
+  }
+
   call<K extends keyof Operations>(
     type: K,
     payload: Operations[K]['input'],

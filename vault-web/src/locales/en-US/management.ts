@@ -80,7 +80,7 @@ export default {
   'manage.localMaterials':
     'Master passwords and key files are used only in this browser.',
   'manage.backupExcludes':
-    'Excludes master passwords, account and recovery keys, vault Passkeys and MFA recovery codes.',
+    'Excludes deleted passwords, the master password, account key, recovery key, vault Passkeys and MFA recovery codes.',
   'manage.snapshotChecked': 'Backup contents checked',
   'manage.snapshotAuth':
     'Reading a consistent snapshot requires recent authentication. Each ciphertext has been verified locally.',

@@ -23,9 +23,9 @@ export default {
   'entries.saveHint':
     'Saves the whole entry, including added, replaced or removed 2FA configuration.',
   'entries.discardTitle': 'Discard unsaved changes?',
-  'entries.deleteTitle': 'Delete this entry?',
+  'entries.deleteTitle': 'Delete this password?',
   'entries.deleteWarning':
-    'Deletes this entry’s password and authenticator configuration. The original website’s password and 2FA stay unchanged. This vault has no trash recovery.',
+    'Move this password to Deleted for 30 days, then permanently delete it. The original website password and 2FA settings are unchanged.',
   'entries.manage': 'Manage',
   'entries.manageTitle': 'Manage authenticator configuration',
   'entries.removeTitle': 'Remove 2FA from this entry?',

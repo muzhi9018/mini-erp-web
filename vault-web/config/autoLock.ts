@@ -1,6 +1,4 @@
 export function readAutoLockConfig(env: NodeJS.ProcessEnv) {
-  const production = env.NODE_ENV === 'production';
-
   function duration(name: string, fallback: number, milliseconds: number) {
     const value = env[name]?.trim();
     if (!value) return fallback;
@@ -17,15 +15,7 @@ export function readAutoLockConfig(env: NodeJS.ProcessEnv) {
   }
 
   return {
-    idleMinutes: duration(
-      'VAULT_IDLE_LOCK_MINUTES',
-      production ? 5 : 1,
-      60_000,
-    ),
-    backgroundSeconds: duration(
-      'VAULT_BACKGROUND_LOCK_SECONDS',
-      production ? 60 : 20,
-      1_000,
-    ),
+    idleMinutes: duration('VAULT_IDLE_LOCK_MINUTES', 5, 60_000),
+    backgroundSeconds: duration('VAULT_BACKGROUND_LOCK_SECONDS', 60, 1_000),
   };
 }

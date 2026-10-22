@@ -141,6 +141,7 @@ export default function Transition({
   const [newRecovery, setNewRecovery] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [cancelConfirm, setCancelConfirm] = useState(false);
+  const retentionDeadlines = useRef<string[]>([]);
   const preparedMeta = useRef<Vault.Meta | undefined>(undefined);
   const startRequest = useRef<Vault.RotationStart | undefined>(undefined);
   const commitRequest = useRef<Vault.RotationCommand | undefined>(undefined);
@@ -167,7 +168,9 @@ export default function Transition({
     const meta = await guard(vault.meta());
     const empty =
       meta.status !== 'RESTORING' &&
-      (!meta.initialized || (await guard(itemAPI.allItems(meta))).length === 0);
+      (!meta.initialized ||
+        ((await guard(itemAPI.allItems(meta))).length === 0 &&
+          (await guard(itemAPI.deletedItems(meta))).items.length === 0));
     setTarget(empty ? 'empty' : 'nonempty');
     return empty ? meta : undefined;
   };
@@ -196,6 +199,20 @@ export default function Transition({
         Date.now() < Date.parse(current.expiresAt),
     );
     setManifest('');
+    if (current.mode === 'ROTATION') {
+      const meta = await guard(vault.meta());
+      const items = await guard(rotation.stagedItems(current, 'SOURCE', meta));
+      retentionDeadlines.current = items.flatMap((item) =>
+        item.deleted && item.purgeAt ? [item.purgeAt] : [],
+      );
+      for (let offset = 0; offset < Math.max(1, items.length); offset += 100)
+        await guard(
+          client.call('transitionSource', {
+            items: items.slice(offset, offset + 100),
+            reset: offset === 0,
+          }),
+        );
+    }
     await guard(client.call('bindTransition', { task: current }));
     const staged = await guard(rotation.stagedItems(current));
     const accepted = new Set(staged.map((item) => item.itemId));
@@ -222,7 +239,14 @@ export default function Transition({
       setProgress(accepted.size + Math.min(offset + 20, remaining.length));
     }
     const complete = await guard(rotation.stagedItems(current));
-    setManifest(await guard(client.call('verifyStaged', { items: complete })));
+    for (let offset = 0; offset < Math.max(1, complete.length); offset += 100)
+      await guard(
+        client.call('ingestStaged', {
+          items: complete.slice(offset, offset + 100),
+          reset: offset === 0,
+        }),
+      );
+    setManifest(await guard(client.call('verifyStaged', {})));
     setStep(4);
     setUncertain(false);
   };
@@ -294,6 +318,7 @@ export default function Transition({
     generation: current.generation,
     keyEpoch: current.keyEpoch,
     count: current.expectedItemCount,
+    retentionDeadlines: retentionDeadlines.current,
   });
   return (
     <>
@@ -417,6 +442,22 @@ export default function Transition({
                       return;
                     }
                     const meta = await guard(vault.meta());
+                    if (current.mode === 'ROTATION') {
+                      const items = await guard(
+                        rotation.stagedItems(current, 'SOURCE', meta),
+                      );
+                      for (
+                        let offset = 0;
+                        offset < Math.max(1, items.length);
+                        offset += 100
+                      )
+                        await guard(
+                          client.call('transitionSource', {
+                            items: items.slice(offset, offset + 100),
+                            reset: offset === 0,
+                          }),
+                        );
+                    }
                     await guard(
                       client.call('resumeTransition', {
                         ownerSubject,

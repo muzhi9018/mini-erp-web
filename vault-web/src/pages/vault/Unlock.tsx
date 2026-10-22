@@ -10,6 +10,7 @@ import styles from './Vault.module.css';
 
 export default function Unlock(props: {
   busy: boolean;
+  hasAccount?: boolean;
   meta: Vault.Meta;
   ownerSubject: string;
   onUnlock: (file: string, password: string) => void;
@@ -46,7 +47,13 @@ export default function Unlock(props: {
         <span>
           <b>{file ? name : t('vault.chooseAccountFile')}</b>
           <small>
-            {t(file ? 'vault.fileMatched' : 'vault.fileRefreshHint')}
+            {t(
+              props.hasAccount
+                ? 'deleted.accountRetained'
+                : file
+                  ? 'vault.fileMatched'
+                  : 'vault.fileRefreshHint',
+            )}
           </small>
         </span>
         <span className={styles.fileEnd}>
@@ -134,7 +141,7 @@ export default function Unlock(props: {
           type="primary"
           htmlType="submit"
           loading={props.busy}
-          disabled={!file}
+          disabled={!file && !props.hasAccount}
         >
           <LockKeyhole size={16} strokeWidth={1.5} />
           {t('vault.unlock')}

@@ -23,7 +23,7 @@
 - 新增账号组只填名称，允许空组。组内可选择已有密码，确认保存后加入；也可打开原有新增密码表单，只预选当前组，不复制组名、邮箱、密码或 2FA。
 - 点击成员使用原有独立账号详情，不显示绑定邮箱、反向关联列表或同组关联卡片。旧邮箱绑定元数据兼容保留，不参与分组校验、搜索或联动写入，不做存量清理。
 - 重命名、添加或移出成员只修改组；移出成员和删除组保留全部密码与 2FA。删除账号只维护组成员引用，不改写其他账号的弃用邮箱元数据。引用超过单批上限时先分批解除，最后删除目标；已完成批次会保留。
-- 组内新建账号通过 `/api/v1/vault/items/batch` 原子提交账号 CREATE 与组 UPDATE，其他组操作只提交组变更。单批最多 100 条、1 MiB；组明文按 UTF-8 检查 16 KiB 上限，超限提示拆组。网络结果不确定时重试完全相同的请求；版本冲突保留草稿，由用户核对后刷新重编，不自动合并或覆盖。
+- 组内新建账号通过 `/vault/api/items/batch` 原子提交账号 CREATE 与组 UPDATE，其他组操作只提交组变更。单批最多 100 条、1 MiB；组明文按 UTF-8 检查 16 KiB 上限，超限提示拆组。网络结果不确定时重试完全相同的请求；版本冲突保留草稿，由用户核对后刷新重编，不自动合并或覆盖。
 - 加密备份、恢复和完整轮换包含全部 LOGIN 与 ACCOUNT_GROUP，保留原 UUID 及兼容元数据。继续使用现有 v3 接口；已执行账号组增量 SQL 的环境无需为本次简化再做迁移。后端接入契约见后端仓库 `docs/password-vault-account-groups.md`。
 
 ## 生产构建与接口地址
@@ -36,7 +36,7 @@ npm --prefix vault-web run build
 
 上传 `vault-web/dist/` 内的全部内容到密码库前端站点。生产包会直接向配置的 API 地址发送请求，并保留 Cookie、CSRF 和内容版本请求头。该配置只影响生产构建，本地开发继续使用下文的代理配置；修改接口地址后需重新构建。
 
-`VAULT_API_BASE_URL` 不提供硬编码默认地址。必须显式配置，留空表示沿用同源代理；可包含网关路径，构建时会去除末尾斜杠。客户端会保留前缀并追加 `/vault-auth/*` 或 `/api/v1/vault/*`，不会自动删除或补充网关路径。`.env.example` 只保留空变量，真实地址仅保存在被忽略的本地文件或运行环境中。
+`VAULT_API_BASE_URL` 不提供硬编码默认地址。必须显式配置，留空表示沿用同源代理；可包含网关路径，构建时会去除末尾斜杠。客户端会保留前缀并追加 `/vault/auth/*` 或 `/vault/api/*`，不会自动删除或补充网关路径。Base URL 不要重复包含 Controller 的 `/vault` 前缀。`.env.example` 只保留空变量，真实地址仅保存在被忽略的本地文件或运行环境中。
 
 跨域部署时，前端站点的 CSP `connect-src` 必须允许 API Origin；API 服务端必须允许密码库页面的精确 HTTPS Origin、携带凭据的 CORS 请求，以及 Cookie/CSRF 的完整流程。后端 `vault.origin` 和 `vault.rp-id` 仍对应前端页面地址。具体要求见 [跨域后端接入约定](docs/cross-origin-backend-contract.md)。只修改前端地址不代表服务端跨域配置已生效。
 
@@ -91,10 +91,10 @@ npm run dev
 | 浏览器请求 | nginx 上游 |
 | --- | --- |
 | 页面、静态资源及 HMR WebSocket | `http://127.0.0.1:8002` |
-| `/vault-auth/*` | `VAULT_NGINX_API_TARGET`，保留请求路径 |
-| `/api/v1/vault/*` | `VAULT_NGINX_API_TARGET`，保留请求路径 |
+| `/vault/auth/*` | `VAULT_NGINX_API_TARGET`，保留请求路径 |
+| `/vault/api/*` | `VAULT_NGINX_API_TARGET`，保留请求路径 |
 
-这个新虚拟主机中的 API 路径直接保留，无需额外 `/api` 前缀；原有后端网关的重写规则保持原样。修改环境变量后需重新生成并重载本地 NGINX 配置。
+这个新虚拟主机中的 API 路径直接保留，无需额外 `/api` 前缀。NGINX 转发到 Java 时须保留完整的 `/vault/auth/*` 和 `/vault/api/*`，不要剥离 `/vault`；`proxy_pass` 使用不带 URI 和末尾斜杠的后端 Origin。修改模板或环境变量后需重新生成并重载本地 NGINX 配置。
 
 以下是前端直接提供 HTTPS 的可选方式；使用现有 nginx 时跳过此部分。首次在本机准备可信开发证书（macOS）：
 
@@ -118,7 +118,7 @@ vault:
   rp-id: localhost
 ```
 
-HTTPS 开发服务器将 `/vault-auth/*` 和 `/api/v1/vault/*` 代理至 `.env.local` 中 `VAULT_API_TARGET` 配置的入口。前端保留真实浏览器 Origin。开发时启用 source map，生产构建关闭；在 DevTools 的 Sources 中可调试页面，Worker 可从其线程入口调试。ERP 开发入口通过根目录 `.env.local` 的 `DEV_VAULT_SITE_URL` 指向本地密码库。
+HTTPS 开发服务器将 `/vault/auth/*` 和 `/vault/api/*` 代理至 `.env.local` 中 `VAULT_API_TARGET` 配置的入口。前端保留真实浏览器 Origin。开发时启用 source map，生产构建关闭；在 DevTools 的 Sources 中可调试页面，Worker 可从其线程入口调试。ERP 开发入口通过根目录 `.env.local` 的 `DEV_VAULT_SITE_URL` 指向本地密码库。
 
 如果后端网关入口包含 `/api` 前缀，在 `VAULT_API_TARGET` 中保留此前缀，nginx 转发时去掉第一个 `/api`。配置后运行：
 
@@ -130,10 +130,10 @@ npm run dev:https
 
 | 浏览器请求路径 | Umi 转发至 nginx 的路径 | nginx 去掉前缀后的 Java 路径 |
 | --- | --- | --- |
-| `/vault-auth/options` | `/api/vault-auth/options` | `/vault-auth/options` |
-| `/api/v1/vault/meta` | `/api/api/v1/vault/meta` | `/api/v1/vault/meta` |
+| `/vault/auth/options` | `/api/vault/auth/options` | `/vault/auth/options` |
+| `/vault/api/meta` | `/api/vault/api/meta` | `/vault/api/meta` |
 
-数据接口转发时的两个 `/api` 是有意的：第一个属于 nginx 网关前缀，第二个属于 Java 接口路径，不能一起删除。后端 `vault.origin` 仍为浏览器源 `https://localhost:8002`，`vault.rp-id` 仍为 `localhost`，不配置成上游网关地址。现有 nginx 规则无需为这一开发代理方式修改。
+示例中仅最前面的 `/api` 属于 nginx 网关前缀；Java Controller 的 `/vault` 前缀必须保留。后端 `vault.origin` 仍为浏览器源 `https://localhost:8002`，`vault.rp-id` 仍为 `localhost`，不配置成上游网关地址。
 
 首次安装依赖或只查看 HTTP 页面时：
 
@@ -160,22 +160,32 @@ ERP 的 Utoopack 开发服务会占用 `8000` 和内部端口 `8001`，因此密
 
 ## 生命周期与重试
 
-所有锁定都会终止 Worker、清理本页文件和明文、移除密文查询缓存。因此普通锁定也需要重新导入账户密钥，比方案允许保留 AK 的模式更保守。主密码不做 trim 或 Unicode 归一化。
+普通手动、闲置和后台锁定会清理 VMK、DEK、明文索引、字段、TOTP 及进行中的表单，仅允许账户密钥 AK 留在当前标签页 Worker 私有内存中，再次解锁可只输入主密码。刷新、关闭、退出、401 或切换账号会终止 Worker 并清理 AK；会话代次会丢弃迟到结果。主密码不做 trim 或 Unicode 归一化。
 
 开发环境的 effect 重放和热更新也执行完整清理，释放旧操作标记，再重新读取会话和密码库状态。状态尚未读取时显示加载或重试说明；读取失败后的“关闭提示 / 重新连接”会重新请求会话和状态，避免仅关闭错误后留下无法进入的页面。
 
-显示内容 20 秒后移除，进入后台立即关闭显示及编辑表单。自动锁定默认时限：开发环境无操作 1 分钟或后台 20 秒，生产环境无操作 5 分钟或后台 60 秒。焦点恢复、pageshow、每次敏感操作和异步返回都会检查期限。复制不自动读取/覆写剪贴板，系统剪贴板历史可能保留副本。
+显示内容 20 秒后移除，进入后台立即关闭显示及编辑表单。自动锁定默认时限：开发和生产环境均为无操作 5 分钟或后台 60 秒。焦点恢复、pageshow、每次敏感操作和异步返回都会检查期限。复制不自动读取/覆写剪贴板，系统剪贴板历史可能保留副本。
 
 可以在 `vault-web/.env.local` 或启动/构建命令的环境变量中配置自动锁定时限：
 
 ```dotenv
-VAULT_IDLE_LOCK_MINUTES=1
-VAULT_BACKGROUND_LOCK_SECONDS=20
+VAULT_IDLE_LOCK_MINUTES=5
+VAULT_BACKGROUND_LOCK_SECONDS=60
 ```
 
 两个变量分别以分钟、秒为单位，必须是正整数；留空采用当前环境默认值。配置在启动或构建时读取，修改后重启开发服务，生产环境修改后须重新构建。环境变量的显式值在开发和生产构建中都会生效；发布构建时应清除仅用于本地测试的覆盖值。页面三种语言的锁定提示与实际时限使用同一份配置。后端 Passkey 近期认证的 5 分钟规则单独管理。
 
 初始化失败时保留已验证的材料和幂等键，重试前查询 meta。条目保存结果未确认时，重试复用原密文和幂等键；不允许在未确认请求上继续编辑。版本冲突保留当前草稿，并提供明确的“放弃草稿并加载最新版本”操作。离线刷新后没有秘密持久化，也没有自动恢复未提交编辑的功能。
+
+## 已删除密码（生命周期 v2）
+
+密码删除后保留固定 720 小时，正常列表、搜索、有效组成员和用户备份均排除已删除项。账号组由 Worker 校验类型后使用 `DELETE_GROUP` 直接删除，不回收，成员密码和 TOTP 不变。历史软删除组会阻断同步并提示核对，不能作为密码恢复。
+
+“已删除”提供独立本地搜索、删除时间倒序、准确期限与时区、只读字段和单条恢复／永久删除。敏感操作前重新查询详情；回前台或休眠恢复重新确认服务端时间。永久删除需要确认，未知结果保留原请求和幂等键，查询当前状态后以相同请求读取历史回执，并重新同步。没有批量恢复、清空、组回收或额外近期 Passkey。
+
+所有数据 POST 同时声明内容 schema v3 和生命周期 v2；meta 必须明确支持生命周期 v2。完整轮换在 start 后下载 `SOURCE` 冻结集合，包含未到期的已删除密码，分批发送给 Worker；`STAGING` 验证包含原删除状态和期限。用户备份仍只包含正常条目；仅剩可恢复密码时也不允许覆盖空库恢复。
+
+本轮实际验证、截图位置及待联调范围见 [已删除密码验证记录](docs/deleted-passwords-verification.md)。真实后端、数据库迁移、清理器和跨设备并发验收分别由 R1/R2/R4 实施方完成，不能用隔离浏览器测试代替。
 
 ## 验证
 
@@ -202,7 +212,7 @@ CSP 允许 `wasm-unsafe-eval`，不允许 `unsafe-eval`；样式暂允许 antd �
 - `/items` 和 `/rotations/items` 使用 `pageSize`，不是设计稿表格中的 `limit`。
 - 密文盒字段为 `wrappedVmk`、`wrappedDek`、`encryptedItem`；算法名 `A256GCM`。
 - 认证阶段为 PASSWORD / RECOVERY_ENROLLMENT / RECOVERY_SETUP / MFA。
-- `/vault-auth/options` 提供 `credentialRevision`；登录/认证/恢复确认响应会轮换 CSRF token，后续 POST 必须更新。
+- `/vault/auth/options` 提供 `credentialRevision`；登录/认证/恢复确认响应会轮换 CSRF token，后续 POST 必须更新。
 - Java 的 FastJson 响应省略值为 null 的字段。前端在接口边界补齐密钥槽中可空的参数，并将省略的 `nextCursor` 视为分页结束；加密协议、必填字段及密文校验仍严格执行。
 - HTTP 错误按 `data.errorCode` 分支处理，页面不展示服务端任意异常消息或提交内容。
 
@@ -245,7 +255,7 @@ TOTP 支持 SHA1/SHA256/SHA512、6/8 位、30/60 秒以及 16–128 字节 Base3
 
 普通 `/rotations/start` 明确不接受 `vaultId` 或 `itemIds`，这两个字段仅在 `/restores/start` 提交。start/resume/cancel 返回任务摘要，完整集合另查 status。当前后端 status 映射可能省略 `expectedItemCount`；客户端只在该字段缺失时使用显式 `expectedItems` 的长度，并继续严格校验去重、版本以及与源快照的逐项一致性，不据摘要数量跳过内容验证。
 
-本次只读实连检查确认 `/vault-auth/options` 返回本地 Passkey 认证方式、CSRF 和 Secure/HttpOnly Cookie；匿名 `/meta` 返回 HTTP/JsonResult 401、`VAULT_SESSION_EXPIRED` 与 no-store。已登录写入、真实硬件 Passkey 和跨设备恢复仍需在测试账户完成，不能将契约模拟器通过记为这些真实环境验收完成。
+此前只读实连检查确认认证 options 返回本地 Passkey 认证方式、CSRF 和 Secure/HttpOnly Cookie；匿名 meta 返回 HTTP/JsonResult 401、`VAULT_SESSION_EXPIRED` 与 no-store。路径迁移后须重新验证；已登录写入、真实硬件 Passkey 和跨设备恢复仍需在测试账户完成，不能将契约模拟器通过记为这些真实环境验收完成。
 
 ### 本轮前端检查
 

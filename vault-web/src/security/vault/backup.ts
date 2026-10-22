@@ -32,6 +32,7 @@ export function validateSnapshot(value: Vault.Snapshot): Vault.Snapshot {
   const seen = new Set<string>();
   for (const item of value.items) {
     validateItem(item);
+    assert(!(item as Vault.RotationItem).deleted);
     assert(item.keyEpoch === value.keyEpoch && !seen.has(item.itemId));
     seen.add(item.itemId);
   }

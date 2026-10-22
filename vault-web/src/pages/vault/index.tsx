@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { VaultClient } from '@/security/vault/client';
+import { RetentionClock } from '@/security/vault/lifecycle';
 import { assert, object } from '@/security/vault/protocol';
 import { createPasskey, getPasskey } from '@/security/vault/webauthn';
 import {
@@ -51,6 +52,8 @@ function VaultWorkspace() {
   const [session, setSession] = useState<Vault.Session>();
   const [meta, setMeta] = useState<Vault.Meta>();
   const [busy, setBusy] = useState(false);
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const lifecyclePending = useRef(false);
   const [error, setError] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -65,6 +68,9 @@ function VaultWorkspace() {
   const [completionVerified, setCompletionVerified] = useState(false);
   const [limitations, setLimitations] = useState(false);
   const [allRows, setAllRows] = useState<Vault.Summary[]>([]);
+  const [hasAccount, setHasAccount] = useState(false);
+  const [deletedRows, setDeletedRows] = useState<Vault.DeletedSummary[]>([]);
+  const deletedClock = useRef(new RetentionClock()).current;
   const [groups, setGroups] = useState<Vault.GroupSummary[]>([]);
   const [groupEditor, setGroupEditor] = useState<GroupEditorDraft>();
   const [deleting, setDeleting] = useState(false);
@@ -118,12 +124,26 @@ function VaultWorkspace() {
     clearTimeout(revealTimer.current);
   }, []);
   const lock = useCallback(
-    (broadcast = false) => {
+    (broadcast = false, retainAccount = true) => {
       epoch.current++;
       invalidateResponses();
-      client.reset();
+      if (retainAccount) {
+        const locking = client.lock();
+        const workerRevision = client.revision;
+        void locking.catch(() => {
+          if (client.revision === workerRevision) {
+            client.reset();
+            setHasAccount(false);
+          }
+        });
+      } else {
+        client.reset();
+        setHasAccount(false);
+      }
       active.current = false;
       inFlight.current = false;
+      lifecyclePending.current = false;
+      setLifecycleBusy(false);
       void cache.cancelQueries();
       cache.clear();
       conceal();
@@ -135,6 +155,7 @@ function VaultWorkspace() {
       setRows([]);
       setAllRows([]);
       setGroups([]);
+      setDeletedRows([]);
       setDeleting(false);
       setSelected(undefined);
       selectedRef.current = undefined;
@@ -171,7 +192,7 @@ function VaultWorkspace() {
     return result;
   }
   function run(action: () => Promise<void>) {
-    if (inFlight.current) return;
+    if (inFlight.current || lifecyclePending.current) return;
     try {
       check();
     } catch {
@@ -211,7 +232,7 @@ function VaultWorkspace() {
   async function loadSession() {
     const result = await guard(auth.options());
     if (owner.current && owner.current !== result.ownerSubject) {
-      lock(true);
+      lock(true, false);
       owner.current = result.ownerSubject;
       setSession(result);
       setMeta(undefined);
@@ -248,14 +269,18 @@ function VaultWorkspace() {
     setMeta(value);
     return value;
   }
-  async function sync(value?: Vault.Meta, prefer?: string) {
+  async function sync(value?: Vault.Meta, prefer?: string, retry = true) {
     const selection = prefer || selectedRef.current;
     setSyncFailed(false);
     try {
       setRows([]);
+      setAllRows([]);
+      setGroups([]);
+      setDeletedRows([]);
       setQuery('');
       conceal();
       clearTimeout(searchTimer.current);
+      cache.removeQueries({ queryKey: ['vault-ciphertext'] });
       await guard(client.call('resetIndex', {}));
       const fresh = value || (await loadMeta());
       const items = await guard(
@@ -278,6 +303,16 @@ function VaultWorkspace() {
       await guard(
         client.call('completeIndex', { meta: fresh, count: items.length }),
       );
+      const deleted = await guard(itemAPI.deletedItems(fresh));
+      deletedClock.calibrate(deleted.serverTime, deleted.requestStarted);
+      for (let offset = 0; offset < deleted.items.length; offset += 100)
+        await guard(
+          client.call('ingestDeleted', {
+            items: deleted.items.slice(offset, offset + 100),
+            serverTime: new Date(deletedClock.now()).toISOString(),
+          }),
+        );
+      setDeletedRows(await guard(client.call('searchDeleted', { query: '' })));
       const summaries = await guard(client.call('search', { query: '' }));
       const currentGroups = await guard(client.call('groups', {}));
       setGroups(currentGroups);
@@ -290,7 +325,11 @@ function VaultWorkspace() {
           if (
             fresh.generation !== receipt.generation ||
             fresh.keyEpoch !== receipt.keyEpoch ||
-            items.length !== receipt.count
+            items.length + deleted.items.length !==
+              receipt.count -
+                (receipt.retentionDeadlines?.filter(
+                  (time) => Date.parse(time) <= deletedClock.now(),
+                ).length || 0)
           )
             throw new Error('VAULT_COMPLETION_MISMATCH');
           setCompletion(receipt);
@@ -312,6 +351,12 @@ function VaultWorkspace() {
       setSelected(next);
       return { rows: summaries, groups: currentGroups };
     } catch (failure) {
+      if (
+        retry &&
+        failure instanceof VaultHttpError &&
+        failure.code === 'VAULT_VERSION_CONFLICT'
+      )
+        return sync(undefined, prefer, false);
       setSyncFailed(true);
       throw failure;
     }
@@ -328,13 +373,13 @@ function VaultWorkspace() {
       await loadSession();
     });
     const sessionEnded = () => {
-      lock(true);
+      lock(true, false);
       setSession(undefined);
       setMeta(undefined);
       setError('VAULT_SESSION_EXPIRED');
     };
     const workerFailed = () => {
-      lock(true);
+      lock(true, false);
       setError('VAULT_WORKER_FAILED');
     };
     const activity = (event: Event) => {
@@ -347,6 +392,16 @@ function VaultWorkspace() {
     };
     const inspect = () => {
       if (active.current && expired()) lock(true);
+      if (active.current) {
+        setDeletedRows((rows) =>
+          rows.filter(
+            (row) =>
+              !deletedClock.needsConfirmation() &&
+              Date.parse(row.purgeAt) > deletedClock.now(),
+          ),
+        );
+        void guard(client.call('expireDeleted', {})).catch(() => {});
+      }
     };
     const visibility = () => {
       if (document.hidden) {
@@ -355,17 +410,28 @@ function VaultWorkspace() {
       } else {
         inspect();
         hiddenAt.current = undefined;
+        if (active.current && !inFlight.current)
+          run(async () => {
+            await sync();
+          });
       }
     };
-    const pageHide = () => lock();
+    const foreground = () => {
+      inspect();
+      if (active.current && deletedClock.needsConfirmation())
+        run(async () => {
+          await sync();
+        });
+    };
+    const pageHide = () => lock(false, false);
     const pageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) lock();
+      if (event.persisted) lock(false, false);
       else inspect();
     };
     const timer = setInterval(inspect, 1000);
     for (const type of ['pointerdown', 'keydown', 'touchstart', 'wheel'])
       window.addEventListener(type, activity, { passive: true });
-    window.addEventListener('focus', inspect);
+    window.addEventListener('focus', foreground);
     window.addEventListener('pageshow', pageShow);
     window.addEventListener('pagehide', pageHide);
     window.addEventListener('vault-session-ended', sessionEnded);
@@ -381,14 +447,14 @@ function VaultWorkspace() {
     return () => {
       // Development effect replay and Fast Refresh preserve refs and state.
       // Release the old operation as well as its worker before loading again.
-      lock();
+      lock(false, false);
       clearInterval(timer);
       clearTimeout(revealTimer.current);
       clearTimeout(searchTimer.current);
       channel.current?.close();
       for (const type of ['pointerdown', 'keydown', 'touchstart', 'wheel'])
         window.removeEventListener(type, activity);
-      window.removeEventListener('focus', inspect);
+      window.removeEventListener('focus', foreground);
       window.removeEventListener('pageshow', pageShow);
       window.removeEventListener('pagehide', pageHide);
       window.removeEventListener('vault-session-ended', sessionEnded);
@@ -412,6 +478,9 @@ function VaultWorkspace() {
     if (error === 'VAULT_RELATION_INVALID') return t('groups.relationInvalid');
     if (error === 'VAULT_INDEX_INCOMPLETE') return t('groups.conflict');
     if (error === 'VAULT_VERSION_CONFLICT') return t('vault.conflict');
+    if (error === 'VAULT_DELETED_TYPE_UNSUPPORTED')
+      return t('deleted.unsupportedType');
+    if (error === 'VAULT_ITEM_LIMIT_REACHED') return t('deleted.capacity');
     if (error === 'VAULT_WRITE_LOCKED') return t('vault.writeLocked');
     if (error === 'VAULT_REAUTH_REQUIRED') return t('vault.reauthRequired');
     if (error === 'VAULT_INVALID_FORMAT' || error === 'VAULT_INVALID_REQUEST')
@@ -448,7 +517,7 @@ function VaultWorkspace() {
     check();
     const current = await guard(auth.options());
     if (current.ownerSubject !== owner.current || current.stage !== 'MFA') {
-      lock(true);
+      lock(true, false);
       owner.current = current.ownerSubject;
       setSession(current);
       setMeta(undefined);
@@ -459,7 +528,7 @@ function VaultWorkspace() {
   };
 
   const switchAccount = () => {
-    lock(true);
+    lock(true, false);
     owner.current = undefined;
     run(async () => {
       await guard(auth.logout());
@@ -511,7 +580,17 @@ function VaultWorkspace() {
       await sync(undefined, prefer);
       if (!nextDelete) {
         setDeleting(false);
-        message.success(t(pending.deleting ? 'vault.deleted' : 'vault.saved'));
+        message.success(
+          t(
+            pending.deleting
+              ? pending.batch.changes.some(
+                  (change) => change.action === 'DELETE',
+                )
+                ? 'deleted.moved'
+                : 'vault.deleted'
+              : 'vault.saved',
+          ),
+        );
         return;
       }
       const fresh = await loadMeta();
@@ -625,7 +704,7 @@ function VaultWorkspace() {
             )}
             {session?.stage === 'MFA' && !maintenance && (
               <Button
-                disabled={busy}
+                disabled={busy || lifecycleBusy}
                 onClick={() => {
                   navigate(() => {
                     lock();
@@ -652,7 +731,13 @@ function VaultWorkspace() {
               <Button
                 className={styles.workspaceExtra}
                 type="text"
-                disabled={busy || !!editor || !!groupEditor || uncertain}
+                disabled={
+                  busy ||
+                  lifecycleBusy ||
+                  !!editor ||
+                  !!groupEditor ||
+                  uncertain
+                }
                 aria-label={t('vault.refresh')}
                 onClick={() =>
                   run(async () => {
@@ -810,7 +895,7 @@ function VaultWorkspace() {
                 setCompletion(receipt);
                 setCompletionVerified(false);
               }
-              lock(true);
+              lock(true, false);
               clearSession();
               setSession(undefined);
               setMeta(undefined);
@@ -996,6 +1081,7 @@ function VaultWorkspace() {
                       );
                       setDraft(undefined);
                       setVerified(false);
+                      setHasAccount(true);
                       setUnlocked(true);
                       await sync(current);
                     })
@@ -1013,6 +1099,7 @@ function VaultWorkspace() {
                   key={revision}
                   busy={busy}
                   meta={meta}
+                  hasAccount={hasAccount}
                   ownerSubject={session.ownerSubject || ''}
                   onSwitchAccount={switchAccount}
                   onUnlock={(account, password) =>
@@ -1030,9 +1117,11 @@ function VaultWorkspace() {
                       );
                       try {
                         await sync(current);
+                        setHasAccount(true);
                         setUnlocked(true);
                       } catch (failure) {
                         client.reset();
+                        setHasAccount(false);
                         active.current = false;
                         throw failure;
                       }
@@ -1051,7 +1140,7 @@ function VaultWorkspace() {
               )}
               action={
                 <Button
-                  disabled={busy}
+                  disabled={busy || lifecycleBusy}
                   onClick={() =>
                     run(async () => {
                       if (pendingWrite.current) await submitPending();
@@ -1072,6 +1161,18 @@ function VaultWorkspace() {
           <Items
             key={revision}
             editorRef={editorRef}
+            onDeletedBlocked={(value) => {
+              lifecyclePending.current = value;
+              setLifecycleBusy(value);
+            }}
+            deletedRows={deletedRows}
+            deletedServerNow={() => deletedClock.now()}
+            client={client}
+            guard={guard}
+            onDeletedSync={() => sync()}
+            onForgetDeleted={(id) =>
+              setDeletedRows((rows) => rows.filter((row) => row.itemId !== id))
+            }
             onNotes={async (itemId) => {
               check();
               const serial = exposure.current;

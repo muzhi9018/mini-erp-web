@@ -4,9 +4,11 @@
 
 ## URL 与身份边界
 
-- API Base URL 可以包含网关路径；完整请求为 Base URL 加 `/vault-auth/*` 或 `/api/v1/vault/*`。网关保留或重写此前缀的行为必须与部署配置一致。
+- API Base URL 可以包含网关路径；完整请求为 Base URL 加 `/vault/auth/*` 或 `/vault/api/*`，不要在 Base URL 中重复添加 Controller 的 `/vault` 前缀。网关仅按部署约定处理额外网关路径，转发到 Java 时须保留 `/vault/auth/*` 和 `/vault/api/*`。
 - `vault.origin` 必须等于浏览器中密码库页面的完整 HTTPS Origin；`vault.rp-id` 必须是该前端域名。二者不改成 API 地址。
 - 继续使用独立密码库 Cookie 会话、Passkey 和 CSRF，不接受 ERP JWT 代替密码库认证。
+
+Controller 路径迁移时，后端还须同步 `VaultPaths`、`VaultSecurityConfig` 的认证规则、`VaultSessionConfig` 的过滤器注册路径、`VaultHttpFilter` 的数据请求识别、`VaultFailureAuditServiceImpl` 的失败审计路径，以及 `reauth` 返回的 `optionsEndpoint`；只修改 Controller 注解不足以完成迁移。
 
 ## CORS
 
@@ -17,7 +19,7 @@ API 服务或网关应为两个密码库路径提供下列响应，并覆盖成�
 | `Access-Control-Allow-Origin` | 仅允许已配置的密码库页面精确 Origin，不能为 `*`，也不能无条件反射任意 Origin |
 | `Access-Control-Allow-Credentials` | `true` |
 | 预检方法 | 无需登录或 CSRF 的 `OPTIONS`；只放行对应实际业务方法 `GET`、`POST` |
-| 预检请求头 | 显式允许 `Content-Type`、`Accept-Language`、实际 CSRF header（当前为 `X-CSRF-TOKEN`）和 `X-Vault-Item-Schema-Version` |
+| 预检请求头 | 显式允许 `Content-Type`、`Accept-Language`、实际 CSRF header（当前为 `X-CSRF-TOKEN`）、`X-Vault-Item-Schema-Version` 和 `X-Vault-Lifecycle-Version` |
 | 缓存区分 | 返回 `Vary: Origin`；预检按请求方法及请求头区分 |
 
 携带凭据时，不能用 `Access-Control-Allow-Headers: *` 代替显式请求头列表。只有预检可以免认证，实际读写仍执行原有身份、MFA、近期认证、CSRF、Origin、归属和版本校验。保持原始业务 HTTP 状态，不把 401/403 错误重定向成 HTML。

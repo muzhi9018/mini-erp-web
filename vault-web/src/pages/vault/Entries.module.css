@@ -719,3 +719,63 @@
   border-radius: 8px;
   font-size: 12px;
 }
+
+.deletedIntro {
+  padding: 0 18px 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.deadline {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  margin: -8px 0 18px;
+  border: 1px solid #dfc99a;
+  background: #fff9eb;
+  color: #785c20;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.deadline > svg {
+  flex: none;
+  margin-top: 3px;
+}
+.deadline p + p {
+  margin-top: 5px;
+  font-size: 12px;
+}
+.deletedReadonly {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 18px 0;
+}
+.lifecycleActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.remaining {
+  color: var(--muted);
+  margin-top: 4px;
+}
+:global(html[data-vault-theme="dark"]) .deadline {
+  background: #332d1e;
+  color: #f0d9a0;
+  border-color: #675533;
+}
+@media (max-width: 620px) {
+  .lifecycleActions {
+    flex-basis: 100%;
+    margin-top: 8px;
+  }
+  .lifecycleActions > button {
+    flex: 1;
+  }
+  .remaining {
+    display: none;
+  }
+}

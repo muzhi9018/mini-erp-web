@@ -21,9 +21,9 @@ export default {
   'entries.saveEntry': '保存条目',
   'entries.saveHint': '保存整个条目，包括本次新增、更换或移除的 2FA 配置。',
   'entries.discardTitle': '放弃未保存的修改？',
-  'entries.deleteTitle': '删除此条目？',
+  'entries.deleteTitle': '删除此密码？',
   'entries.deleteWarning':
-    '将删除此条目的密码和验证码配置。原网站的密码与 2FA 设置不会改变。本库不提供回收站。',
+    '删除后将移入“已删除”，可在 30 天内恢复；到期后自动永久删除。原网站的密码与 2FA 设置不会改变。',
   'entries.manage': '管理',
   'entries.manageTitle': '管理动态验证码',
   'entries.removeTitle': '从条目移除 2FA？',

@@ -41,6 +41,9 @@ declare namespace Vault {
   type Context = { ownerSubject: string; vaultId: string; keyEpoch: number };
   type Meta = {
     initialized: boolean;
+    lifecycleProtocolVersion?: number;
+    clientLifecycleVersionHeader?: string;
+    deletedItemRetentionDays?: number;
     metaRevision: number;
     collectionRevision: number;
     vaultId?: string;
@@ -69,6 +72,50 @@ declare namespace Vault {
     collectionRevision: number;
     items: Item[];
     nextCursor?: string | null;
+  };
+  type DeletedItem = Item & {
+    deleted: true;
+    deletedAt: string;
+    purgeAt: string;
+  };
+  type DeletedSummary = Summary & Pick<DeletedItem, 'deletedAt' | 'purgeAt'>;
+  type DeletedPage = ItemPage & {
+    serverTime: string;
+    items: DeletedItem[];
+    nextCursor: string | null;
+  };
+  type DeletedDetail = DeletedItem & {
+    generation: number;
+    collectionRevision: number;
+    serverTime: string;
+  };
+  type DeleteReceipt = WriteReceipt & {
+    deleted: true;
+    contentVersion: number;
+    deletedAt: string;
+    purgeAt: string;
+    serverTime: string;
+  };
+  type LifecycleRequest = {
+    itemId: string;
+    generation: number;
+    expectedRowVersion: number;
+    idempotencyKey: string;
+  };
+  type LifecycleReceipt = {
+    itemId: string;
+    collectionRevision: number;
+    serverTime: string;
+    deleted?: false;
+    rowVersion?: number;
+    contentVersion?: number;
+    permanentlyDeleted?: true;
+    purgedAt?: string;
+  };
+  type RotationItem = Item & {
+    deleted?: boolean;
+    deletedAt?: string | null;
+    purgeAt?: string | null;
   };
   type PlainItem = {
     itemSchemaVersion: 3;
@@ -131,7 +178,7 @@ declare namespace Vault {
     preserveTotp?: boolean;
   };
   type BatchChange = {
-    action: 'CREATE' | 'UPDATE' | 'DELETE';
+    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'DELETE_GROUP';
     itemId: string;
     expectedRowVersion: number | null;
     contentVersion: number | null;
@@ -148,7 +195,17 @@ declare namespace Vault {
   type BatchReceipt = {
     generation: number;
     collectionRevision: number;
-    results: (WriteReceipt & { contentVersion?: number; deleted?: boolean })[];
+    results: (Partial<WriteReceipt> & {
+      itemId: string;
+      collectionRevision: number;
+      contentVersion?: number;
+      deleted?: boolean;
+      permanentlyDeleted?: boolean;
+      deletedAt?: string;
+      purgeAt?: string;
+      serverTime?: string;
+      purgedAt?: string;
+    })[];
   };
   type AccountFile = {
     formatVersion: 1;

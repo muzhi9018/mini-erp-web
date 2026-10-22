@@ -21,9 +21,9 @@ export default {
   'entries.saveEntry': '儲存項目',
   'entries.saveHint': '儲存整個項目，包括此次新增、更換或移除的 2FA 設定。',
   'entries.discardTitle': '放棄尚未儲存的修改？',
-  'entries.deleteTitle': '刪除此項目？',
+  'entries.deleteTitle': '刪除此密碼？',
   'entries.deleteWarning':
-    '將刪除此項目的密碼及驗證碼設定。原網站的密碼與 2FA 設定不會改變。本庫不提供資源回收筒。',
+    '刪除後將移至「已刪除」，可在 30 天內還原；到期後自動永久刪除。原網站的密碼與 2FA 設定不會改變。',
   'entries.manage': '管理',
   'entries.manageTitle': '管理動態驗證碼',
   'entries.removeTitle': '從項目移除 2FA？',

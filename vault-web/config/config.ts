@@ -58,13 +58,13 @@ export default defineConfig({
   },
   proxy: apiTarget
     ? {
-        '/vault-auth': {
+        '/vault/auth': {
           target: apiTarget,
           // Select the upstream nginx virtual host; retain the browser's Origin header.
           changeOrigin: true,
           onProxyReq: preserveBrowserOrigin,
         },
-        '/api/v1/vault': {
+        '/vault/api': {
           target: apiTarget,
           changeOrigin: true,
           onProxyReq: preserveBrowserOrigin,

@@ -1,7 +1,7 @@
 import { assert } from '@/security/vault/protocol';
 import { doGet, doPost, updateCSRF } from '@/services/httpClient';
 
-const prefix = '/vault-auth';
+const prefix = '/vault/auth';
 async function sessionResponse(promise: Promise<Vault.Session>) {
   const session = await promise;
   if (session.loginMethod !== 'LOCAL_PASSKEY')

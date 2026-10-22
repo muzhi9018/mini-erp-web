@@ -35,6 +35,7 @@ export type Completion = {
   generation: number;
   keyEpoch: number;
   count: number;
+  retentionDeadlines?: string[];
 };
 export type Runtime = {
   client: VaultClient;

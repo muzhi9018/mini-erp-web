@@ -32,6 +32,9 @@ function parseMeta(result: Vault.Meta): Vault.Meta {
         result.allowedKdfProfiles?.includes(PROFILE),
     );
     if (
+      result.lifecycleProtocolVersion !== 2 ||
+      result.clientLifecycleVersionHeader !== 'X-Vault-Lifecycle-Version' ||
+      result.deletedItemRetentionDays !== 30 ||
       result.writeItemSchemaVersion !== 3 ||
       result.minimumClientSchemaVersion > 3 ||
       result.clientSchemaVersionHeader !== 'X-Vault-Item-Schema-Version' ||
@@ -56,7 +59,7 @@ function parseMeta(result: Vault.Meta): Vault.Meta {
 }
 
 export async function meta() {
-  return parseMeta(await doGet<Vault.Meta>('/api/v1/vault/meta'));
+  return parseMeta(await doGet<Vault.Meta>('/vault/api/meta'));
 }
 
 export async function initialize(setup: {
@@ -66,13 +69,13 @@ export async function initialize(setup: {
 }) {
   // An idempotent receipt can contain an older compatibility declaration.
   // The caller reads GET meta before accepting the initialized state.
-  return doPost<Vault.Meta>('/api/v1/vault/initialize', setup);
+  return doPost<Vault.Meta>('/vault/api/initialize', setup);
 }
 
 export const changeMaster = (value: {
   expectedMetaRevision: number;
   normalSlot: Vault.Slot;
   idempotencyKey: string;
-}) => doPost<Vault.Meta>('/api/v1/vault/key-slots/change-master', value);
+}) => doPost<Vault.Meta>('/vault/api/key-slots/change-master', value);
 export const snapshot = () =>
-  doGet<Vault.Snapshot>('/api/v1/vault/backup-snapshot');
+  doGet<Vault.Snapshot>('/vault/api/backup-snapshot');

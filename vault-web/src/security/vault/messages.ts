@@ -1,4 +1,19 @@
 export type Operations = {
+  lock: { input: Record<string, never>; output: boolean };
+  ingestDeleted: {
+    input: { items: Vault.DeletedItem[]; serverTime: string; reset?: boolean };
+    output: boolean;
+  };
+  expireDeleted: { input: Record<string, never>; output: boolean };
+  forgetDeleted: {
+    input: { itemId: string; deleted?: boolean };
+    output: boolean;
+  };
+  searchDeleted: { input: { query: string }; output: Vault.DeletedSummary[] };
+  transitionSource: {
+    input: { items: Vault.RotationItem[]; reset?: boolean };
+    output: boolean;
+  };
   prepare: {
     input: { ownerSubject: string; password: string; vaultId?: string };
     output: Vault.PreparedSetup;
@@ -28,8 +43,11 @@ export type Operations = {
     input: { ownerSubject: string; meta: Vault.Meta; recovery: string };
     output: boolean;
   };
-  code: { input: { itemId: string }; output: Vault.TotpCode };
-  notes: { input: { itemId: string }; output: string };
+  code: {
+    input: { itemId: string; deleted?: boolean };
+    output: Vault.TotpCode;
+  };
+  notes: { input: { itemId: string; deleted?: boolean }; output: string };
   draftCode: { input: { config: Vault.Totp }; output: Vault.TotpCode };
   exportTotp: {
     input: { itemId: string; session: Vault.Session; checkedAt: number };
@@ -72,7 +90,11 @@ export type Operations = {
   };
   bindTransition: { input: { task: Vault.Rotation }; output: boolean };
   transitionBatch: { input: { itemIds: string[] }; output: Vault.Item[] };
-  verifyStaged: { input: { items: Vault.Item[] }; output: string };
+  ingestStaged: {
+    input: { items: Vault.Item[]; reset?: boolean };
+    output: boolean;
+  };
+  verifyStaged: { input: { items?: Vault.Item[] }; output: string };
   resumeTransition: {
     input: {
       ownerSubject: string;
@@ -100,7 +122,10 @@ export type Operations = {
     output: { batch: Vault.ItemBatch; final: boolean };
   };
   search: { input: { query: string }; output: Vault.Summary[] };
-  reveal: { input: { itemId: string }; output: Vault.PlainItem };
+  reveal: {
+    input: { itemId: string; deleted?: boolean };
+    output: Vault.PlainItem;
+  };
   encrypt: {
     input: { plain: Vault.PlainItem; itemId?: string; preserveTotp?: boolean };
     output: Vault.ItemWrite;
@@ -116,6 +141,8 @@ export type WorkerRequest = {
 }[keyof Operations];
 
 export const WORKER_FAILURES = [
+  'VAULT_ITEM_EXPIRED',
+  'VAULT_DELETED_TYPE_UNSUPPORTED',
   'VAULT_INVALID_FORMAT',
   'VAULT_QR_TOO_LONG',
   'VAULT_DECRYPT_FAILED',

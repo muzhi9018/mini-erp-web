@@ -13,9 +13,12 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Tag,
+  Trash2,
 } from 'lucide-react';
 import type { ReactNode, RefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import type { VaultClient } from '@/security/vault/client';
+import DeletedView from './DeletedView';
 import entry from './Entries.module.css';
 import EntryDetail, { type DetailActions } from './EntryDetail';
 import GroupDetail from './GroupDetail';
@@ -26,6 +29,13 @@ import { useText } from './text';
 import styles from './Vault.module.css';
 
 type Props = DetailActions & {
+  deletedRows: Vault.DeletedSummary[];
+  deletedServerNow: () => number;
+  client: VaultClient;
+  guard: <T>(promise: Promise<T>) => Promise<T>;
+  onDeletedBlocked: (value: boolean) => void;
+  onDeletedSync: () => Promise<unknown>;
+  onForgetDeleted: (id: string) => void;
   groups: Vault.GroupSummary[];
   groupEditor?: GroupEditorDraft;
   onGroupEditor: (draft: GroupEditorDraft) => void;
@@ -60,6 +70,7 @@ type Props = DetailActions & {
 export default function Items(props: Props) {
   const t = useText();
   const [filter, setFilter] = useState('');
+  const [deletedBlocked, setDeletedBlocked] = useState(false);
   const [contextGroup, setContextGroup] = useState<string>();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const editing = props.editor || props.groupEditor;
@@ -111,13 +122,14 @@ export default function Items(props: Props) {
           .join(' / ') || t('groups.none'),
     });
   useEffect(() => {
-    if (props.busy) return;
+    if (props.busy || filter === 'deleted') return;
     const changed = dataset.current !== props.allRows;
     dataset.current = props.allRows;
     if (
       changed &&
       filter &&
       filter !== 'groups' &&
+      filter !== 'deleted' &&
       props.allRows.some(
         (item) => item.itemId === props.selected && !matches(item),
       )
@@ -129,7 +141,7 @@ export default function Items(props: Props) {
       props.onSelect(validIds[0]);
   }, [props.rows, props.allRows, props.groups, filter, editing, props.busy]);
   const navigate = (action: () => void) => {
-    if (props.uncertain && !editing) return;
+    if (props.busy || deletedBlocked || (props.uncertain && !editing)) return;
     if (editing)
       props.editorRef.current?.leave(() => {
         props.onCloseEditor();
@@ -231,6 +243,16 @@ export default function Items(props: Props) {
         </button>
         <button
           type="button"
+          className={`${styles.nav} ${filter === 'deleted' && !security ? styles.selected : ''}`}
+          aria-current={filter === 'deleted' && !security ? 'page' : undefined}
+          onClick={() => changeFilter('deleted')}
+        >
+          <Trash2 size={17} />
+          <span>{t('deleted.title')}</span>
+          <small>{props.deletedRows.length}</small>
+        </button>
+        <button
+          type="button"
           className={`${styles.nav} ${filter === '2fa' && !security ? styles.selected : ''}`}
           aria-current={filter === '2fa' && !security ? 'page' : undefined}
           onClick={() => changeFilter('2fa')}
@@ -288,6 +310,7 @@ export default function Items(props: Props) {
             options={[
               { value: '', label: t('vault.allPasswords') },
               { value: 'groups', label: t('groups.title') },
+              { value: 'deleted', label: t('deleted.title') },
               { value: '2fa', label: t('entries.with2fa') },
               ...tags.map((tag) => ({ value: `tag:${tag}`, label: tag })),
               { value: 'security', label: t('vault.security') },
@@ -319,6 +342,25 @@ export default function Items(props: Props) {
               {t('vault.backList')}
             </Button>
           </div>
+        ) : filter === 'deleted' ? (
+          <DeletedView
+            serverNow={props.deletedServerNow}
+            rows={props.deletedRows}
+            client={props.client}
+            guard={props.guard}
+            onSync={props.onDeletedSync}
+            onForget={props.onForgetDeleted}
+            onBlocked={(value) => {
+              setDeletedBlocked(value);
+              props.onDeletedBlocked(value);
+            }}
+            onNormal={(id) => {
+              setFilter('');
+              props.onSearch('');
+              props.onSelect(id);
+              setMobileDetail(!!id);
+            }}
+          />
         ) : (
           <div
             className={`${entry.split} ${mobileDetail ? entry.mobileDetail : ''}`}

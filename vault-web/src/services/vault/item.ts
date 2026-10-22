@@ -1,3 +1,8 @@
+import {
+  parseServerTime,
+  validateDeleted,
+  validateRetentionTimes,
+} from '@/security/vault/lifecycle';
 import { assert, validateItem, version } from '@/security/vault/protocol';
 import { doGet, doPost, VaultHttpError } from '@/services/httpClient';
 
@@ -11,7 +16,7 @@ export async function allItems(
   let cursor: string | null = null;
   do {
     const page: Vault.ItemPage = await doGet(
-      '/api/v1/vault/items',
+      '/vault/api/items',
       { ...(cursor ? { cursor } : {}), pageSize: 100 },
       signal,
     );
@@ -42,23 +47,19 @@ export async function allItems(
   return items;
 }
 export const createItem = (value: Vault.ItemWrite) =>
-  doPost<Vault.WriteReceipt>('/api/v1/vault/items/create', value);
+  doPost<Vault.WriteReceipt>('/vault/api/items/create', value);
 export const updateItem = (value: Vault.ItemWrite) =>
-  doPost<Vault.WriteReceipt>('/api/v1/vault/items/update', value);
+  doPost<Vault.WriteReceipt>('/vault/api/items/update', value);
 export const deleteItem = (value: {
   itemId: string;
   generation: number;
   expectedRowVersion: number;
   idempotencyKey: string;
-}) =>
-  doPost<{ deleted: boolean; collectionRevision: number }>(
-    '/api/v1/vault/items/delete',
-    value,
-  );
+}) => doPost<Vault.DeleteReceipt>('/vault/api/items/delete', value);
 
 export async function batch(value: Vault.ItemBatch) {
   const receipt = await doPost<Vault.BatchReceipt>(
-    '/api/v1/vault/items/batch',
+    '/vault/api/items/batch',
     value,
   );
   try {
@@ -77,13 +78,106 @@ export async function batch(value: Vault.ItemBatch) {
         result.itemId === change.itemId &&
           result.collectionRevision === receipt.collectionRevision,
       );
+      if (change.action === 'DELETE_GROUP') {
+        assert(result.permanentlyDeleted === true);
+        return;
+      }
       assert(result.rowVersion === (change.expectedRowVersion ?? 0) + 1);
-      if (change.action === 'DELETE') assert(result.deleted === true);
-      else assert(result.contentVersion === change.contentVersion);
+      if (change.action === 'DELETE') {
+        assert(result.deleted === true);
+        validateRetentionTimes(result as Vault.DeleteReceipt);
+        parseServerTime(result.serverTime || '');
+      } else assert(result.contentVersion === change.contentVersion);
     });
     return receipt;
   } catch {
     // The transaction may have committed. Keep the exact request available for retry.
+    throw new VaultHttpError(0, 'VAULT_INVALID_RESPONSE');
+  }
+}
+
+export async function deletedItems(meta: Vault.Meta, signal?: AbortSignal) {
+  const items: Vault.DeletedItem[] = [];
+  const cursors = new Set<string>();
+  const ids = new Set<string>();
+  let cursor: string | null = null;
+  let serverTime = '';
+  let requestStarted = performance.now();
+  do {
+    requestStarted = performance.now();
+    const page: Vault.DeletedPage = await doGet(
+      '/vault/api/items/deleted',
+      { pageSize: 100, ...(cursor ? { cursor } : {}) },
+      signal,
+    );
+    if (
+      page.generation !== meta.generation ||
+      page.collectionRevision !== meta.collectionRevision
+    )
+      throw new VaultHttpError(409, 'VAULT_VERSION_CONFLICT');
+    assert(Array.isArray(page.items) && page.items.length <= 100);
+    parseServerTime(page.serverTime);
+    serverTime = page.serverTime;
+    for (const item of page.items) {
+      validateDeleted(item);
+      assert(item.keyEpoch === meta.keyEpoch && !ids.has(item.itemId));
+      ids.add(item.itemId);
+      items.push(item);
+    }
+    cursor = page.nextCursor;
+    assert(
+      cursor === null ||
+        (typeof cursor === 'string' &&
+          cursor.length > 0 &&
+          cursor.length <= 342 &&
+          !cursors.has(cursor)),
+    );
+    if (cursor) cursors.add(cursor);
+  } while (cursor);
+  return { items, serverTime, requestStarted };
+}
+export async function deletedDetail(itemId: string) {
+  const value = await doGet<Vault.DeletedDetail>(
+    '/vault/api/items/deleted/detail',
+    { itemId },
+  );
+  validateDeleted(value);
+  parseServerTime(value.serverTime);
+  assert(
+    value.itemId === itemId && Number.isFinite(Date.parse(value.serverTime)),
+  );
+  version(value.generation);
+  version(value.collectionRevision);
+  return value;
+}
+export async function lifecycle(
+  action: 'restore' | 'purge',
+  request: Vault.LifecycleRequest,
+) {
+  const value = await doPost<Vault.LifecycleReceipt>(
+    `/vault/api/items/${action}`,
+    request,
+  );
+  try {
+    assert(
+      value.itemId === request.itemId &&
+        Number.isFinite(Date.parse(value.serverTime)),
+    );
+    version(value.collectionRevision);
+    parseServerTime(value.serverTime);
+    if (action === 'restore') {
+      version(value.contentVersion);
+      assert(
+        value.deleted === false &&
+          value.rowVersion === request.expectedRowVersion + 1,
+      );
+    } else
+      assert(
+        value.permanentlyDeleted === true &&
+          Number.isFinite(Date.parse(value.purgedAt || '')),
+      );
+    return value;
+  } catch {
     throw new VaultHttpError(0, 'VAULT_INVALID_RESPONSE');
   }
 }

@@ -7,7 +7,7 @@ import {
 } from '@/security/vault/protocol';
 import { doGet, doPost } from '@/services/httpClient';
 
-const prefix = '/api/v1/vault';
+const prefix = '/vault/api';
 export const start = (value: Vault.RotationStart, restore: boolean) =>
   doPost<Vault.RotationSummary>(
     `${prefix}/${restore ? 'restores' : 'rotations'}/start`,
@@ -36,16 +36,13 @@ export async function status(rotationId: string) {
   version(result.generation);
   version(result.keyEpoch);
   version(result.expectedCollectionRevision);
-  assert(
-    Array.isArray(result.expectedItems) && result.expectedItems.length <= 2000,
-  );
+  assert(Array.isArray(result.expectedItems));
   // The current status mapper omits the nullable summary count. The explicit
   // expected set remains authoritative and is matched against the source below.
   result.expectedItemCount ??= result.expectedItems.length;
   assert(
-    Number.isInteger(result.expectedItemCount) &&
-      result.expectedItemCount >= 0 &&
-      result.expectedItemCount <= 2000,
+    Number.isSafeInteger(result.expectedItemCount) &&
+      result.expectedItemCount >= 0,
   );
   assert(
     Array.isArray(result.expectedItems) &&
@@ -91,29 +88,44 @@ export const cancel = (value: Vault.RotationCommand) =>
   doPost<Vault.RotationSummary>(`${prefix}/rotations/cancel`, value);
 export const commit = (value: Vault.RotationCommand) =>
   doPost<Vault.RotationReceipt>(`${prefix}/rotations/commit`, value);
-export async function stagedItems(task: Vault.Rotation) {
-  const result: Vault.Item[] = [];
+export async function stagedItems(
+  task: Vault.Rotation,
+  scope: 'SOURCE' | 'STAGING' = 'STAGING',
+  sourceMeta?: Vault.Meta,
+) {
+  const result: Vault.RotationItem[] = [];
   const seen = new Set<string>();
   const cursors = new Set<string>();
   let cursor: string | undefined;
   do {
-    const page = await doGet<Vault.ItemPage & { rotationId: string }>(
-      `${prefix}/rotations/items`,
-      {
-        rotationId: task.rotationId,
-        pageSize: 100,
-        ...(cursor ? { cursor } : {}),
-      },
-    );
+    const page = await doGet<
+      Vault.ItemPage & {
+        rotationId: string;
+        scope: string;
+        serverTime: string;
+        items: Vault.RotationItem[];
+      }
+    >(`${prefix}/rotations/items`, {
+      rotationId: task.rotationId,
+      scope,
+      pageSize: 100,
+      ...(cursor ? { cursor } : {}),
+    });
     assert(
       page.rotationId === task.rotationId &&
-        page.generation === task.generation &&
+        page.scope === scope &&
+        page.generation ===
+          (scope === 'SOURCE' ? sourceMeta?.generation : task.generation) &&
         Array.isArray(page.items) &&
         page.items.length <= 100,
     );
     for (const item of page.items) {
       validateItem(item);
-      assert(item.keyEpoch === task.keyEpoch && !seen.has(item.itemId));
+      assert(
+        item.keyEpoch ===
+          (scope === 'SOURCE' ? sourceMeta?.keyEpoch : task.keyEpoch) &&
+          !seen.has(item.itemId),
+      );
       seen.add(item.itemId);
       result.push(item);
     }

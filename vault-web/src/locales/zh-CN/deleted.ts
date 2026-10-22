@@ -1,0 +1,42 @@
+export default {
+  'deleted.title': '已删除',
+  'deleted.intro': '删除后保留 30 天，到期自动永久删除。',
+  'deleted.search': '仅搜索已删除条目',
+  'deleted.count': '{count} 个密码 · 最近删除',
+  'deleted.empty': '暂无已删除的密码',
+  'deleted.noResults': '没有匹配的已删除条目',
+  'deleted.days': '{days} 天后永久删除',
+  'deleted.lessDay': '不足 1 天后永久删除',
+  'deleted.readonly': '只读',
+  'deleted.readonlyHint': '已删除密码为只读，恢复后可编辑或管理 2FA。',
+  'deleted.totpHint': '恢复后可管理 2FA 或导出二维码。',
+  'deleted.deadline': '此密码将于 {time} 永久删除，之后无法恢复',
+  'deleted.deletedAt': '删除时间：{time}',
+  'deleted.restore': '恢复',
+  'deleted.purge': '永久删除',
+  'deleted.purgeTitle': '永久删除此密码？',
+  'deleted.purgeWarning': '此密码将立即永久删除，无法恢复。是否继续？',
+  'deleted.checking': '正在确认条目状态…',
+  'deleted.expired': '此密码已过保留期，无法恢复。',
+  'deleted.notFound': '该条目已不存在或已永久删除。',
+  'deleted.conflict': '条目状态已在其他设备发生变化，请重新同步后再操作。',
+  'deleted.capacity':
+    '正常条目数量已达上限，暂时无法恢复。请先释放正常容量，再重试；此条目的保留期限不变。',
+  'deleted.writeLocked':
+    '密钥轮换正在进行，暂时无法恢复或永久删除。请完成任务后重试。',
+  'deleted.unknown':
+    '暂未确认操作结果，请勿重复提交。查询后使用相同请求重试以获取回执。',
+  'deleted.queryRetry': '查询结果并重试原请求',
+  'deleted.restored': '已恢复',
+  'deleted.restoredHint': '密码已恢复到全部密码；原分组需手动重新加入。',
+  'deleted.purged': '已永久删除，无法恢复',
+  'deleted.purgedHint': '此密码已从已删除列表移除。已下载的备份不受影响。',
+  'deleted.viewAll': '查看全部密码',
+  'deleted.viewRestored': '查看已恢复密码',
+  'deleted.move': '移入已删除',
+  'deleted.moved': '已移入已删除',
+  'deleted.unsupportedType':
+    '历史已删除记录包含账号组，无法按密码流程处理。请联系实施方核对历史数据。',
+  'deleted.accountRetained':
+    '账户密钥保留在当前标签页，输入主密码即可再次解锁。',
+};

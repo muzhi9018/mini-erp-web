@@ -11,8 +11,15 @@ const key = 'vault-operation-receipt';
 // Public task coordinates only. Never persist files, passwords or unlocking state.
 export function rememberCompletion(value: Completion) {
   try {
-    const { ownerSubject, rotationId, mode, generation, keyEpoch, count } =
-      value;
+    const {
+      ownerSubject,
+      rotationId,
+      mode,
+      generation,
+      keyEpoch,
+      count,
+      retentionDeadlines,
+    } = value;
     sessionStorage.setItem(
       key,
       JSON.stringify({
@@ -22,6 +29,7 @@ export function rememberCompletion(value: Completion) {
         generation,
         keyEpoch,
         count,
+        ...(retentionDeadlines ? { retentionDeadlines } : {}),
       }),
     );
   } catch {
@@ -47,6 +55,9 @@ export function readCompletion(): Completion | undefined {
       'generation',
       'keyEpoch',
       'count',
+      ...(Object.hasOwn(value, 'retentionDeadlines')
+        ? ['retentionDeadlines']
+        : []),
     ]);
     assert(
       typeof value.ownerSubject === 'string' &&
@@ -57,11 +68,16 @@ export function readCompletion(): Completion | undefined {
     version(value.generation);
     version(value.keyEpoch);
     assert(value.mode === 'ROTATION' || value.mode === 'RESTORE');
-    assert(
-      Number.isInteger(value.count) &&
-        (value.count as number) >= 0 &&
-        (value.count as number) <= 2000,
-    );
+    assert(Number.isSafeInteger(value.count) && (value.count as number) >= 0);
+    if (value.retentionDeadlines !== undefined)
+      assert(
+        Array.isArray(value.retentionDeadlines) &&
+          value.retentionDeadlines.length <= (value.count as number) &&
+          value.retentionDeadlines.every(
+            (time) =>
+              typeof time === 'string' && Number.isFinite(Date.parse(time)),
+          ),
+      );
     return value as Completion;
   } catch {
     forgetCompletion();

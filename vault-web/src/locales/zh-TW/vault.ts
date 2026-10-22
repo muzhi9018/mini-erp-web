@@ -51,7 +51,7 @@ export default {
   'vault.cancel': '取消',
   'vault.unlock': '解鎖密碼庫',
   'vault.unlockHint':
-    '匯入帳戶金鑰檔案並輸入主密碼。本頁鎖定或重新整理後須重新匯入檔案。金鑰與主密碼不會上傳。',
+    '帳戶金鑰僅保留在目前分頁，一般鎖定後可輸入主密碼再次解鎖；重新整理、關閉或登出後需重新匯入。金鑰與主密碼不會上傳。',
   'vault.accountFile': '帳戶金鑰檔案',
   'vault.recoveryFile': '密碼庫復原檔案',
   'vault.items': '密碼項目',
@@ -78,7 +78,8 @@ export default {
   'vault.copy': '複製密碼',
   'vault.edit': '編輯',
   'vault.delete': '刪除',
-  'vault.deleteConfirm': '刪除此密碼項目？此操作無法復原。',
+  'vault.deleteConfirm':
+    '刪除後將移至「已刪除」，可在 30 天內還原；到期後自動永久刪除。',
   'vault.revealHint': '20 秒後自動隱藏。切換至背景時會立即隱藏。',
   'vault.language': '語言',
   'vault.switchToLight': '切換白天模式',
@@ -162,7 +163,7 @@ export default {
   'vault.unlockTitle': '解鎖密碼庫',
   'vault.unlockIntro': '選擇帳戶金鑰檔案，再輸入主密碼。檔案和主密碼不會上傳。',
   'vault.chooseAccountFile': '選擇帳戶金鑰檔案',
-  'vault.fileRefreshHint': '鎖定或重新整理後需要重新選擇',
+  'vault.fileRefreshHint': '重新整理、關閉或登出後需要重新選擇',
   'vault.fileMatched': '檔案已符合目前密碼庫',
   'vault.chooseFile': '＋ 選擇',
   'vault.changeFile': '更換',

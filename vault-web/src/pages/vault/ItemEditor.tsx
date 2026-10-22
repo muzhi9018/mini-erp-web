@@ -409,7 +409,7 @@ export default function ItemEditor(props: {
             confirmation === 'delete' ? 'vault.cancel' : 'vault.keepEditing',
           )}
           okText={t(
-            confirmation === 'delete' ? 'vault.delete' : 'vault.discard',
+            confirmation === 'delete' ? 'deleted.move' : 'vault.discard',
           )}
           okButtonProps={{ danger: true, disabled: props.busy }}
           onOk={() => {

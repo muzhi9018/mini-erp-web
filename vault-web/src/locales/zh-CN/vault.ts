@@ -51,7 +51,7 @@ export default {
   'vault.cancel': '取消',
   'vault.unlock': '解锁密码库',
   'vault.unlockHint':
-    '导入账户密钥文件并输入主密码。本页锁定或刷新后需重新导入文件。密钥与主密码不会上传。',
+    '账户密钥仅保留在当前标签页，普通锁定后可输入主密码再次解锁；刷新、关闭或退出后需重新导入文件。密钥与主密码不会上传。',
   'vault.accountFile': '账户密钥文件',
   'vault.recoveryFile': '密码库恢复文件',
   'vault.items': '密码条目',
@@ -78,7 +78,8 @@ export default {
   'vault.copy': '复制密码',
   'vault.edit': '编辑',
   'vault.delete': '删除',
-  'vault.deleteConfirm': '删除此密码条目？此操作无法撤销。',
+  'vault.deleteConfirm':
+    '删除后将移入“已删除”，可在 30 天内恢复；到期后自动永久删除。',
   'vault.revealHint': '20 秒后自动隐藏。切换到后台会立即隐藏。',
   'vault.language': '语言',
   'vault.switchToLight': '切换白天模式',
@@ -162,7 +163,7 @@ export default {
   'vault.unlockTitle': '解锁密码库',
   'vault.unlockIntro': '选择账户密钥文件，再输入主密码。文件和主密码不会上传。',
   'vault.chooseAccountFile': '选择账户密钥文件',
-  'vault.fileRefreshHint': '锁定或刷新后需要重新选择',
+  'vault.fileRefreshHint': '刷新、关闭或退出后需要重新选择',
   'vault.fileMatched': '文件已匹配当前密码库',
   'vault.chooseFile': '＋ 选择',
   'vault.changeFile': '更换',

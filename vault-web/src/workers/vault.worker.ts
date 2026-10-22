@@ -8,9 +8,29 @@ import { assert, encoder } from '../security/vault/protocol';
 const engine = new VaultEngine();
 let queue = Promise.resolve();
 let queued = 0;
+let lifecycleEpoch = 0;
 
 async function execute(message: WorkerRequest) {
   switch (message.type) {
+    case 'lock':
+      return engine.lock();
+    case 'ingestDeleted':
+      return engine.ingestDeleted(
+        message.payload.items,
+        message.payload.serverTime,
+        message.payload.reset,
+      );
+    case 'expireDeleted':
+      return engine.expireDeleted();
+    case 'forgetDeleted':
+      return engine.forgetDeleted(message.payload.itemId);
+    case 'searchDeleted':
+      return engine.searchDeleted(message.payload.query);
+    case 'transitionSource':
+      return engine.transitionSource(
+        message.payload.items,
+        message.payload.reset,
+      );
     case 'prepare':
       return engine.prepare(
         message.payload.ownerSubject,
@@ -43,9 +63,13 @@ async function execute(message: WorkerRequest) {
         message.payload.recovery,
       );
     case 'code':
-      return engine.code(message.payload.itemId);
+      return engine.code(
+        message.payload.itemId,
+        Date.now(),
+        message.payload.deleted,
+      );
     case 'notes':
-      return engine.notes(message.payload.itemId);
+      return engine.notes(message.payload.itemId, message.payload.deleted);
     case 'draftCode':
       return engine.draftCode(message.payload.config);
     case 'exportTotp':
@@ -87,6 +111,8 @@ async function execute(message: WorkerRequest) {
       return engine.bindTransition(message.payload.task);
     case 'transitionBatch':
       return engine.transitionBatch(message.payload.itemIds);
+    case 'ingestStaged':
+      return engine.ingestStaged(message.payload.items, message.payload.reset);
     case 'verifyStaged':
       return engine.verifyStaged(message.payload.items);
     case 'resumeTransition':
@@ -119,7 +145,7 @@ async function execute(message: WorkerRequest) {
     case 'search':
       return engine.search(message.payload.query);
     case 'reveal':
-      return engine.reveal(message.payload.itemId);
+      return engine.reveal(message.payload.itemId, message.payload.deleted);
     case 'encrypt':
       return engine.encrypt(
         message.payload.plain,
@@ -147,10 +173,15 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     self.postMessage({ id: message?.id, error: 'VAULT_INVALID_FORMAT' });
     return;
   }
+  if (message.type === 'lock') lifecycleEpoch++;
+  const epoch = lifecycleEpoch;
   queued++;
   queue = queue.then(async () => {
     try {
-      self.postMessage({ id: message.id, result: await execute(message) });
+      if (epoch !== lifecycleEpoch) return;
+      const result = await execute(message);
+      if (epoch === lifecycleEpoch)
+        self.postMessage({ id: message.id, result });
     } catch (error) {
       const code =
         error instanceof Error &&

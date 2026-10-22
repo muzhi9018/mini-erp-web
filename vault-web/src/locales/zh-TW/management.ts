@@ -73,7 +73,7 @@ export default {
   'manage.backupUnlockTitle': '確認本次備份的解鎖材料',
   'manage.localMaterials': '主密碼和金鑰檔案僅在瀏覽器本機使用。',
   'manage.backupExcludes':
-    '不包含主密碼、帳戶金鑰、復原金鑰、密碼庫 Passkey 或 MFA 復原碼。',
+    '不包含已刪除密碼、主密碼、帳戶金鑰、恢復金鑰、密碼庫 Passkey 或 MFA 恢復碼。',
   'manage.snapshotChecked': '備份內容已檢查',
   'manage.snapshotAuth':
     '讀取一致性快照需要近期身分驗證；目前快照已在本機逐項驗證。',

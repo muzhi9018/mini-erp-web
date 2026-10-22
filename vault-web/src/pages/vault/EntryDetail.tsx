@@ -9,7 +9,7 @@ import {
   ScanLine,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { totpTransferLabels } from '@/security/vault/totp';
 import { trapDialogTab } from './dialog';
 import styles from './Entries.module.css';
@@ -31,6 +31,9 @@ export type DetailActions = {
 export default function EntryDetail(
   props: DetailActions & {
     row: Vault.Summary;
+    readonly?: boolean;
+    lifecycleHeader?: ReactNode;
+    lifecycleActions?: ReactNode;
     deleteImpact: string;
     busy: boolean;
     detail?: Vault.PlainItem;
@@ -123,16 +126,22 @@ export default function EntryDetail(
           <p className={styles.help}>
             {t('vault.loginAccount')}
             {row.hasTotp && ` · ${t('entries.factorSaved')}`}
+            {props.readonly && ` · ${t('deleted.readonly')}`}
           </p>
         </div>
-        <Button
-          disabled={props.busy}
-          onClick={() => props.onEdit(row.itemId)}
-          icon={<Pencil size={16} />}
-        >
-          {t('vault.editItem')}
-        </Button>
+        {props.readonly ? (
+          props.lifecycleActions
+        ) : (
+          <Button
+            disabled={props.busy}
+            onClick={() => props.onEdit(row.itemId)}
+            icon={<Pencil size={16} />}
+          >
+            {t('vault.editItem')}
+          </Button>
+        )}
       </div>
+      {props.lifecycleHeader}
       <div className={styles.detailColumns}>
         <div className={styles.primaryColumn}>
           <section
@@ -197,27 +206,31 @@ export default function EntryDetail(
               disabled={props.busy}
               onCode={props.onCode}
               actions={
-                <>
-                  <Button
-                    type="link"
-                    disabled={props.busy}
-                    data-transfer
-                    onClick={() => setTransfer(true)}
-                    icon={<QrCode size={16} />}
-                  >
-                    {t('entries.transfer')}
-                  </Button>
-                  <Button
-                    type="link"
-                    disabled={props.busy}
-                    onClick={() => setDialog('manage')}
-                  >
-                    {t('entries.manage')}
-                  </Button>
-                </>
+                props.readonly ? (
+                  <p className={styles.help}>{t('deleted.totpHint')}</p>
+                ) : (
+                  <>
+                    <Button
+                      type="link"
+                      disabled={props.busy}
+                      data-transfer
+                      onClick={() => setTransfer(true)}
+                      icon={<QrCode size={16} />}
+                    >
+                      {t('entries.transfer')}
+                    </Button>
+                    <Button
+                      type="link"
+                      disabled={props.busy}
+                      onClick={() => setDialog('manage')}
+                    >
+                      {t('entries.manage')}
+                    </Button>
+                  </>
+                )
               }
             />
-          ) : (
+          ) : !props.readonly ? (
             <section className={styles.totpPanel}>
               <h3>{t('vault.totp')}</h3>
               <p className={styles.help}>{t('entries.factorHint')}</p>
@@ -230,7 +243,7 @@ export default function EntryDetail(
                 {t('vault.totpAdd')}
               </Button>
             </section>
-          )}
+          ) : null}
           {props.copyFallback !== undefined && (
             <div className={styles.warning} role="alert">
               <p>{t('vault.copyFailed')}</p>
@@ -315,19 +328,21 @@ export default function EntryDetail(
           </div>
         </aside>
       </div>
-      <div className={styles.detailFooter}>
-        <p className={styles.help}>{t('vault.localSearch')}</p>
-        <Button
-          type="link"
-          danger
-          disabled={props.busy}
-          onClick={() => setDialog('delete')}
-          icon={<Trash2 size={15} />}
-        >
-          {t('vault.delete')}
-        </Button>
-      </div>
-      {transfer && row.totpInfo && (
+      {!props.readonly && (
+        <div className={styles.detailFooter}>
+          <p className={styles.help}>{t('vault.localSearch')}</p>
+          <Button
+            type="link"
+            danger
+            disabled={props.busy}
+            onClick={() => setDialog('delete')}
+            icon={<Trash2 size={15} />}
+          >
+            {t('vault.delete')}
+          </Button>
+        </div>
+      )}
+      {!props.readonly && transfer && row.totpInfo && (
         <TotpTransferDialog
           itemId={row.itemId}
           info={{ ...row.totpInfo, ...totpTransferLabels(row.totpInfo, row) }}
@@ -336,7 +351,7 @@ export default function EntryDetail(
           onCode={props.onCode}
         />
       )}
-      {dialog && (
+      {!props.readonly && dialog && (
         <Modal
           open
           title={t(
@@ -364,7 +379,7 @@ export default function EntryDetail(
           cancelText={t('vault.cancel')}
           okText={t(
             dialog === 'delete'
-              ? 'vault.delete'
+              ? 'deleted.move'
               : dialog === 'remove'
                 ? 'vault.totpRemove'
                 : 'entries.importStep',

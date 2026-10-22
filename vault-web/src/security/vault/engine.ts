@@ -15,6 +15,7 @@ import {
   slotAAD,
   unlockMaterial,
 } from './crypto';
+import { RetentionClock, validateDeleted } from './lifecycle';
 import {
   assert,
   canonicalItems,
@@ -52,6 +53,7 @@ export class VaultEngine {
   private generation?: number;
   private backupRoot?: CryptoKey;
   private sourceSnapshot?: Vault.Snapshot;
+  private stagedVerification = new Map<string, Vault.Item>();
   private transition?: {
     target: VaultEngine;
     restore: boolean;
@@ -67,11 +69,25 @@ export class VaultEngine {
   >();
 
   private collectionRevision?: number;
+  private deletedIndex = new Map<
+    string,
+    { summary: Vault.DeletedSummary; cipher: Vault.DeletedItem }
+  >();
+  private deletedClock = new RetentionClock();
+  private retainedAccount?: string;
+
+  lock() {
+    const account = this.retainedAccount;
+    this.clear();
+    this.retainedAccount = account;
+    return true;
+  }
 
   clear() {
     this.transition?.target.clear();
     this.transition = undefined;
     this.sourceSnapshot = undefined;
+    this.stagedVerification.clear();
     this.backupRoot = undefined;
     this.ctx = undefined;
     this.vmk = undefined;
@@ -79,6 +95,8 @@ export class VaultEngine {
     this.draft = undefined;
     this.verified = false;
     this.index.clear();
+    this.deletedIndex.clear();
+    this.retainedAccount = undefined;
     this.collectionRevision = undefined;
   }
 
@@ -166,6 +184,7 @@ export class VaultEngine {
       JSON.stringify(canonicalSlots(meta.keySlots)) ===
         JSON.stringify(canonicalSlots(this.draft.keySlots)),
     );
+    this.retainedAccount = this.draft.accountFile;
     this.draft = undefined;
     this.verified = false;
     this.generation = meta.generation;
@@ -178,7 +197,9 @@ export class VaultEngine {
     accountText: string,
     password: string,
   ) {
-    this.clear();
+    const account = accountText || this.retainedAccount;
+    this.lock();
+    assert(account);
     assert(meta.initialized && meta.vaultId && meta.keyEpoch);
     version(meta.generation);
     const ctx = {
@@ -188,13 +209,14 @@ export class VaultEngine {
     };
     validateContext(ctx);
     validateSlots(meta.keySlots);
-    const raw = await unlockMaterial(ctx, meta.keySlots, accountText, password);
+    const raw = await unlockMaterial(ctx, meta.keySlots, account, password);
     try {
       await this.material(raw);
     } finally {
       raw.fill(0);
     }
     this.ctx = ctx;
+    this.retainedAccount = account;
     this.generation = meta.generation;
     return true;
   }
@@ -236,6 +258,7 @@ export class VaultEngine {
 
   resetIndex() {
     this.index.clear();
+    this.deletedIndex.clear();
     this.collectionRevision = undefined;
     return true;
   }
@@ -281,7 +304,9 @@ export class VaultEngine {
     this.collectionRevision = undefined;
     try {
       for (const item of items) {
-        assert(!this.index.has(item.itemId));
+        assert(
+          !(item as Vault.RotationItem).deleted && !this.index.has(item.itemId),
+        );
         const plain = await this.decrypt(item);
         const summary: Vault.Summary | Vault.GroupSummary =
           plain.itemType === 'ACCOUNT_GROUP'
@@ -386,10 +411,122 @@ export class VaultEngine {
     return plain;
   }
 
-  async reveal(itemId: string) {
-    const entry = this.index.get(itemId);
+  async reveal(itemId: string, deleted = false) {
+    const entry = deleted ? this.deletedEntry(itemId) : this.index.get(itemId);
     assert(entry && this.vmk);
     return { ...(await this.login(entry.cipher)), totp: null };
+  }
+
+  async ingestDeleted(
+    items: Vault.DeletedItem[],
+    serverTime: string,
+    reset = false,
+  ) {
+    assert(this.vmk && items.length <= 100);
+    if (reset) this.deletedIndex.clear();
+    this.deletedClock.calibrate(serverTime);
+    try {
+      for (const item of items) {
+        validateDeleted(item);
+        const detailGeneration = (item as Partial<Vault.DeletedDetail>)
+          .generation;
+        assert(
+          detailGeneration === undefined ||
+            detailGeneration === this.generation,
+        );
+        assert(!this.index.has(item.itemId));
+        const plain = await this.decrypt(item);
+        // Legacy soft-deleted groups are a protocol error, never a hidden recycle branch.
+        if (plain.itemType !== 'LOGIN')
+          throw new Error('VAULT_DELETED_TYPE_UNSUPPORTED');
+        const { password, notes, totp, ...fields } = plain;
+        const summary: Vault.DeletedSummary = {
+          ...fields,
+          itemId: item.itemId,
+          contentVersion: item.contentVersion,
+          rowVersion: item.rowVersion,
+          hasPassword: password.length > 0,
+          hasTotp: totp !== null,
+          totpInfo: totp
+            ? {
+                issuer: totp.issuer,
+                accountName: totp.accountName,
+                algorithm: totp.algorithm,
+                digits: totp.digits,
+                period: totp.period,
+              }
+            : null,
+          deletedAt: item.deletedAt,
+          purgeAt: item.purgeAt,
+        };
+        this.deletedIndex.set(item.itemId, { summary, cipher: item });
+      }
+      this.expireDeleted();
+      return true;
+    } catch (error) {
+      this.deletedIndex.clear();
+      throw error;
+    }
+  }
+
+  expireDeleted() {
+    if (!this.deletedIndex.size) return true;
+    for (const [id, entry] of this.deletedIndex)
+      if (
+        this.deletedClock.needsConfirmation() ||
+        Date.parse(entry.cipher.purgeAt) <= this.deletedClock.now()
+      )
+        this.deletedIndex.delete(id);
+    return true;
+  }
+
+  forgetDeleted(itemId: string) {
+    this.deletedIndex.delete(itemId);
+    return true;
+  }
+
+  private deletedEntry(itemId: string) {
+    this.expireDeleted();
+    const entry = this.deletedIndex.get(itemId);
+    if (!entry) throw new Error('VAULT_ITEM_EXPIRED');
+    return entry;
+  }
+
+  searchDeleted(query: string) {
+    assert(this.vmk && typeof query === 'string' && query.length <= 1024);
+    this.expireDeleted();
+    const needle = query.toLocaleLowerCase();
+    return [...this.deletedIndex.values()]
+      .map(({ summary }) => summary)
+      .filter((item) =>
+        [
+          item.title,
+          item.username,
+          item.website,
+          item.platform || '',
+          ...item.tags,
+        ].some((text) => text.toLocaleLowerCase().includes(needle)),
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(b.deletedAt) - Date.parse(a.deletedAt) ||
+          a.itemId.localeCompare(b.itemId),
+      );
+  }
+
+  async transitionSource(items: Vault.RotationItem[], reset = false) {
+    assert(this.sourceSnapshot && this.vmk);
+    const combined = [...(reset ? [] : this.sourceSnapshot.items), ...items];
+    assert(
+      new Set(combined.map((item) => item.itemId)).size === combined.length,
+    );
+    for (const item of items) {
+      if (item.deleted) validateDeleted(item as Vault.DeletedItem);
+      const plain = await this.decrypt(item);
+      if (item.deleted) assert(plain.itemType === 'LOGIN');
+    }
+    this.sourceSnapshot = { ...this.sourceSnapshot, items: combined };
+    return true;
   }
 
   async encrypt(
@@ -588,7 +725,10 @@ export class VaultEngine {
     let final = selected.length === repairs.length;
     if (final)
       batch.changes.push({
-        action: 'DELETE',
+        action:
+          target.summary.itemType === 'ACCOUNT_GROUP'
+            ? 'DELETE_GROUP'
+            : 'DELETE',
         itemId,
         expectedRowVersion: target.cipher.rowVersion,
         contentVersion: null,
@@ -603,16 +743,16 @@ export class VaultEngine {
     return { batch, final };
   }
 
-  async code(itemId: string, now = Date.now()) {
-    const entry = this.index.get(itemId);
+  async code(itemId: string, now = Date.now(), deleted = false) {
+    const entry = deleted ? this.deletedEntry(itemId) : this.index.get(itemId);
     assert(entry && this.vmk);
     const plain = await this.login(entry.cipher);
     assert(plain.totp);
     return totpCode(plain.totp, now);
   }
 
-  async notes(itemId: string) {
-    const entry = this.index.get(itemId);
+  async notes(itemId: string, deleted = false) {
+    const entry = deleted ? this.deletedEntry(itemId) : this.index.get(itemId);
     assert(entry && this.vmk);
     return (await this.login(entry.cipher)).notes;
   }
@@ -784,7 +924,6 @@ export class VaultEngine {
     version(task.keyEpoch);
     assert(
       Array.isArray(task.expectedItems) &&
-        task.expectedItems.length <= 2000 &&
         task.expectedItemCount === task.expectedItems.length,
     );
     assert(
@@ -867,7 +1006,23 @@ export class VaultEngine {
     }
     return result;
   }
-  async verifyStaged(items: Vault.Item[]) {
+  ingestStaged(items: Vault.Item[], reset = false) {
+    assert(
+      this.transition?.task && Array.isArray(items) && items.length <= 100,
+    );
+    if (reset) this.stagedVerification.clear();
+    for (const item of items) {
+      validateItem(item);
+      assert(!this.stagedVerification.has(item.itemId));
+      this.stagedVerification.set(item.itemId, item);
+    }
+    assert(
+      this.stagedVerification.size <= this.transition.task.expectedItemCount,
+    );
+    return true;
+  }
+
+  async verifyStaged(items = [...this.stagedVerification.values()]) {
     const transition = this.transition;
     assert(transition?.task && this.sourceSnapshot && transition.target.ctx);
     const task = transition.task;
@@ -884,6 +1039,14 @@ export class VaultEngine {
           staged.contentVersion ===
             (transition.restore ? 1 : source.contentVersion),
       );
+      const oldState = source as Vault.RotationItem;
+      const newState = staged as Vault.RotationItem;
+      assert(!!oldState.deleted === !!newState.deleted);
+      if (oldState.deleted)
+        assert(
+          oldState.deletedAt === newState.deletedAt &&
+            oldState.purgeAt === newState.purgeAt,
+        );
       const oldPlain = await this.decrypt(source);
       const newPlain = await transition.target.decrypt(staged);
       const canonical = (plain: Vault.PlainRecord) =>

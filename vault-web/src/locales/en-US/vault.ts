@@ -52,7 +52,7 @@ export default {
   'vault.cancel': 'Cancel',
   'vault.unlock': 'Unlock vault',
   'vault.unlockHint':
-    'Import your account key and enter your master password. Reimport after locking or refreshing this page. Neither the key nor your master password is uploaded.',
+    'The account key stays in this tab after an ordinary lock. Enter your master password to unlock again. Reloading, closing or signing out requires importing the file again. Keys and passwords are never uploaded.',
   'vault.accountFile': 'Account key file',
   'vault.recoveryFile': 'Vault recovery file',
   'vault.items': 'Password entries',
@@ -80,7 +80,8 @@ export default {
   'vault.copy': 'Copy password',
   'vault.edit': 'Edit',
   'vault.delete': 'Delete',
-  'vault.deleteConfirm': 'Delete this entry? This cannot be undone.',
+  'vault.deleteConfirm':
+    'Move this password to Deleted for 30 days, then permanently delete it.',
   'vault.revealHint':
     'Hidden automatically after 20 seconds, or immediately when this tab goes into the background.',
   'vault.language': 'Language',
@@ -177,7 +178,8 @@ export default {
   'vault.unlockIntro':
     'Select your account key file, then enter your master password. Neither is uploaded.',
   'vault.chooseAccountFile': 'Select account key file',
-  'vault.fileRefreshHint': 'Select again after locking or refreshing',
+  'vault.fileRefreshHint':
+    'Select again after reloading, closing or signing out',
   'vault.fileMatched': 'File matches this vault',
   'vault.chooseFile': '＋ Select',
   'vault.changeFile': 'Change',

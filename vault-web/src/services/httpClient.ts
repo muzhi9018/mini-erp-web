@@ -54,13 +54,9 @@ async function send<T>(
   signal?: AbortSignal,
 ): Promise<T> {
   const epoch = sessionEpoch;
-  if (!url.startsWith('/vault-auth/') && !url.startsWith('/api/v1/vault/'))
+  if (!url.startsWith('/vault/auth/') && !url.startsWith('/vault/api/'))
     throw new VaultHttpError(400, 'VAULT_INVALID_REQUEST');
-  if (
-    method === 'POST' &&
-    url.startsWith('/api/v1/vault/') &&
-    dataWritesBlocked
-  )
+  if (method === 'POST' && url.startsWith('/vault/api/') && dataWritesBlocked)
     throw new VaultHttpError(409, 'VAULT_CLIENT_UPGRADE_REQUIRED');
   if (method === 'POST' && !csrf)
     throw new VaultHttpError(403, 'VAULT_CSRF_INVALID');
@@ -74,8 +70,11 @@ async function send<T>(
       skipErrorHandler: true,
       headers: {
         'Accept-Language': getLocale(),
-        ...(method === 'POST' && url.startsWith('/api/v1/vault/')
-          ? { 'X-Vault-Item-Schema-Version': '3' }
+        ...(method === 'POST' && url.startsWith('/vault/api/')
+          ? {
+              'X-Vault-Item-Schema-Version': '3',
+              'X-Vault-Lifecycle-Version': '2',
+            }
           : {}),
         ...(method === 'POST' && csrf ? { [csrf.header]: csrf.token } : {}),
       },
