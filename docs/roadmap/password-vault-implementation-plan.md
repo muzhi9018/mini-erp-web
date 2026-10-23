@@ -59,7 +59,7 @@
 
 - 独立客户端位于 `vault-web/`，沿用 React、Umi Max、antd、TypeScript、Worker 和独立会话；密码库与 ERP 的认证、来源及明文驻留边界继续按本文执行。
 - 后端使用 Java 25、Spring Boot、MyBatis-Plus、PostgreSQL 和 Redis；已有密文 CRUD、原子批量变更、行版本/集合版本、幂等、authEpoch/outbox、轮换、快照和后台清理。
-- 当前内容版本为 v3，支持 LOGIN 与 ACCOUNT_GROUP，读取兼容 v1/v2；数据写请求要求 `X-Vault-Item-Schema-Version: 3`。账号组是独立密文记录，仅含名称与成员引用。具体契约以 `mini-erp-api/docs/password-vault-account-groups.md` 为基线，本轮不恢复旧版邮箱绑定设计。
+- 首次生产发布统一采用内容版本 1，包含完整 LOGIN、TOTP 与 ACCOUNT_GROUP；数据写请求要求 `X-Vault-Item-Schema-Version: 1` 和 `X-Vault-Lifecycle-Version: 1`。开发期密文及备份不自动转换。账号组是独立密文记录，仅含名称与成员引用。具体契约以 `mini-erp-api/docs/password-vault-account-groups.md` 为基线，本轮不恢复旧版邮箱绑定设计。
 - 当前删除使用 `is_deleted`、`gmt_deleted`、`delete_user`，没有已删除列表或条目恢复接口。现有 `purge-delay` 默认 24 小时，并同时用于已删除条目、旧槽和旧代清理；不能直接沿用为本轮 30 天保留策略。
 - 当前轮换源集合、正常快照和空库判断排除已删除条目。本轮必须分别调整轮换及空库语义，不能仅新增一个列表页面。
 
@@ -254,16 +254,16 @@ purpose 字段均为字符串；epoch/version 为安全范围内的正整数；�
 
 ## 6. 明文、密文与数据库契约
 
-LOGIN 明文保留 `title`、`website`、`username`、`password`、`notes`、`tags`、可选 `totp` 及现有兼容字段；当前 `itemSchemaVersion=3`，`itemType=LOGIN`。ACCOUNT_GROUP 使用同一内容版本，组名和成员 ID 整体加密，不内嵌密码或 TOTP。删除状态和期限属于服务端生命周期元数据，不写入加密明文，本轮不升级内容 schema。整体加密，不为搜索另外上传标题、域名、标签、是否启用 TOTP 或确定性搜索索引。备注按纯文本显示；网址只允许 http/https，打开外链断开 opener，不请求外部网站图标。
+LOGIN 明文保留 `title`、`website`、`username`、`password`、`notes`、`tags`、可选 `totp` 及现有兼容字段；当前生产 `itemSchemaVersion=1`，`itemType=LOGIN`。ACCOUNT_GROUP 使用同一内容版本，组名和成员 ID 整体加密，不内嵌密码或 TOTP。删除状态和期限属于服务端生命周期元数据，不写入加密明文，本轮不升级内容 schema。整体加密，不为搜索另外上传标题、域名、标签、是否启用 TOTP 或确定性搜索索引。备注按纯文本显示；网址只允许 http/https，打开外链断开 opener，不请求外部网站图标。
 
 | 明文字段 | 首版内容契约 |
 | --- | --- |
-| `itemSchemaVersion` | 当前新写入为 3，区分 LOGIN / ACCOUNT_GROUP；兼容读取 v1/v2，缺失时仅将原六字段条目解释为 v1，读取时在内存补齐 `totp=null` |
+| `itemSchemaVersion` | 生产读写均为 1，区分 LOGIN / ACCOUNT_GROUP，完整保留 TOTP 及现有兼容字段；开发期缺版本及 v2/v3 内容须另行转换，不能视为生产 v1 |
 | `totp` | null 或单个配置：`secretBase32`、`issuer`、`accountName`、`algorithm`、`digits`、`period`；T0 固定为 0，不保存当前动态码或倒计时 |
 
 TOTP 首版每个账号只关联一份配置；多个第三方账号使用独立条目。首版不为第三方账号预留 Passkey 私钥存储格式；P6 在原型验证后单独冻结内容 schema、容量及迁移规则，并保持旧条目可读，旧客户端不得覆盖新凭据数据。
 
-`itemSchemaVersion` 描述解密后的字段结构，与每次编辑递增的 `contentVersion`、服务端 `rowVersion` 和外层密文盒 `formatVersion` 不同。升级已有条目只在用户保存时写入新结构并沿用正常编辑的版本控制；不因读取批量改写。遇到未知内容版本或不支持的字段结构，客户端必须阻止该条目的编辑，以及需要解析重写它的整库轮换/恢复，不得丢弃字段后继续；密文备份仍可保留原始内容。当前通过最低写入内容版本 3 阻断旧客户端有损写入；本轮再独立声明删除生命周期协议能力，见第 6.3 节，不能仅靠内容版本号识别是否支持已删除条目轮换。
+`itemSchemaVersion` 描述解密后的字段结构，与每次编辑递增的 `contentVersion`、服务端 `rowVersion` 和外层密文盒 `formatVersion` 不同。生产版本 1 与开发期编号不等价；本轮不自动迁移开发期条目或备份。正常编辑沿用原版本控制，不因读取批量改写。遇到未知内容版本或不支持的字段结构，客户端必须阻止该条目的编辑，以及需要解析重写它的整库轮换/恢复，不得丢弃字段后继续；密文备份仍可保留原始内容。当前通过生产内容版本 1 的完整结构校验及写入声明阻断不兼容客户端有损写入；本轮再独立声明删除生命周期协议能力，见第 6.3 节，不能仅靠内容版本号识别是否支持已删除条目轮换。
 
 现有容量上限为每库 2,000 条正常密文记录，LOGIN 与 ACCOUNT_GROUP 共同计数；已删除记录不占正常条目名额，恢复时重新检查容量，不得挤掉其他数据。每条序列化明文最多 16 KiB，标签最多 20 个；超过限制在加密前拒绝。服务器按协议限制密文盒长度和请求体大小，不尝试解密。本轮保留这些已采用的单条及正常容量限制。
 
@@ -364,7 +364,7 @@ Redis 保存专用会话、短期认证挑战及限流计数，不另建 SQL Ses
 
 账号组与密码均在服务端视为不透明的 `vault_item`，采用相同保留期；列表在本地解密后标注“密码”或“账号组”，计数含义明确。删除密码继续沿用现有组引用解除流程，不改写其他密码；恢复密码默认回到“全部密码”，不自动重建已经解除的组关系，界面提示可手动重新加入。删除组只移走组本身，手动永久删除组也不删除成员账号；恢复组保留其密文成员引用，仅将当前正常账号显示为可用成员，缺失或已删除成员提示不可用，不连带恢复、不创建副本。
 
-上线采用独立生命周期协议版本 2：`/meta` 新增 `lifecycleProtocolVersion=2`、`clientLifecycleVersionHeader=X-Vault-Lifecycle-Version`、`deletedItemRetentionDays=30`。全部数据 POST 在现有内容版本头 3 之外，要求唯一的 `X-Vault-Lifecycle-Version: 2`；缺失、重复或不支持时返回 409 `VAULT_CLIENT_UPGRADE_REQUIRED`，防止旧 v3 客户端发起会遗漏已删除条目的轮换。认证和普通 GET 不增加该要求；新增查询及内部保留集合下载由已支持本协议的客户端使用。该请求头不加入历史请求摘要，不修改现有幂等请求的字段顺序或摘要规则。
+首次生产上线采用独立生命周期协议版本 1：`/meta` 声明 `lifecycleProtocolVersion=1`、`clientLifecycleVersionHeader=X-Vault-Lifecycle-Version`、`deletedItemRetentionDays=30`。全部数据 POST 在生产内容版本头 1 之外，要求唯一的 `X-Vault-Lifecycle-Version: 1`；缺失、重复或不支持时返回 409 `VAULT_CLIENT_UPGRADE_REQUIRED`，防止不兼容客户端发起会遗漏已删除条目的轮换。认证和普通 GET 不增加该要求；新增查询及内部保留集合下载由已支持本协议的客户端使用。该请求头不加入历史请求摘要，不修改现有幂等请求的字段顺序或摘要规则。
 
 发布时先暂停旧条目清理任务并停止新建轮换，允许既有任务提交或取消；排空任务后短暂阻断数据写入，部署兼容服务与客户端，再开启新策略和写入。仍在库中且删除未满 30 天的历史删除行沿用原删除时间进入已删除列表；已满 30 天的直接列入清理，不重新赠送保留期。已被旧任务清除的密文或旧代已清除密钥导致不可解密的历史条目无法补回，不承诺历史完整恢复；迁移核对可用密钥与密文后再开放入口。数据库变更仅围绕必要的枚举 CHECK 和删除时间查询索引编写独立增量迁移，本次不写 SQL、不修改已执行的建表脚本。回退版本必须支持该生命周期，不允许恢复旧清理器提前删除未到期数据。
 

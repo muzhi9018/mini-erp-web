@@ -118,7 +118,7 @@ declare namespace Vault {
     purgeAt?: string | null;
   };
   type PlainItem = {
-    itemSchemaVersion: 3;
+    itemSchemaVersion: 1;
     itemType: 'LOGIN';
     title: string;
     website: string;
@@ -132,7 +132,7 @@ declare namespace Vault {
     emailItemId: string | null;
   };
   type PlainGroup = {
-    itemSchemaVersion: 3;
+    itemSchemaVersion: 1;
     itemType: 'ACCOUNT_GROUP';
     name: string;
     defaultBoundEmail?: string | null;

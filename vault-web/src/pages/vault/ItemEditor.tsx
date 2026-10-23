@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { Ref } from 'react';
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { validatePlain } from '@/security/vault/protocol';
+import { ITEM_SCHEMA_VERSION, validatePlain } from '@/security/vault/protocol';
 import { trapDialogTab } from './dialog';
 import styles from './Entries.module.css';
 import TotpEditor from './TotpEditor';
@@ -115,10 +115,10 @@ export default function ItemEditor(props: {
     try {
       const values = validated || (await form.validateFields());
       if (!alive.current) return;
-      const plain = {
+      const plain: Vault.PlainItem = {
         ...props.editor.plain,
         ...values,
-        itemSchemaVersion: 3 as const,
+        itemSchemaVersion: ITEM_SCHEMA_VERSION,
         itemType: 'LOGIN' as const,
         totp: totp
           ? {

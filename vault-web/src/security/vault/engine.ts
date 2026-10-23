@@ -27,6 +27,7 @@ import {
   encode,
   encoder,
   generatePassword,
+  ITEM_SCHEMA_VERSION,
   normalizeSlots,
   PROFILE,
   parseAccountFile,
@@ -692,7 +693,7 @@ export class VaultEngine {
           repairs.push({
             itemId: id,
             plain: {
-              itemSchemaVersion: 3,
+              itemSchemaVersion: ITEM_SCHEMA_VERSION,
               itemType: 'ACCOUNT_GROUP',
               name: summary.name,
               memberItemIds: summary.memberItemIds.filter(

@@ -1,5 +1,7 @@
 import {
   assert,
+  ITEM_SCHEMA_VERSION,
+  LIFECYCLE_PROTOCOL_VERSION,
   normalizeSlots,
   PROFILE,
   uuid,
@@ -32,13 +34,13 @@ function parseMeta(result: Vault.Meta): Vault.Meta {
         result.allowedKdfProfiles?.includes(PROFILE),
     );
     if (
-      result.lifecycleProtocolVersion !== 2 ||
+      result.lifecycleProtocolVersion !== LIFECYCLE_PROTOCOL_VERSION ||
       result.clientLifecycleVersionHeader !== 'X-Vault-Lifecycle-Version' ||
       result.deletedItemRetentionDays !== 30 ||
-      result.writeItemSchemaVersion !== 3 ||
-      result.minimumClientSchemaVersion > 3 ||
+      result.writeItemSchemaVersion !== ITEM_SCHEMA_VERSION ||
+      result.minimumClientSchemaVersion > ITEM_SCHEMA_VERSION ||
       result.clientSchemaVersionHeader !== 'X-Vault-Item-Schema-Version' ||
-      ![1, 2, 3].every((v) => result.readableItemSchemaVersions?.includes(v))
+      !result.readableItemSchemaVersions?.includes(ITEM_SCHEMA_VERSION)
     ) {
       blockDataWrites();
       throw new VaultHttpError(409, 'VAULT_CLIENT_UPGRADE_REQUIRED');

@@ -56,6 +56,7 @@ function VaultWorkspace() {
   const lifecyclePending = useRef(false);
   const [error, setError] = useState('');
   const [unlocked, setUnlocked] = useState(false);
+  const unlockedRef = useRef(false);
   const [revision, setRevision] = useState(0);
   const [draft, setDraft] = useState<Vault.PreparedSetup>();
   const [verified, setVerified] = useState(false);
@@ -141,6 +142,7 @@ function VaultWorkspace() {
         setHasAccount(false);
       }
       active.current = false;
+      unlockedRef.current = false;
       inFlight.current = false;
       lifecyclePending.current = false;
       setLifecycleBusy(false);
@@ -392,7 +394,7 @@ function VaultWorkspace() {
     };
     const inspect = () => {
       if (active.current && expired()) lock(true);
-      if (active.current) {
+      if (unlockedRef.current) {
         setDeletedRows((rows) =>
           rows.filter(
             (row) =>
@@ -410,7 +412,7 @@ function VaultWorkspace() {
       } else {
         inspect();
         hiddenAt.current = undefined;
-        if (active.current && !inFlight.current)
+        if (unlockedRef.current && !inFlight.current)
           run(async () => {
             await sync();
           });
@@ -418,7 +420,7 @@ function VaultWorkspace() {
     };
     const foreground = () => {
       inspect();
-      if (active.current && deletedClock.needsConfirmation())
+      if (unlockedRef.current && deletedClock.needsConfirmation())
         run(async () => {
           await sync();
         });
@@ -707,7 +709,7 @@ function VaultWorkspace() {
                 disabled={busy || lifecycleBusy}
                 onClick={() => {
                   navigate(() => {
-                    lock();
+                    lock(false, false);
                     setMaintenance(true);
                     active.current = true;
                     lastActivity.current = Date.now();
@@ -884,7 +886,7 @@ function VaultWorkspace() {
             guard={guard}
             run={run}
             onExit={() => {
-              lock();
+              lock(false, false);
               run(async () => {
                 await loadSession();
               });
@@ -1082,6 +1084,7 @@ function VaultWorkspace() {
                       setDraft(undefined);
                       setVerified(false);
                       setHasAccount(true);
+                      unlockedRef.current = true;
                       setUnlocked(true);
                       await sync(current);
                     })
@@ -1118,6 +1121,7 @@ function VaultWorkspace() {
                       try {
                         await sync(current);
                         setHasAccount(true);
+                        unlockedRef.current = true;
                         setUnlocked(true);
                       } catch (failure) {
                         client.reset();
@@ -1237,7 +1241,7 @@ function VaultWorkspace() {
             securityPanel={
               <Button
                 onClick={() => {
-                  lock();
+                  lock(false, false);
                   setMaintenance(true);
                   active.current = true;
                   lastActivity.current = Date.now();

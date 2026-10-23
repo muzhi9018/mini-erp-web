@@ -1,4 +1,8 @@
 import { getLocale, request } from '@umijs/max';
+import {
+  ITEM_SCHEMA_VERSION,
+  LIFECYCLE_PROTOCOL_VERSION,
+} from '@/security/vault/protocol';
 
 let csrf: { token: string; header: string } | undefined;
 let sessionEpoch = 0;
@@ -72,8 +76,8 @@ async function send<T>(
         'Accept-Language': getLocale(),
         ...(method === 'POST' && url.startsWith('/vault/api/')
           ? {
-              'X-Vault-Item-Schema-Version': '3',
-              'X-Vault-Lifecycle-Version': '2',
+              'X-Vault-Item-Schema-Version': String(ITEM_SCHEMA_VERSION),
+              'X-Vault-Lifecycle-Version': String(LIFECYCLE_PROTOCOL_VERSION),
             }
           : {}),
         ...(method === 'POST' && csrf ? { [csrf.header]: csrf.token } : {}),

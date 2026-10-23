@@ -1,5 +1,7 @@
+import { ITEM_SCHEMA_VERSION } from '@/security/vault/protocol';
+
 export const emptyItem = (): Vault.PlainItem => ({
-  itemSchemaVersion: 3,
+  itemSchemaVersion: ITEM_SCHEMA_VERSION,
   itemType: 'LOGIN',
   title: '',
   website: '',
@@ -23,7 +25,7 @@ export const groupDraft = (): GroupEditorDraft => ({
   itemId: crypto.randomUUID(),
   isNew: true,
   group: {
-    itemSchemaVersion: 3,
+    itemSchemaVersion: ITEM_SCHEMA_VERSION,
     itemType: 'ACCOUNT_GROUP',
     name: '',
     memberItemIds: [],
@@ -31,7 +33,7 @@ export const groupDraft = (): GroupEditorDraft => ({
 });
 
 export const groupPlain = (group: Vault.GroupSummary): Vault.PlainGroup => ({
-  itemSchemaVersion: 3,
+  itemSchemaVersion: ITEM_SCHEMA_VERSION,
   itemType: 'ACCOUNT_GROUP',
   name: group.name,
   memberItemIds: group.memberItemIds,

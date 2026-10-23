@@ -2,7 +2,11 @@ import { Button, Input, Modal, Select } from 'antd';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import type { Ref } from 'react';
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { encoder, parsePlain } from '@/security/vault/protocol';
+import {
+  encoder,
+  ITEM_SCHEMA_VERSION,
+  parsePlain,
+} from '@/security/vault/protocol';
 import { trapDialogTab } from './dialog';
 import styles from './Entries.module.css';
 import type { GroupEditorDraft } from './groups';
@@ -57,7 +61,7 @@ export default function GroupEditor(props: {
       return;
     }
     const group: Vault.PlainGroup = {
-      itemSchemaVersion: 3,
+      itemSchemaVersion: ITEM_SCHEMA_VERSION,
       itemType: 'ACCOUNT_GROUP',
       name: name.trim(),
       memberItemIds: members,

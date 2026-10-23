@@ -1,6 +1,8 @@
 import { normalizeTotp } from './totp';
 
 export const PROFILE = 'ARGON2ID_V19_M65536_T3_P4_L32';
+export const ITEM_SCHEMA_VERSION = 1;
+export const LIFECYCLE_PROTOCOL_VERSION = 1;
 export const encoder = new TextEncoder();
 export const decoder = new TextDecoder('utf-8', { fatal: true });
 export const context = (...fields: unknown[]) =>
@@ -150,20 +152,12 @@ export function validateItem(value: unknown): asserts value is Vault.Item {
 
 export function parsePlain(value: unknown): Vault.PlainRecord {
   const item = object(value);
-  if (
-    item.itemSchemaVersion !== undefined &&
-    ![2, 3].includes(item.itemSchemaVersion as number)
-  )
+  if (item.itemSchemaVersion !== ITEM_SCHEMA_VERSION)
     throw new Error('VAULT_CLIENT_UPGRADE_REQUIRED');
-  if (
-    item.itemSchemaVersion === 3 &&
-    item.itemType !== 'LOGIN' &&
-    item.itemType !== 'ACCOUNT_GROUP'
-  )
+  if (item.itemType !== 'LOGIN' && item.itemType !== 'ACCOUNT_GROUP')
     throw new Error('VAULT_CLIENT_UPGRADE_REQUIRED');
   assert(encoder.encode(JSON.stringify(item)).length <= 16384);
   if (item.itemType === 'ACCOUNT_GROUP') {
-    assert(item.itemSchemaVersion === 3);
     exact(item, [
       'itemSchemaVersion',
       'itemType',
@@ -185,17 +179,15 @@ export function parsePlain(value: unknown): Vault.PlainRecord {
     return item as Vault.PlainGroup;
   }
   const fields = ['title', 'website', 'username', 'password', 'notes', 'tags'];
-  if (item.itemSchemaVersion === undefined) exact(item, fields);
-  else {
-    exact(item, [
-      ...fields,
-      'itemSchemaVersion',
-      'totp',
-      ...(item.itemSchemaVersion === 3
-        ? ['itemType', 'platform', 'boundEmail', 'emailItemId']
-        : []),
-    ]);
-  }
+  exact(item, [
+    ...fields,
+    'itemSchemaVersion',
+    'itemType',
+    'totp',
+    'platform',
+    'boundEmail',
+    'emailItemId',
+  ]);
   for (const key of fields.slice(0, 5)) assert(typeof item[key] === 'string');
   assert((item.title as string).trim().length > 0);
   assert(
@@ -211,18 +203,9 @@ export function parsePlain(value: unknown): Vault.PlainRecord {
         !url.password,
     );
   }
-  const totp =
-    item.itemSchemaVersion === undefined || item.totp === null
-      ? null
-      : normalizeTotp(item.totp);
   const normalized = {
     ...item,
-    itemSchemaVersion: 3,
-    itemType: 'LOGIN',
-    totp,
-    platform: item.itemSchemaVersion === 3 ? item.platform : null,
-    boundEmail: item.itemSchemaVersion === 3 ? item.boundEmail : null,
-    emailItemId: item.itemSchemaVersion === 3 ? item.emailItemId : null,
+    totp: item.totp === null ? null : normalizeTotp(item.totp),
   } as Vault.PlainItem;
   for (const field of ['platform', 'boundEmail', 'emailItemId'] as const)
     assert(normalized[field] === null || typeof normalized[field] === 'string');
