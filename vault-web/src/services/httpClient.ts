@@ -103,7 +103,10 @@ async function send<T>(
         ? error
         : new VaultHttpError(
             raw.response?.status || 0,
-            failure?.errorCode || 'VAULT_REQUEST_FAILED',
+            failure?.errorCode ||
+              (raw.response?.status
+                ? 'VAULT_REQUEST_FAILED'
+                : 'VAULT_CONNECTION_FAILED'),
             failure?.requestId,
           );
     if (safe.code === 'VAULT_CLIENT_UPGRADE_REQUIRED') blockDataWrites();

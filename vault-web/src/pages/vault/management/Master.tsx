@@ -95,6 +95,7 @@ export default function Master() {
           <Stage title={t('manage.masterNew')} />
           <Note warning>{t('manage.masterHistory')}</Note>
           <NewPassword
+            label={t('manage.masterReview')}
             onNext={(password) =>
               execute(async () => {
                 assert(meta && !material.recovery);

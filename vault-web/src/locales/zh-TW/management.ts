@@ -95,6 +95,7 @@ export default {
   'manage.masterVerify': '驗證舊材料',
   'manage.masterNew': '設定新主密碼',
   'manage.masterConfirm': '確認修改',
+  'manage.masterReview': '下一步：確認修改',
   'manage.masterVerifyTitle': '先驗證目前解鎖材料',
   'manage.masterOnlyNormal': '此操作僅接受原帳戶金鑰檔案與目前主密碼。',
   'manage.masterRecoveryHint':
@@ -172,6 +173,8 @@ export default {
   'manage.newUnlock': '新主密碼 + 新帳戶金鑰',
   'manage.restoreLastCheck':
     '提交後仍須重新登入，使用目標庫新材料解鎖並驗證全部內容，才可確認復原成功。',
+  'manage.rotationLastCheck':
+    '輪換已提交。請重新登入，使用新主密碼與新帳戶金鑰解鎖並驗證全部內容，才可確認輪換成功。',
   'manage.rotationHistory':
     '線上輪換不會撤銷歷史備份，也不會更改第三方網站密碼或重新綁定 TOTP。',
   'manage.confirmSwitch': '確認切換並登出',

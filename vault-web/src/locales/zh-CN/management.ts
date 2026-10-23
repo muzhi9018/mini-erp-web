@@ -94,6 +94,7 @@ export default {
   'manage.masterVerify': '验证旧材料',
   'manage.masterNew': '设置新主密码',
   'manage.masterConfirm': '确认修改',
+  'manage.masterReview': '下一步：确认修改',
   'manage.masterVerifyTitle': '先验证当前解锁材料',
   'manage.masterOnlyNormal': '此操作只接受原账户密钥文件与当前主密码。',
   'manage.masterRecoveryHint':
@@ -171,6 +172,8 @@ export default {
   'manage.newUnlock': '新主密码 + 新账户密钥',
   'manage.restoreLastCheck':
     '提交后还需重新登录，使用目标库新材料解锁并验证全部内容，才能确认恢复成功。',
+  'manage.rotationLastCheck':
+    '轮换已提交。请重新登录，使用新主密码和新账户密钥解锁并验证全部内容，才能确认轮换成功。',
   'manage.rotationHistory':
     '在线轮换不会撤销历史备份，也不会更改第三方网站密码或重新绑定 TOTP。',
   'manage.confirmSwitch': '确认切换并退出登录',

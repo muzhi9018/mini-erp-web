@@ -104,6 +104,7 @@ export default {
   'manage.masterVerify': 'Verify current materials',
   'manage.masterNew': 'Set new master password',
   'manage.masterConfirm': 'Review change',
+  'manage.masterReview': 'Next: review change',
   'manage.masterVerifyTitle': 'Verify current unlocking materials',
   'manage.masterOnlyNormal':
     'This operation requires the original account key file and current master password.',
@@ -190,6 +191,8 @@ export default {
   'manage.newUnlock': 'New master password + new account key',
   'manage.restoreLastCheck':
     'After commit, sign in again and unlock with the new target materials to verify all contents before restoration is complete.',
+  'manage.rotationLastCheck':
+    'Key rotation committed. Sign in again, then unlock with the new master password and account key to verify all contents before rotation is complete.',
   'manage.rotationHistory':
     'Online rotation does not revoke historical backups, change website passwords or rebind third-party TOTP.',
   'manage.confirmSwitch': 'Confirm switch and sign out',

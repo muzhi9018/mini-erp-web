@@ -488,6 +488,7 @@ function VaultWorkspace() {
     if (error === 'VAULT_INVALID_FORMAT' || error === 'VAULT_INVALID_REQUEST')
       return t('vault.invalidFile');
     if (error === 'VAULT_INVALID_RESPONSE') return t('vault.invalidResponse');
+    if (error === 'VAULT_CONNECTION_FAILED') return t('vault.connectionFailed');
     if (error === 'VAULT_DECRYPT_FAILED') return t('vault.unlockFailed');
     if (error.includes('SESSION') || error === 'VAULT_LOCKED')
       return t('vault.sessionExpired');
@@ -839,7 +840,9 @@ function VaultWorkspace() {
                   ? completion.mode === 'RESTORE'
                     ? 'manage.restoreVerified'
                     : 'manage.rotationVerified'
-                  : 'manage.restoreLastCheck',
+                  : completion.mode === 'RESTORE'
+                    ? 'manage.restoreLastCheck'
+                    : 'manage.rotationLastCheck',
               )}
             />
           </div>
@@ -1058,6 +1061,7 @@ function VaultWorkspace() {
                       setupKey.current ||= crypto.randomUUID();
                       let current = await loadMeta();
                       if (!current.initialized) {
+                        let connectionFailure: VaultHttpError | undefined;
                         try {
                           await guard(
                             vaultAPI.initialize({
@@ -1071,8 +1075,11 @@ function VaultWorkspace() {
                             failure.status !== 0
                           )
                             throw failure;
+                          connectionFailure = failure;
                         }
                         current = await loadMeta();
+                        if (!current.initialized && connectionFailure)
+                          throw connectionFailure;
                       }
                       assert(current.initialized && session.ownerSubject);
                       await guard(

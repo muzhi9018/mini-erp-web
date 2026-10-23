@@ -96,6 +96,8 @@ export default {
   'vault.invalidFile': '文件、条目内容或协议格式无效，请核对后重新选择。',
   'vault.invalidResponse':
     '密码库服务返回的数据格式异常。请保留已下载的密钥文件，重新连接后重试。',
+  'vault.connectionFailed':
+    '无法连接密码库服务，请检查网络后重试。请保留已下载的密钥文件，无需重新生成。',
   'vault.unlockFailed':
     '无法解锁或解密，请检查主密码和密钥文件。也可能是密文损坏。',
   'vault.sessionExpired':

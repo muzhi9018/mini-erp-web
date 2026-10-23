@@ -102,6 +102,8 @@ export default {
     'The file, entry or protocol format is invalid. Check it and select the file again.',
   'vault.invalidResponse':
     'The vault service returned an invalid response. Keep your downloaded key files, reconnect and try again.',
+  'vault.connectionFailed':
+    'Unable to connect to the vault service. Check your network and try again. Keep your downloaded key files; you do not need to generate new ones.',
   'vault.unlockFailed':
     'Unable to unlock or decrypt. Check your master password and key file; the ciphertext may also be damaged.',
   'vault.sessionExpired':

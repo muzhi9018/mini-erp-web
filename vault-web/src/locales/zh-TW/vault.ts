@@ -96,6 +96,8 @@ export default {
   'vault.invalidFile': '檔案、項目內容或協定格式無效，請核對後重新選取。',
   'vault.invalidResponse':
     '密碼庫服務傳回的資料格式異常。請保留已下載的金鑰檔案，重新連線後重試。',
+  'vault.connectionFailed':
+    '無法連線至密碼庫服務，請檢查網路後重試。請保留已下載的金鑰檔案，無需重新產生。',
   'vault.unlockFailed':
     '無法解鎖或解密，請檢查主密碼與金鑰檔案。密文也可能已損壞。',
   'vault.sessionExpired':
