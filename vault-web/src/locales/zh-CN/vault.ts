@@ -27,11 +27,10 @@ export default {
     'Passkey 验证成功，请重试生成或使用当前文件确认恢复码。',
   'vault.setup': '创建密码库',
   'vault.setupHint':
-    '主密码至少 16 个字符，建议使用随机词组。请使用不同于系统登录密码的主密码。解密需要主密码和账户密钥，或独立恢复文件；两种路径都丢失时，管理员也无法恢复。',
+    '主密码至少 8 个字符，建议使用随机词组。请使用不同于系统登录密码的主密码。解密需要主密码和账户密钥，或独立恢复文件；两种路径都丢失时，管理员也无法恢复。',
   'vault.masterPassword': '主密码',
   'vault.confirmPassword': '再次输入主密码',
-  'vault.passwordRule':
-    '主密码至少 16 个 Unicode 字符，最多 1024 个 UTF-8 字节',
+  'vault.passwordRule': '主密码至少 8 个 Unicode 字符，最多 1024 个 UTF-8 字节',
   'vault.passwordMismatch': '两次主密码不一致',
   'vault.prepare': '生成密钥与文件',
   'vault.filesHint':

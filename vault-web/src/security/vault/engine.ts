@@ -704,44 +704,24 @@ export class VaultEngine {
         }
       }
     }
-    // Large fan-outs are unlinked in explicit batches; the target remains until the final transaction.
-    const selected = repairs.slice(0, 99);
-    let batch: Vault.ItemBatch;
-    while (true) {
-      try {
-        batch = selected.length
-          ? await this.batch(selected, collectionRevision)
-          : this.batchEnvelope([], collectionRevision);
-        break;
-      } catch (error) {
-        if (
-          !(error instanceof Error) ||
-          error.message !== 'VAULT_BATCH_TOO_LARGE' ||
-          selected.length <= 1
-        )
-          throw error;
-        selected.splice(Math.max(1, Math.floor(selected.length / 2)));
-      }
-    }
-    let final = selected.length === repairs.length;
-    if (final)
-      batch.changes.push({
-        action:
-          target.summary.itemType === 'ACCOUNT_GROUP'
-            ? 'DELETE_GROUP'
-            : 'DELETE',
-        itemId,
-        expectedRowVersion: target.cipher.rowVersion,
-        contentVersion: null,
-        wrappedDek: null,
-        encryptedItem: null,
-      });
+    // Group repairs and deletion must be authorized and committed together.
+    if (repairs.length >= 100) throw new Error('VAULT_BATCH_TOO_LARGE');
+    const batch = repairs.length
+      ? await this.batch(repairs, collectionRevision)
+      : this.batchEnvelope([], collectionRevision);
+    batch.changes.push({
+      action:
+        target.summary.itemType === 'ACCOUNT_GROUP' ? 'DELETE_GROUP' : 'DELETE',
+      itemId,
+      expectedRowVersion: target.cipher.rowVersion,
+      contentVersion: null,
+      wrappedDek: null,
+      encryptedItem: null,
+    });
     if (encoder.encode(JSON.stringify(batch)).length > 1024 * 1024) {
-      batch.changes.pop();
-      final = false;
+      throw new Error('VAULT_BATCH_TOO_LARGE');
     }
-    assert(batch.changes.length > 0);
-    return { batch, final };
+    return { batch, final: true };
   }
 
   async code(itemId: string, now = Date.now(), deleted = false) {

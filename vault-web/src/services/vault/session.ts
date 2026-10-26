@@ -1,5 +1,10 @@
-import { assert } from '@/security/vault/protocol';
-import { doGet, doPost, updateCSRF } from '@/services/httpClient';
+import { assert, encoder } from '@/security/vault/protocol';
+import {
+  doGet,
+  doPost,
+  updateCSRF,
+  VaultHttpError,
+} from '@/services/httpClient';
 
 const prefix = '/vault/auth';
 async function sessionResponse(promise: Promise<Vault.Session>) {
@@ -33,6 +38,27 @@ export const authenticateOptions = () =>
     `${prefix}/passkeys/authenticate/options`,
     {},
   );
+export const operationOptions = (
+  value: Vault.DeleteOperation,
+  signal: AbortSignal,
+) => {
+  const path = {
+    DELETE_ITEM: 'delete-item',
+    PURGE_ITEM: 'purge-item',
+    DELETE_GROUP: 'delete-group',
+    BATCH_ITEMS: 'batch-items',
+  }[value.operation];
+  if (
+    encoder.encode(JSON.stringify(value.request)).length >
+    (value.operation === 'BATCH_ITEMS' ? 1024 * 1024 : 64 * 1024)
+  )
+    throw new VaultHttpError(400, 'VAULT_BATCH_TOO_LARGE');
+  return doPost<Vault.OperationOptions>(
+    `${prefix}/passkeys/operations/${path}/options`,
+    value.request,
+    signal,
+  );
+};
 export const authenticate = (credential: Vault.Credential) =>
   sessionResponse(
     doPost<Vault.Session>(`${prefix}/passkeys/authenticate/verify`, credential),

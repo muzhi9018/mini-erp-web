@@ -28,11 +28,11 @@ export default {
     'Passkey verified. Retry generating recovery codes or confirming them with the current file.',
   'vault.setup': 'Create your vault',
   'vault.setupHint':
-    'Use a master password of at least 16 characters, preferably random words, different from your system password. Decryption requires your master password and account key, or your recovery file. If both paths are lost, administrators cannot recover the vault.',
+    'Use a master password of at least 8 characters, preferably random words, different from your system password. Decryption requires your master password and account key, or your recovery file. If both paths are lost, administrators cannot recover the vault.',
   'vault.masterPassword': 'Master password',
   'vault.confirmPassword': 'Confirm master password',
   'vault.passwordRule':
-    'Use at least 16 Unicode characters and at most 1024 UTF-8 bytes',
+    'Use at least 8 Unicode characters and at most 1024 UTF-8 bytes',
   'vault.passwordMismatch': 'The master passwords do not match',
   'vault.prepare': 'Generate keys and files',
   'vault.filesHint':

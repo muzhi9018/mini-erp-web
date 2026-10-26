@@ -6,12 +6,13 @@ import {
   EyeOff,
   RefreshCw,
   Trash2,
+  TriangleAlert,
   X,
 } from 'lucide-react';
 import type { Ref } from 'react';
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ITEM_SCHEMA_VERSION, validatePlain } from '@/security/vault/protocol';
-import { trapDialogTab } from './dialog';
+import { trapDialogTab, useDialogBackground } from './dialog';
 import styles from './Entries.module.css';
 import TotpEditor from './TotpEditor';
 import TotpImportWizard from './TotpImportWizard';
@@ -36,14 +37,9 @@ export default function ItemEditor(props: {
   onReload: () => void;
   onSave: (plain: Vault.PlainItem, preserveTotp: boolean) => void;
   groupName?: string;
-  deleteImpact: string;
   onDelete: (id: string) => void;
   onDraftCode: (config: Vault.Totp) => Promise<Vault.TotpCode>;
-  onGenerate: (
-    length: number,
-    symbols: boolean,
-    set: (password: string) => void,
-  ) => void;
+  onGenerate: (length: number, symbols: boolean) => Promise<string>;
 }) {
   const t = useText();
   const [form] = Form.useForm<Vault.PlainItem>();
@@ -55,13 +51,27 @@ export default function ItemEditor(props: {
   );
   const [dirty, setDirty] = useState(props.editor.totpAction === 'remove');
   const [wizard, setWizard] = useState(props.editor.totpAction === 'replace');
-  const [confirmation, setConfirmation] = useState<'discard' | 'delete'>();
+  const [confirmation, setConfirmation] = useState<'discard' | 'generate'>();
+  const dialog = useRef<HTMLDivElement>(null);
+  const [dialogReady, setDialogReady] = useState(false);
+  useDialogBackground(dialog, !!confirmation && dialogReady);
+  const [generating, setGenerating] = useState(false);
+  const [generated, setGenerated] = useState(false);
+  const [generationFailed, setGenerationFailed] = useState(false);
+  const generation = useRef(0);
+  const generationPending = useRef(false);
   const [visible, setVisible] = useState(false);
   const [length, setLength] = useState(24);
   const [symbols, setSymbols] = useState(true);
   const next = useRef<(() => void) | undefined>(undefined);
   const alive = useRef(true);
   const addButton = useRef<HTMLDivElement>(null);
+  const generatorButton = useRef<HTMLDivElement>(null);
+  const focusGenerator = () =>
+    requestAnimationFrame(() => {
+      if (!document.hidden)
+        generatorButton.current?.querySelector('button')?.focus();
+    });
   useEffect(() => {
     alive.current = true;
     form.setFieldsValue(props.editor.plain);
@@ -71,9 +81,16 @@ export default function ItemEditor(props: {
     );
     setDirty(props.editor.totpAction === 'remove');
     setWizard(props.editor.totpAction === 'replace');
+    setConfirmation(undefined);
+    setDialogReady(false);
+    setGenerating(false);
+    setGenerated(false);
+    setGenerationFailed(false);
+    generationPending.current = false;
     form.getFieldInstance('title')?.focus();
     return () => {
       alive.current = false;
+      generation.current++;
       form.resetFields();
     };
   }, [props.editor]);
@@ -82,6 +99,13 @@ export default function ItemEditor(props: {
     const timer = setTimeout(() => setVisible(false), 20000);
     return () => clearTimeout(timer);
   }, [visible]);
+  useEffect(() => {
+    const hide = () => {
+      if (document.hidden) setVisible(false);
+    };
+    document.addEventListener('visibilitychange', hide);
+    return () => document.removeEventListener('visibilitychange', hide);
+  }, []);
   useEffect(() => {
     const unload = (event: BeforeUnloadEvent) => {
       if (dirty || props.uncertain) {
@@ -101,6 +125,31 @@ export default function ItemEditor(props: {
   };
   useImperativeHandle(props.ref, () => ({ leave }));
   const close = () => leave(props.onClose);
+  const generate = async () => {
+    if (generationPending.current || props.busy || props.uncertain) return;
+    const ticket = ++generation.current;
+    generationPending.current = true;
+    setConfirmation(undefined);
+    setDialogReady(false);
+    setGenerating(true);
+    setGenerationFailed(false);
+    try {
+      const password = await props.onGenerate(length, symbols);
+      if (!alive.current || ticket !== generation.current) return;
+      form.setFieldValue('password', password);
+      setDirty(true);
+      setGenerated(true);
+    } catch {
+      if (alive.current && ticket === generation.current)
+        setGenerationFailed(true);
+    } finally {
+      if (alive.current && ticket === generation.current) {
+        generationPending.current = false;
+        setGenerating(false);
+        focusGenerator();
+      }
+    }
+  };
   const closeWizard = () => {
     setWizard(false);
     requestAnimationFrame(() =>
@@ -149,7 +198,7 @@ export default function ItemEditor(props: {
         <TotpImportWizard
           title={title || ''}
           username={username || ''}
-          disabled={props.busy || props.uncertain}
+          disabled={props.busy || props.uncertain || generating}
           onClose={closeWizard}
           onCode={props.onDraftCode}
           onAdd={(value) => {
@@ -196,7 +245,7 @@ export default function ItemEditor(props: {
           preserve={false}
           clearOnDestroy
           autoComplete="off"
-          disabled={props.busy || props.uncertain}
+          disabled={props.busy || props.uncertain || generating}
           onValuesChange={() => setDirty(true)}
           onFinish={(values) => void save(values)}
         >
@@ -261,23 +310,36 @@ export default function ItemEditor(props: {
                 />
               </Form.Item>
             </div>
-            <div className={styles.generatorHead}>
+            <div ref={generatorButton} className={styles.generatorHead}>
               <p className={styles.help}>{t('entries.generatorHint')}</p>
               <Button
                 type="link"
                 icon={<RefreshCw size={16} />}
-                onClick={() =>
-                  props.onGenerate(length, symbols, (password) => {
-                    if (alive.current) {
-                      form.setFieldValue('password', password);
-                      setDirty(true);
-                    }
-                  })
-                }
+                loading={generating}
+                disabled={props.busy || props.uncertain || generating}
+                onClick={() => {
+                  if (props.editor.itemId || form.getFieldValue('password'))
+                    setConfirmation('generate');
+                  else void generate();
+                }}
               >
-                {t('vault.generatePassword')}
+                {t(
+                  generating
+                    ? 'actions.generate.pending'
+                    : 'vault.generatePassword',
+                )}
               </Button>
             </div>
+            {generationFailed && (
+              <p className={styles.error} role="alert">
+                {t('actions.generate.failure')}
+              </p>
+            )}
+            {generated && (
+              <p className={styles.help} role="status">
+                {t('actions.generate.draftOnly')}
+              </p>
+            )}
             <details className={styles.advanced}>
               <summary>{t('entries.generatorOptions')}</summary>
               <div className="grid gap-3 py-3">
@@ -290,14 +352,14 @@ export default function ItemEditor(props: {
                   min={16}
                   max={48}
                   value={length}
-                  disabled={props.busy || props.uncertain}
+                  disabled={props.busy || props.uncertain || generating}
                   onChange={(event) => setLength(Number(event.target.value))}
                 />
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={symbols}
-                    disabled={props.busy || props.uncertain}
+                    disabled={props.busy || props.uncertain || generating}
                     onChange={(event) => setSymbols(event.target.checked)}
                   />
                   {t('vault.includeSymbols')}
@@ -362,7 +424,9 @@ export default function ItemEditor(props: {
               danger
               disabled={props.busy || props.uncertain}
               aria-label={t('vault.delete')}
-              onClick={() => setConfirmation('delete')}
+              onClick={() =>
+                props.editor.itemId && props.onDelete(props.editor.itemId)
+              }
               icon={<Trash2 size={16} />}
             />
           )}
@@ -374,7 +438,7 @@ export default function ItemEditor(props: {
             form="vault-item-editor"
             htmlType={props.uncertain ? 'button' : 'submit'}
             loading={props.busy}
-            disabled={props.conflict || props.busy}
+            disabled={props.conflict || props.busy || generating}
             onClick={props.uncertain ? () => void save() : undefined}
             icon={<Check size={16} />}
           >
@@ -386,7 +450,12 @@ export default function ItemEditor(props: {
         <Modal
           open
           modalRender={(node) => (
-            <div role="presentation" onKeyDownCapture={trapDialogTab}>
+            <div
+              ref={dialog}
+              data-vault-dialog-ready={dialogReady || undefined}
+              role="presentation"
+              onKeyDownCapture={trapDialogTab}
+            >
               {node}
             </div>
           )}
@@ -394,39 +463,59 @@ export default function ItemEditor(props: {
           getContainer={false}
           className={styles.dialog}
           destroyOnHidden
+          afterOpenChange={setDialogReady}
           focusable={{ trap: true, focusTriggerAfterClose: true }}
           mask={{ closable: false }}
           title={t(
-            confirmation === 'delete'
-              ? 'entries.deleteTitle'
+            confirmation === 'generate'
+              ? 'actions.generate.title'
               : 'entries.discardTitle',
           )}
           onCancel={() => {
             next.current = undefined;
+            setDialogReady(false);
             setConfirmation(undefined);
+            if (confirmation === 'generate') focusGenerator();
           }}
           cancelText={t(
-            confirmation === 'delete' ? 'vault.cancel' : 'vault.keepEditing',
+            confirmation === 'generate' ? 'vault.cancel' : 'vault.keepEditing',
           )}
+          cancelButtonProps={{ autoFocus: true }}
           okText={t(
-            confirmation === 'delete' ? 'deleted.move' : 'vault.discard',
+            confirmation === 'generate'
+              ? 'actions.generate.confirm'
+              : 'vault.discard',
           )}
-          okButtonProps={{ danger: true, disabled: props.busy }}
+          okButtonProps={{
+            danger: confirmation === 'discard',
+            disabled: props.busy || generating,
+          }}
           onOk={() => {
-            if (confirmation === 'delete' && props.editor.itemId)
-              props.onDelete(props.editor.itemId);
+            if (confirmation === 'generate') void generate();
             else next.current?.();
+            setDialogReady(false);
             setConfirmation(undefined);
           }}
         >
-          <p>
+          {confirmation === 'generate' && (
+            <div
+              className={`${styles.actionTarget} ${styles.generationTarget}`}
+            >
+              <TriangleAlert size={22} aria-hidden />
+              <span>{title}</span>
+            </div>
+          )}
+          <p
+            className={
+              confirmation === 'generate' ? styles.generationRisk : undefined
+            }
+          >
             {t(
-              confirmation === 'delete'
-                ? 'entries.deleteWarning'
+              confirmation === 'generate'
+                ? 'actions.generate.warning'
                 : 'vault.discardConfirm',
             )}
           </p>
-          {confirmation === 'delete' && <p>{props.deleteImpact}</p>}
         </Modal>
       )}
     </>

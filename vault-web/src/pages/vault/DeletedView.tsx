@@ -1,4 +1,4 @@
-import { Alert, App, Button, Input, Modal } from 'antd';
+import { Alert, App, Button, Input } from 'antd';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -13,7 +13,9 @@ import { RetentionClock } from '@/security/vault/lifecycle';
 import { assert } from '@/security/vault/protocol';
 import { VaultHttpError } from '@/services/httpClient';
 import * as api from '@/services/vault/item';
-import { trapDialogTab } from './dialog';
+import DeleteOperationDialog, {
+  type DeletePhase,
+} from './DeleteOperationDialog';
 import s from './Entries.module.css';
 import EntryDetail from './EntryDetail';
 import { type MessageKey, useText } from './text';
@@ -28,6 +30,7 @@ export default function DeletedView(props: {
   onForget: (id: string) => void;
   onNormal: (id?: string) => void;
   onBlocked: (value: boolean) => void;
+  onOperationActivity: (value: boolean) => void;
 }) {
   const t = useText();
   const { message } = App.useApp();
@@ -38,13 +41,18 @@ export default function DeletedView(props: {
   const [checking, setChecking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<{
-    action: 'restore' | 'purge';
+    action: 'restore';
     request: Vault.LifecycleRequest;
   }>();
   const [error, setError] = useState<MessageKey>();
   const [result, setResult] = useState<'restore' | 'purge'>();
   const [restoredId, setRestoredId] = useState<string>();
-  const [confirm, setConfirm] = useState(false);
+  const [purgeTarget, setPurgeTarget] = useState<{
+    name: string;
+    detail: Vault.DeletedDetail;
+  }>();
+  const purgePhase = useRef<DeletePhase | undefined>(undefined);
+  const purgeTrigger = useRef<HTMLElement | null>(null);
   const [plain, setPlain] = useState<Vault.PlainItem>();
   const [fallback, setFallback] = useState<string>();
   const [until, setUntil] = useState(0);
@@ -68,7 +76,10 @@ export default function DeletedView(props: {
   const invalidate = (message: MessageKey) => {
     hide();
     setVerified(undefined);
-    setConfirm(false);
+    if (
+      !['submitting', 'unknown', 'querying'].includes(purgePhase.current || '')
+    )
+      setPurgeTarget(undefined);
     setViewVersion((value) => value + 1);
     setError(message);
     const id = currentId.current;
@@ -182,8 +193,15 @@ export default function DeletedView(props: {
     mounted.current = true;
     const recheck = () => {
       hide();
+      if (
+        purgePhase.current &&
+        ['preparing', 'waiting', 'submitting', 'querying', 'unknown'].includes(
+          purgePhase.current,
+        )
+      )
+        return;
       setVerified(undefined);
-      setConfirm(false);
+      setPurgeTarget(undefined);
       setViewVersion((value) => value + 1);
       const id = currentId.current;
       if (
@@ -253,11 +271,10 @@ export default function DeletedView(props: {
       timer.current = setTimeout(hide, 20000);
     }
   };
-  const submit = async (action: 'restore' | 'purge', retry = pending) => {
+  const submit = async (action: 'restore', retry = pending) => {
     if (submitting.current || !currentId.current) return;
     submitting.current = true;
     setBusy(true);
-    setConfirm(false);
     hide();
     setViewVersion((value) => value + 1);
     let operation = retry;
@@ -328,11 +345,11 @@ export default function DeletedView(props: {
     }
   };
   useEffect(() => {
-    props.onBlocked(busy || !!pending);
+    props.onBlocked(busy || !!pending || !!purgeTarget);
     return () => props.onBlocked(false);
-  }, [busy, pending]);
+  }, [busy, pending, purgeTarget]);
   const row = rows.find((value) => value.itemId === selected);
-  const blocked = busy || !!pending || checking || !verified;
+  const blocked = busy || !!pending || !!purgeTarget || checking || !verified;
   const format = (time: string) => {
     const date = new Date(time);
     const pad = (value: number) => String(value).padStart(2, '0');
@@ -363,10 +380,7 @@ export default function DeletedView(props: {
         />
       )}
       {pending && (
-        <Button
-          disabled={busy}
-          onClick={() => void submit(pending.action, pending)}
-        >
+        <Button disabled={busy} onClick={() => void submit('restore', pending)}>
           {t('deleted.queryRetry')}
         </Button>
       )}
@@ -446,7 +460,6 @@ export default function DeletedView(props: {
             readonly
             row={row}
             busy={blocked}
-            deleteImpact=""
             detail={plain}
             revealUntil={until}
             copyFallback={fallback}
@@ -465,9 +478,10 @@ export default function DeletedView(props: {
                 <Button
                   danger
                   disabled={blocked}
-                  onClick={() => {
+                  onClick={(event) => {
                     hide();
-                    setConfirm(true);
+                    purgeTrigger.current = event.currentTarget;
+                    setPurgeTarget({ name: row.title, detail: verified });
                   }}
                 >
                   {t('deleted.purge')}
@@ -595,30 +609,69 @@ export default function DeletedView(props: {
           </div>
         )}
       </section>
-      {confirm && verified && (
-        <Modal
-          open
-          title={t('deleted.purgeTitle')}
-          className={s.dialog}
-          getContainer={false}
-          destroyOnHidden
-          mask={{ closable: false }}
-          focusable={{ trap: true, focusTriggerAfterClose: true }}
-          modalRender={(node) => (
-            <div role="presentation" onKeyDownCapture={trapDialogTab}>
-              {node}
-            </div>
-          )}
-          cancelButtonProps={{ autoFocus: true }}
-          cancelText={t('vault.cancel')}
-          okText={t('deleted.purge')}
-          okButtonProps={{ danger: true, disabled: blocked }}
-          onCancel={() => setConfirm(false)}
-          onOk={() => void submit('purge')}
-        >
-          <p>{row?.title}</p>
-          <p>{t('deleted.purgeWarning')}</p>
-        </Modal>
+      {purgeTarget && (
+        <DeleteOperationDialog
+          key={`${purgeTarget.detail.itemId}:${purgeTarget.detail.generation}`}
+          kind="purge"
+          name={purgeTarget.name}
+          guard={props.guard}
+          valid={() =>
+            mounted.current && currentId.current === purgeTarget.detail.itemId
+          }
+          onPhase={(phase) => {
+            purgePhase.current = phase;
+            props.onOperationActivity(
+              !!phase &&
+                [
+                  'preparing',
+                  'waiting',
+                  'submitting',
+                  'querying',
+                  'unknown',
+                ].includes(phase),
+            );
+          }}
+          onClose={() => {
+            setPurgeTarget(undefined);
+            requestAnimationFrame(() => {
+              if (!document.hidden && purgeTrigger.current?.isConnected)
+                purgeTrigger.current.focus();
+            });
+          }}
+          prepare={async () => {
+            const value = await check(
+              purgeTarget.detail.itemId,
+              purgeTarget.detail,
+            );
+            return {
+              operation: 'PURGE_ITEM',
+              request: {
+                itemId: value.itemId,
+                generation: value.generation,
+                expectedRowVersion: value.rowVersion,
+                idempotencyKey: crypto.randomUUID(),
+              },
+            };
+          }}
+          onSuccess={async () => {
+            const id = purgeTarget.detail.itemId;
+            hide();
+            props.onForget(id);
+            await props.guard(
+              props.client.call('forgetDeleted', { itemId: id }),
+            );
+            if (!mounted.current) return;
+            setVerified(undefined);
+            setSelected(undefined);
+            currentId.current = undefined;
+            setError(undefined);
+            setRestoredId(undefined);
+            setResult('purge');
+            await props.onSync().catch(() => {
+              if (mounted.current) setError('vault.requestFailed');
+            });
+          }}
+        />
       )}
     </div>
   );

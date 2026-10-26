@@ -27,11 +27,11 @@ export default {
     'Passkey 驗證成功，請重試產生或使用目前檔案確認復原碼。',
   'vault.setup': '建立密碼庫',
   'vault.setupHint':
-    '主密碼至少 16 個字元，建議使用隨機詞組。請使用與系統登入密碼不同的主密碼。解密需要主密碼與帳戶金鑰，或獨立復原檔案；兩種途徑均遺失時，管理員也無法復原。',
+    '主密碼至少 8 個字元，建議使用隨機詞組。請使用與系統登入密碼不同的主密碼。解密需要主密碼與帳戶金鑰，或獨立復原檔案；兩種途徑均遺失時，管理員也無法復原。',
   'vault.masterPassword': '主密碼',
   'vault.confirmPassword': '再次輸入主密碼',
   'vault.passwordRule':
-    '主密碼至少 16 個 Unicode 字元，最多 1024 個 UTF-8 位元組',
+    '主密碼至少 8 個 Unicode 字元，最多 1024 個 UTF-8 位元組',
   'vault.passwordMismatch': '兩次主密碼不一致',
   'vault.prepare': '產生金鑰與檔案',
   'vault.filesHint':

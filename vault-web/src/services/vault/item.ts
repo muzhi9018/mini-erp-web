@@ -3,7 +3,12 @@ import {
   validateDeleted,
   validateRetentionTimes,
 } from '@/security/vault/lifecycle';
-import { assert, validateItem, version } from '@/security/vault/protocol';
+import {
+  assert,
+  encoder,
+  validateItem,
+  version,
+} from '@/security/vault/protocol';
 import { doGet, doPost, VaultHttpError } from '@/services/httpClient';
 
 export async function allItems(
@@ -50,14 +55,10 @@ export const createItem = (value: Vault.ItemWrite) =>
   doPost<Vault.WriteReceipt>('/vault/api/items/create', value);
 export const updateItem = (value: Vault.ItemWrite) =>
   doPost<Vault.WriteReceipt>('/vault/api/items/update', value);
-export const deleteItem = (value: {
-  itemId: string;
-  generation: number;
-  expectedRowVersion: number;
-  idempotencyKey: string;
-}) => doPost<Vault.DeleteReceipt>('/vault/api/items/delete', value);
+export const deleteItem = (value: Vault.Authorized<Vault.LifecycleRequest>) =>
+  doPost<Vault.DeleteReceipt>('/vault/api/items/delete', value);
 
-export async function batch(value: Vault.ItemBatch) {
+export async function batch(value: Vault.Authorized<Vault.ItemBatch>) {
   const receipt = await doPost<Vault.BatchReceipt>(
     '/vault/api/items/batch',
     value,
@@ -152,7 +153,7 @@ export async function deletedDetail(itemId: string) {
 }
 export async function lifecycle(
   action: 'restore' | 'purge',
-  request: Vault.LifecycleRequest,
+  request: Vault.Authorized<Vault.LifecycleRequest>,
 ) {
   const value = await doPost<Vault.LifecycleReceipt>(
     `/vault/api/items/${action}`,
@@ -180,4 +181,61 @@ export async function lifecycle(
   } catch {
     throw new VaultHttpError(0, 'VAULT_INVALID_RESPONSE');
   }
+}
+
+// Without a proof, these routes can only return an existing durable receipt.
+// Never infer a successful deletion from a detail request or a 404 response.
+export async function submitDeletion(
+  value: Vault.DeleteOperation,
+  passkeyAuthorization?: Vault.PasskeyAuthorization,
+) {
+  const body = {
+    ...value.request,
+    ...(passkeyAuthorization ? { passkeyAuthorization } : {}),
+  };
+  if (
+    encoder.encode(JSON.stringify(body)).length >
+    (value.operation === 'BATCH_ITEMS' ? 1024 * 1024 : 64 * 1024)
+  )
+    throw new VaultHttpError(400, 'VAULT_BATCH_TOO_LARGE');
+  if (value.operation === 'BATCH_ITEMS')
+    return batch({
+      ...value.request,
+      ...(passkeyAuthorization ? { passkeyAuthorization } : {}),
+    });
+  if (value.operation === 'PURGE_ITEM')
+    return lifecycle('purge', {
+      ...value.request,
+      ...(passkeyAuthorization ? { passkeyAuthorization } : {}),
+    });
+  const path = value.operation === 'DELETE_GROUP' ? 'delete-group' : 'delete';
+  return doPost<Vault.LifecycleReceipt | Vault.DeleteReceipt>(
+    `/vault/api/items/${path}`,
+    {
+      ...value.request,
+      ...(passkeyAuthorization ? { passkeyAuthorization } : {}),
+    },
+  ).then((receipt) => {
+    try {
+      assert(receipt.itemId === value.request.itemId);
+      version(receipt.collectionRevision);
+      if (value.operation === 'DELETE_GROUP')
+        assert(
+          'permanentlyDeleted' in receipt &&
+            receipt.permanentlyDeleted === true,
+        );
+      else {
+        assert(
+          'deleted' in receipt &&
+            receipt.deleted === true &&
+            receipt.rowVersion === value.request.expectedRowVersion + 1,
+        );
+        validateRetentionTimes(receipt as Vault.DeleteReceipt);
+        parseServerTime(receipt.serverTime);
+      }
+      return receipt;
+    } catch {
+      throw new VaultHttpError(0, 'VAULT_INVALID_RESPONSE');
+    }
+  });
 }

@@ -123,13 +123,11 @@
   flex-shrink: 0;
 }
 .logoMark {
-  width: 34px;
+  width: 36px;
   height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  color: var(--on-blue);
-  background: var(--blue);
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 .wordmark {
   font-size: 19px;

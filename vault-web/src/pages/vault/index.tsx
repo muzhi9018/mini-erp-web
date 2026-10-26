@@ -27,6 +27,7 @@ import * as auth from '@/services/vault/session';
 import * as vaultAPI from '@/services/vault/vault';
 import Auth, { type AuthMode } from './Auth';
 import AuthShell from './AuthShell';
+import DeleteOperationDialog from './DeleteOperationDialog';
 import { emptyItem, type GroupEditorDraft, groupPlain } from './groups';
 import type { EditorHandle } from './ItemEditor';
 import Items, { type Editor } from './Items';
@@ -74,7 +75,14 @@ function VaultWorkspace() {
   const deletedClock = useRef(new RetentionClock()).current;
   const [groups, setGroups] = useState<Vault.GroupSummary[]>([]);
   const [groupEditor, setGroupEditor] = useState<GroupEditorDraft>();
-  const [deleting, setDeleting] = useState(false);
+  const [deletion, setDeletion] = useState<{
+    itemId: string;
+    name: string;
+    kind: 'delete' | 'group';
+  }>();
+  const deletionOpen = useRef(false);
+  const deletionTrigger = useRef<HTMLElement | null>(null);
+  const operationActive = useRef(false);
   const [selected, setSelected] = useState<string>();
   const selectedRef = useRef<string | undefined>(undefined);
   const exposure = useRef(0);
@@ -91,8 +99,6 @@ function VaultWorkspace() {
     | {
         batch: Vault.ItemBatch;
         prefer?: string;
-        deleting?: string;
-        final?: boolean;
       }
     | undefined
   >(undefined);
@@ -113,6 +119,9 @@ function VaultWorkspace() {
   );
 
   const conceal = useCallback(() => {
+    setDeletion(undefined);
+    deletionOpen.current = false;
+    operationActive.current = false;
     setMaintenance(false);
     exposure.current++;
     setDetail(undefined);
@@ -158,7 +167,6 @@ function VaultWorkspace() {
       setAllRows([]);
       setGroups([]);
       setDeletedRows([]);
-      setDeleting(false);
       setSelected(undefined);
       selectedRef.current = undefined;
       setSyncFailed(false);
@@ -194,7 +202,8 @@ function VaultWorkspace() {
     return result;
   }
   function run(action: () => Promise<void>) {
-    if (inFlight.current || lifecyclePending.current) return;
+    if (inFlight.current || lifecyclePending.current || deletionOpen.current)
+      return;
     try {
       check();
     } catch {
@@ -407,12 +416,19 @@ function VaultWorkspace() {
     };
     const visibility = () => {
       if (document.hidden) {
-        conceal();
+        if (operationActive.current) hideDetail();
+        else conceal();
         hiddenAt.current = Date.now();
       } else {
         inspect();
         hiddenAt.current = undefined;
-        if (unlockedRef.current && !inFlight.current)
+        if (
+          unlockedRef.current &&
+          !inFlight.current &&
+          !operationActive.current &&
+          !deletionOpen.current &&
+          !lifecyclePending.current
+        )
           run(async () => {
             await sync();
           });
@@ -420,7 +436,13 @@ function VaultWorkspace() {
     };
     const foreground = () => {
       inspect();
-      if (unlockedRef.current && deletedClock.needsConfirmation())
+      if (
+        unlockedRef.current &&
+        !operationActive.current &&
+        !deletionOpen.current &&
+        !lifecyclePending.current &&
+        deletedClock.needsConfirmation()
+      )
         run(async () => {
           await sync();
         });
@@ -550,6 +572,11 @@ function VaultWorkspace() {
     clearTimeout(revealTimer.current);
   };
   const select = (id?: string) => {
+    if (deletionOpen.current && selectedRef.current !== id) {
+      setDeletion(undefined);
+      deletionOpen.current = false;
+      operationActive.current = false;
+    }
     hideDetail();
     selectedRef.current = id;
     setSelected(id);
@@ -568,43 +595,20 @@ function VaultWorkspace() {
   };
 
   async function submitPending() {
-    let pending = pendingWrite.current;
+    const pending = pendingWrite.current;
     assert(pending);
-    while (pending) {
-      pendingWrite.current = pending;
-      setUncertain(true);
-      await guard(itemAPI.batch(pending.batch));
-      const nextDelete: string | undefined =
-        pending.deleting && !pending.final ? pending.deleting : undefined;
-      const prefer = pending.prefer;
-      pendingWrite.current = undefined;
-      setUncertain(false);
-      closeEditor();
-      await sync(undefined, prefer);
-      if (!nextDelete) {
-        setDeleting(false);
-        message.success(
-          t(
-            pending.deleting
-              ? pending.batch.changes.some(
-                  (change) => change.action === 'DELETE',
-                )
-                ? 'deleted.moved'
-                : 'vault.deleted'
-              : 'vault.saved',
-          ),
-        );
-        return;
-      }
-      const fresh = await loadMeta();
-      const next: { batch: Vault.ItemBatch; final: boolean } = await guard(
-        client.call('deleteBatch', {
-          itemId: nextDelete,
-          collectionRevision: fresh.collectionRevision,
-        }),
-      );
-      pending = { ...next, deleting: nextDelete };
-    }
+    assert(
+      !pending.batch.changes.some((change) =>
+        ['DELETE', 'DELETE_GROUP'].includes(change.action),
+      ),
+    );
+    setUncertain(true);
+    await guard(itemAPI.batch(pending.batch));
+    pendingWrite.current = undefined;
+    setUncertain(false);
+    closeEditor();
+    await sync(undefined, pending.prefer);
+    message.success(t('vault.saved'));
   }
   function saveChanges(changes: Vault.RecordChange[], prefer?: string) {
     run(async () => {
@@ -654,9 +658,13 @@ function VaultWorkspace() {
         )}
         <header className={styles.top}>
           <div className={styles.logo}>
-            <span className={styles.logoMark}>
-              <ShieldCheck size={16} strokeWidth={1.5} />
-            </span>
+            <img
+              className={styles.logoMark}
+              src="/logo/logo.png"
+              alt=""
+              width={36}
+              height={36}
+            />
             <div className={styles.wordmark}>
               Vault
               <span className={styles.logoSub}>
@@ -1142,27 +1150,21 @@ function VaultWorkspace() {
               )}
           </AuthShell>
         )}
-        {unlocked && (deleting || (uncertain && !editor && !groupEditor)) && (
+        {unlocked && uncertain && !editor && !groupEditor && (
           <div className={styles.errorBanner}>
             <Alert
               type="info"
-              title={t(
-                uncertain ? 'vault.uncertainWrite' : 'groups.unlinkProgress',
-              )}
+              title={t('vault.uncertainWrite')}
               action={
                 <Button
                   disabled={busy || lifecycleBusy}
                   onClick={() =>
                     run(async () => {
                       if (pendingWrite.current) await submitPending();
-                      else {
-                        setDeleting(false);
-                        await sync();
-                      }
                     })
                   }
                 >
-                  {t(uncertain ? 'vault.retrySave' : 'vault.refresh')}
+                  {t('vault.retrySave')}
                 </Button>
               }
             />
@@ -1172,6 +1174,9 @@ function VaultWorkspace() {
           <Items
             key={revision}
             editorRef={editorRef}
+            onOperationActivity={(value) => {
+              operationActive.current = value;
+            }}
             onDeletedBlocked={(value) => {
               lifecyclePending.current = value;
               setLifecycleBusy(value);
@@ -1269,7 +1274,7 @@ function VaultWorkspace() {
             copyFallback={copyFallback}
             syncFailed={syncFailed}
             conflict={error === 'VAULT_VERSION_CONFLICT'}
-            busy={busy}
+            busy={busy || !!deletion}
             query={query}
             detail={detail}
             editor={editor}
@@ -1386,15 +1391,18 @@ function VaultWorkspace() {
                 }
               })
             }
-            onGenerate={(length, symbols, set) => {
+            onGenerate={async (length, symbols) => {
+              check();
               const serial = exposure.current;
-              run(async () => {
-                const password = await guard(
-                  client.call('generate', { length, symbols }),
-                );
-                if (serial === exposure.current && !document.hidden)
-                  set(password);
-              });
+              const password = await guard(
+                client.call('generate', { length, symbols }),
+              );
+              assert(
+                serial === exposure.current &&
+                  active.current &&
+                  !document.hidden,
+              );
+              return password;
             }}
             onSave={(plain, preserveTotp) => {
               if (!editor?.groupId || editor.itemId) {
@@ -1426,23 +1434,103 @@ function VaultWorkspace() {
                 itemId,
               );
             }}
-            onDelete={(itemId) =>
-              run(async () => {
-                if (!pendingWrite.current) {
-                  assert(meta && !syncFailed);
-                  const next: { batch: Vault.ItemBatch; final: boolean } =
-                    await guard(
-                      client.call('deleteBatch', {
-                        itemId,
-                        collectionRevision: meta.collectionRevision,
-                      }),
-                    );
-                  pendingWrite.current = { ...next, deleting: itemId };
-                  setDeleting(true);
-                }
-                await submitPending();
-              })
+            onDelete={(itemId) => {
+              if (
+                deletionOpen.current ||
+                inFlight.current ||
+                lifecyclePending.current ||
+                uncertain
+              )
+                return;
+              try {
+                check();
+              } catch {
+                return;
+              }
+              const group = groups.find((value) => value.itemId === itemId);
+              const row = allRows.find((value) => value.itemId === itemId);
+              if (!meta || syncFailed || (!group && !row)) return;
+              hideDetail();
+              deletionTrigger.current =
+                document.activeElement instanceof HTMLElement
+                  ? document.activeElement
+                  : null;
+              deletionOpen.current = true;
+              setDeletion({
+                itemId,
+                name: group?.name || row?.title || '',
+                kind: group ? 'group' : 'delete',
+              });
+            }}
+          />
+        )}
+        {unlocked && deletion && meta && (
+          <DeleteOperationDialog
+            key={`${deletion.itemId}:${meta.generation}`}
+            kind={deletion.kind}
+            name={deletion.name}
+            editing={!!editor}
+            impact={
+              deletion.kind === 'delete'
+                ? t('groups.deleteImpact', {
+                    groups:
+                      groups
+                        .filter((group) =>
+                          group.memberItemIds.includes(deletion.itemId),
+                        )
+                        .map((group) => group.name)
+                        .join(' / ') || t('groups.none'),
+                  })
+                : undefined
             }
+            guard={guard}
+            valid={() =>
+              active.current &&
+              selectedRef.current === deletion.itemId &&
+              deletionOpen.current
+            }
+            onPhase={(phase) => {
+              operationActive.current =
+                !!phase &&
+                [
+                  'preparing',
+                  'waiting',
+                  'submitting',
+                  'querying',
+                  'unknown',
+                ].includes(phase);
+            }}
+            onClose={() => {
+              setDeletion(undefined);
+              deletionOpen.current = false;
+              operationActive.current = false;
+              requestAnimationFrame(() => {
+                if (!document.hidden && deletionTrigger.current?.isConnected)
+                  deletionTrigger.current.focus();
+              });
+            }}
+            prepare={async () => {
+              check();
+              const { batch } = await guard(
+                client.call('deleteBatch', {
+                  itemId: deletion.itemId,
+                  collectionRevision: meta.collectionRevision,
+                }),
+              );
+              return { operation: 'BATCH_ITEMS', request: batch };
+            }}
+            onSuccess={async () => {
+              closeEditor();
+              hideDetail();
+              message.success(
+                t(
+                  deletion.kind === 'group'
+                    ? 'actions.group.deleted'
+                    : 'deleted.moved',
+                ),
+              );
+              await sync().catch(() => setError('VAULT_REQUEST_FAILED'));
+            }}
           />
         )}
         <footer className={styles.footer}>

@@ -305,6 +305,20 @@ declare namespace Vault {
       userHandle?: string | null;
     };
   };
+  type PasskeyAuthorization = {
+    challengeId: string;
+    credential: Credential;
+  };
+  type Authorized<T> = T & { passkeyAuthorization?: PasskeyAuthorization };
+  type DeleteOperation =
+    | { operation: 'DELETE_ITEM'; request: LifecycleRequest }
+    | { operation: 'PURGE_ITEM' | 'DELETE_GROUP'; request: LifecycleRequest }
+    | { operation: 'BATCH_ITEMS'; request: ItemBatch };
+  type OperationOptions = {
+    challengeId: string;
+    publicKey: AuthenticationOptions;
+    expiresAt: string;
+  };
   type RegistrationOptions = Omit<
     PublicKeyCredentialCreationOptions,
     'challenge' | 'user' | 'excludeCredentials'

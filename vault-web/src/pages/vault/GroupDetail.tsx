@@ -112,7 +112,7 @@ export default function GroupDetail(props: {
           type="link"
           disabled={props.busy}
           icon={<Trash2 size={15} />}
-          onClick={() => setConfirm('dissolve')}
+          onClick={() => props.onDelete(props.group.itemId)}
         >
           {t('groups.dissolve')}
         </Button>
@@ -120,11 +120,7 @@ export default function GroupDetail(props: {
       {confirm && (
         <Modal
           open
-          title={t(
-            confirm === 'dissolve'
-              ? 'groups.dissolveTitle'
-              : 'groups.removeTitle',
-          )}
+          title={t('groups.removeTitle')}
           className={styles.dialog}
           getContainer={false}
           mask={{ closable: false }}
@@ -135,28 +131,24 @@ export default function GroupDetail(props: {
             </div>
           )}
           cancelText={t('vault.cancel')}
-          okText={t(
-            confirm === 'dissolve' ? 'groups.dissolve' : 'groups.remove',
-          )}
+          okText={t('groups.remove')}
           okButtonProps={{ danger: true, disabled: props.busy }}
           onCancel={() => setConfirm(undefined)}
           onOk={() => {
-            if (confirm === 'dissolve') props.onDelete(props.group.itemId);
-            else
-              props.onSave(
-                [
-                  {
-                    itemId: props.group.itemId,
-                    plain: {
-                      ...groupPlain(props.group),
-                      memberItemIds: props.group.memberItemIds.filter(
-                        (id) => id !== confirm,
-                      ),
-                    },
+            props.onSave(
+              [
+                {
+                  itemId: props.group.itemId,
+                  plain: {
+                    ...groupPlain(props.group),
+                    memberItemIds: props.group.memberItemIds.filter(
+                      (id) => id !== confirm,
+                    ),
                   },
-                ],
-                props.group.itemId,
-              );
+                },
+              ],
+              props.group.itemId,
+            );
             setConfirm(undefined);
           }}
         >

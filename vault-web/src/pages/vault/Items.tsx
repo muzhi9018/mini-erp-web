@@ -34,6 +34,7 @@ type Props = DetailActions & {
   client: VaultClient;
   guard: <T>(promise: Promise<T>) => Promise<T>;
   onDeletedBlocked: (value: boolean) => void;
+  onOperationActivity: (value: boolean) => void;
   onDeletedSync: () => Promise<unknown>;
   onForgetDeleted: (id: string) => void;
   groups: Vault.GroupSummary[];
@@ -60,11 +61,7 @@ type Props = DetailActions & {
   onSelect: (id?: string) => void;
   onReload: () => void;
   onSave: (plain: Vault.PlainItem, preserveTotp: boolean) => void;
-  onGenerate: (
-    length: number,
-    symbols: boolean,
-    set: (password: string) => void,
-  ) => void;
+  onGenerate: (length: number, symbols: boolean) => Promise<string>;
   onCloseEditor: () => void;
 };
 export default function Items(props: Props) {
@@ -113,14 +110,6 @@ export default function Items(props: Props) {
   const validIds = groupView
     ? visibleGroups.flatMap((group) => [group.itemId, ...group.memberItemIds])
     : rows.map((row) => row.itemId);
-  const deleteImpact = (id: string) =>
-    t('groups.deleteImpact', {
-      groups:
-        props.groups
-          .filter((group) => group.memberItemIds.includes(id))
-          .map((group) => group.name)
-          .join(' / ') || t('groups.none'),
-    });
   useEffect(() => {
     if (props.busy || filter === 'deleted') return;
     const changed = dataset.current !== props.allRows;
@@ -344,6 +333,7 @@ export default function Items(props: Props) {
           </div>
         ) : filter === 'deleted' ? (
           <DeletedView
+            onOperationActivity={props.onOperationActivity}
             serverNow={props.deletedServerNow}
             rows={props.deletedRows}
             client={props.client}
@@ -548,9 +538,6 @@ export default function Items(props: Props) {
                       (group) => group.itemId === props.editor?.groupId,
                     )?.name
                   }
-                  deleteImpact={
-                    props.editor.itemId ? deleteImpact(props.editor.itemId) : ''
-                  }
                   busy={props.busy}
                   uncertain={props.uncertain}
                   conflict={props.conflict}
@@ -594,7 +581,6 @@ export default function Items(props: Props) {
                 <EntryDetail
                   key={row.itemId}
                   row={row}
-                  deleteImpact={deleteImpact(row.itemId)}
                   busy={blocked}
                   detail={props.detail}
                   revealUntil={props.revealUntil}

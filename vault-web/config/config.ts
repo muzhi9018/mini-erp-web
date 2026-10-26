@@ -18,7 +18,8 @@ function preserveBrowserOrigin(
 }
 
 export default defineConfig({
-  title: 'Personal vault',
+  title: '个人密码库',
+  favicons: ['/favicon.ico'],
   npmClient: 'npm',
   hash: true,
   // Isolate minifier helpers across the app and Worker chunks.

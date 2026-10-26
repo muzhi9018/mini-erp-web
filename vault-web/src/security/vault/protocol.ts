@@ -255,7 +255,7 @@ export async function digest(bytes: Uint8Array<ArrayBuffer>) {
 export function validatePassword(value: string) {
   assert(
     typeof value === 'string' &&
-      Array.from(value).length >= 16 &&
+      Array.from(value).length >= 8 &&
       encoder.encode(value).length <= 1024,
   );
 }

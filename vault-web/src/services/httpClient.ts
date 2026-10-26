@@ -17,6 +17,7 @@ export class VaultHttpError extends Error {
     public readonly status: number,
     public readonly code: string,
     public readonly requestId?: string,
+    public readonly retryAfterMs = 0,
   ) {
     super(code);
     this.name = 'VaultHttpError';
@@ -95,8 +96,25 @@ async function send<T>(
     return response.data;
   } catch (error) {
     const raw = error as {
-      response?: { status?: number; data?: Envelope<Failure> };
+      response?: {
+        status?: number;
+        data?: Envelope<Failure>;
+        headers?: Record<string, unknown>;
+      };
     };
+    const retryAfter = raw.response?.headers?.['retry-after'];
+    const retryAfterMs =
+      typeof retryAfter === 'string'
+        ? Math.min(
+            86400000,
+            Math.max(
+              0,
+              /^\d+$/.test(retryAfter)
+                ? Number(retryAfter) * 1000
+                : Date.parse(retryAfter) - Date.now() || 0,
+            ),
+          )
+        : 0;
     const failure = raw.response?.data?.data;
     const safe =
       error instanceof VaultHttpError
@@ -108,6 +126,7 @@ async function send<T>(
                 ? 'VAULT_REQUEST_FAILED'
                 : 'VAULT_CONNECTION_FAILED'),
             failure?.requestId,
+            retryAfterMs,
           );
     if (safe.code === 'VAULT_CLIENT_UPGRADE_REQUIRED') blockDataWrites();
     if (
@@ -127,5 +146,5 @@ export const doGet = <T>(
   params?: Record<string, unknown>,
   signal?: AbortSignal,
 ) => send<T>(url, 'GET', undefined, params, signal);
-export const doPost = <T>(url: string, data: unknown) =>
-  send<T>(url, 'POST', data);
+export const doPost = <T>(url: string, data: unknown, signal?: AbortSignal) =>
+  send<T>(url, 'POST', data, undefined, signal);

@@ -34,7 +34,6 @@ export default function EntryDetail(
     readonly?: boolean;
     lifecycleHeader?: ReactNode;
     lifecycleActions?: ReactNode;
-    deleteImpact: string;
     busy: boolean;
     detail?: Vault.PlainItem;
     revealUntil: number;
@@ -49,9 +48,7 @@ export default function EntryDetail(
   const [notesError, setNotesError] = useState(false);
   const [notesBusy, setNotesBusy] = useState(false);
   const [transfer, setTransfer] = useState(false);
-  const [dialog, setDialog] = useState<
-    'manage' | 'replace' | 'remove' | 'delete'
-  >();
+  const [dialog, setDialog] = useState<'manage' | 'replace' | 'remove'>();
   const noteSerial = useRef(0);
   const noteTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -335,7 +332,7 @@ export default function EntryDetail(
             type="link"
             danger
             disabled={props.busy}
-            onClick={() => setDialog('delete')}
+            onClick={() => props.onDelete(row.itemId)}
             icon={<Trash2 size={15} />}
           >
             {t('vault.delete')}
@@ -359,9 +356,7 @@ export default function EntryDetail(
               ? 'entries.manageTitle'
               : dialog === 'replace'
                 ? 'entries.replaceTitle'
-                : dialog === 'remove'
-                  ? 'entries.removeTitle'
-                  : 'entries.deleteTitle',
+                : 'entries.removeTitle',
           )}
           className={styles.dialog}
           modalRender={(node) => (
@@ -378,23 +373,17 @@ export default function EntryDetail(
           footer={dialog === 'manage' ? null : undefined}
           cancelText={t('vault.cancel')}
           okText={t(
-            dialog === 'delete'
-              ? 'deleted.move'
-              : dialog === 'remove'
-                ? 'vault.totpRemove'
-                : 'entries.importStep',
+            dialog === 'remove' ? 'vault.totpRemove' : 'entries.importStep',
           )}
           okButtonProps={{
-            danger: dialog === 'remove' || dialog === 'delete',
+            danger: dialog === 'remove',
             disabled: props.busy,
           }}
           onOk={() => {
-            if (dialog === 'delete') props.onDelete(row.itemId);
-            else
-              props.onEdit(
-                row.itemId,
-                dialog === 'remove' ? 'remove' : 'replace',
-              );
+            props.onEdit(
+              row.itemId,
+              dialog === 'remove' ? 'remove' : 'replace',
+            );
             setDialog(undefined);
           }}
         >
@@ -422,15 +411,12 @@ export default function EntryDetail(
           ) : (
             <p>
               {t(
-                dialog === 'delete'
-                  ? 'entries.deleteWarning'
-                  : dialog === 'remove'
-                    ? 'entries.removeWarning'
-                    : 'entries.replaceWarning',
+                dialog === 'remove'
+                  ? 'entries.removeWarning'
+                  : 'entries.replaceWarning',
               )}
             </p>
           )}
-          {dialog === 'delete' && <p>{props.deleteImpact}</p>}
         </Modal>
       )}
     </div>
