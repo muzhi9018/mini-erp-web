@@ -8,7 +8,6 @@
 import Footer from './Footer';
 import { AvatarDropdown } from './RightContent/AvatarDropdown';
 import { LangDropdown } from './RightContent/LangDropdown';
-import { VersionDropdown } from './RightContent/VersionDropdown';
 
 /**
  * 业务组件
@@ -21,4 +20,4 @@ export { default as OfflineBanner } from './OfflineBanner';
 export { default as StandardFormRow } from './StandardFormRow';
 export { default as TagSelect } from './TagSelect';
 
-export { AvatarDropdown, Footer, LangDropdown, VersionDropdown };
+export { AvatarDropdown, Footer, LangDropdown };
