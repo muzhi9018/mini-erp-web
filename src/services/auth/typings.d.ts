@@ -54,6 +54,7 @@ declare namespace Auth {
     accessToken?: string;
     enabled?: boolean;
     tokenType?: string;
+    roles?: Role.Role[];
   };
 
   type Consent = {

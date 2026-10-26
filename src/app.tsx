@@ -1,3 +1,4 @@
+import type { RequestOptions } from '@@/plugin-request/request';
 import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
@@ -6,14 +7,8 @@ import { getLocale, history, Link } from '@umijs/max';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import React from 'react';
-
-// Initialize dayjs plugins globally
-dayjs.extend(relativeTime);
-
-import type { RequestOptions } from '@@/plugin-request/request';
 import {
   AvatarDropdown,
-  DocLink,
   ErrorBoundary,
   Footer,
   LangDropdown,
@@ -23,6 +18,9 @@ import {
 import { currentUser } from '@/services/auth/auth';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
+
+// Initialize dayjs plugins globally
+dayjs.extend(relativeTime);
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
@@ -48,10 +46,9 @@ export async function getInitialState(): Promise<{
 }> {
   const fetchUserInfo = async (): Promise<Auth.CurrentUser | undefined> => {
     try {
-      const user = await currentUser({
+      return await currentUser({
         skipErrorHandler: true,
       });
-      return user;
     } catch (_error) {
       const { pathname, search, hash } = history.location;
       history.replace(
@@ -105,7 +102,6 @@ export const layout: RunTimeLayoutConfig = ({
       const localeEnabled =
         (initialState?.settings as { locale?: boolean })?.locale !== false;
       return [
-        <DocLink key="doc" />,
         <VersionDropdown key="version" />,
         localeEnabled && <LangDropdown key="lang" />,
       ].filter(Boolean);
@@ -113,7 +109,9 @@ export const layout: RunTimeLayoutConfig = ({
     avatarProps: {
       // src: initialState?.currentUser?.avatar,
       src: 'https://gips3.baidu.com/it/u=2049508365,3966261261&fm=3074&app=3074&f=PNG?w=2048&h=2048',
-      title: 'ProUser',
+      title:
+        initialState?.currentUser?.realName ||
+        initialState?.currentUser?.username,
       render: (_, avatarChildren) => (
         <AvatarDropdown>{avatarChildren}</AvatarDropdown>
       ),
