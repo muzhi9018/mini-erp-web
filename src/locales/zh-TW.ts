@@ -1,5 +1,6 @@
 import component from './zh-TW/component';
 import globalHeader from './zh-TW/globalHeader';
+import login from './zh-TW/login';
 import menu from './zh-TW/menu';
 import network from './zh-TW/network';
 import pages from './zh-TW/pages';
@@ -19,6 +20,7 @@ export default {
   'layout.user.link.terms': '條款',
   'app.preview.down.block': '下載此頁面到本地項目',
   ...pages,
+  ...login,
   ...globalHeader,
   ...menu,
   ...settingDrawer,

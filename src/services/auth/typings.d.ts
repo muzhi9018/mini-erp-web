@@ -47,7 +47,7 @@ declare namespace Auth {
     realName?:string;
     username?: string;
     mobile?: string;
-    currentRoleCode?: string;
+    roleCode?: string;
     remark?: string;
     permissionCodes?: string[];
     roleCodes?: string[];

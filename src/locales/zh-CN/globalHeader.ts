@@ -12,6 +12,13 @@ export default {
   'component.globalHeader.event': '待办',
   'component.globalHeader.event.empty': '你已完成所有待办',
   'component.globalHeader.language': '语言切换',
+  'component.globalHeader.themeSettings': '主题设置',
+  'component.globalHeader.switchRole': '切换角色',
+  'component.globalHeader.switchRole.confirm':
+    '切换为“{roleName}”需要退出并重新登录后才会生效，是否确定？',
+  'component.globalHeader.switchRole.ok': '确定',
+  'component.globalHeader.switchRole.cancel': '取消',
+  'component.globalHeader.switchRole.failed': '切换角色失败，请重试',
   'component.noticeIcon.clear': '清空',
   'component.noticeIcon.cleared': '清空了',
   'component.noticeIcon.empty': '暂无数据',

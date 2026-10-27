@@ -13,6 +13,14 @@ export default {
   'component.globalHeader.event': 'Event',
   'component.globalHeader.event.empty': 'You have viewed all events.',
   'component.globalHeader.language': 'Switch language',
+  'component.globalHeader.themeSettings': 'Theme settings',
+  'component.globalHeader.switchRole': 'Switch role',
+  'component.globalHeader.switchRole.confirm':
+    'Switching to “{roleName}” requires signing out and signing in again to take effect. Continue?',
+  'component.globalHeader.switchRole.ok': 'Confirm',
+  'component.globalHeader.switchRole.cancel': 'Cancel',
+  'component.globalHeader.switchRole.failed':
+    'Failed to switch roles. Please try again.',
   'component.noticeIcon.clear': 'Clear',
   'component.noticeIcon.cleared': 'Cleared',
   'component.noticeIcon.empty': 'No notifications',

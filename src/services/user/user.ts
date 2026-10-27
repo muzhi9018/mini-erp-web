@@ -1,4 +1,4 @@
-import { doGet, doPost } from '@/services/httpClient';
+import {doGet, doPost} from '@/services/httpClient';
 
 /**
  * 获取当前用户信息
@@ -23,13 +23,19 @@ export async function authorizeUserRole(data: User.AuthorizeRole): Promise<boole
 }
 
 export async function resetUserPassword(userId: string): Promise<string> {
-  return doPost('/system/user/reset/password', { id: userId });
+  return doPost('/system/user/reset/password', {id: userId});
 }
 
 export async function deleteUser(userId: string): Promise<boolean> {
-  return doPost('/system/user/delete', { id: userId });
+  return doPost('/system/user/delete', {id: userId});
 }
 
 export async function changeUserStatus(userId: string): Promise<number> {
-  return doPost('/system/user/change/status', { id: userId });
+  return doPost('/system/user/change/status', {id: userId});
+}
+
+export async function changeCurrentRole(roleCode: string): Promise<void> {
+  await doPost('/system/user/changeCurrentRole', {
+    currentRoleCode: roleCode,
+  });
 }

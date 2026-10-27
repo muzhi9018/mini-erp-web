@@ -13,7 +13,6 @@ import {
   Footer,
   LangDropdown,
   OfflineBanner,
-  VersionDropdown,
 } from '@/components';
 import { currentUser } from '@/services/auth/auth';
 import defaultSettings from '../config/defaultSettings';

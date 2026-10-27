@@ -10,3 +10,8 @@ export async function login(
 export async function currentUser(options?: { [key: string]: any }): Promise<Auth.CurrentUser> {
   return doGet('/auth/currentUser', {}, options);
 }
+
+export async function logout(): Promise<void> {
+  await doPost('/auth/logout', {});
+}
+
