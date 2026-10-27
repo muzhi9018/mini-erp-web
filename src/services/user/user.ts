@@ -18,6 +18,10 @@ export async function createUser(data: User.CreateSysUser): Promise<void> {
   return doPost('/system/user/create', data);
 }
 
+export async function editUser(data: User.EditSysUser): Promise<boolean> {
+  return doPost('/system/user/edit', data);
+}
+
 export async function authorizeUserRole(data: User.AuthorizeRole): Promise<boolean> {
   return doPost('/system/user/authorize/role', data);
 }

@@ -19,6 +19,7 @@ import {
   changeUserStatus,
   createUser,
   deleteUser,
+  editUser,
   findUsersByPage,
   resetUserPassword,
 } from '@/services/user/user';
@@ -32,7 +33,8 @@ const UserManage = () => {
   const actionRef = useRef<ActionType>(undefined);
   const [users, setUsers] = useState<User.SysUser[]>([]);
   const [changingStatusFor, setChangingStatusFor] = useState<string>();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [userFormOpen, setUserFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User.SysUser>();
   const [authorizeUser, setAuthorizeUser] = useState<User.SysUser>();
   const [allRoles, setAllRoles] = useState<Role.RoleSummary[]>([]);
   const [loadingRolesFor, setLoadingRolesFor] = useState<string>();
@@ -110,6 +112,15 @@ const UserManage = () => {
     value: String(role.id),
     disabled: currentRoleId === undefined || BigInt(role.id) <= currentRoleId,
   }));
+  const userFormTitle = editingUser
+    ? intl.formatMessage({
+        id: 'userManager.edit',
+        defaultMessage: '编辑用户',
+      })
+    : intl.formatMessage({
+        id: 'userManager.create',
+        defaultMessage: '新增用户',
+      });
   const columns: ProColumns<User.SysUser>[] = [
     {
       title: intl.formatMessage({
@@ -231,6 +242,24 @@ const UserManage = () => {
       }),
       valueType: 'option',
       render: (_, user) => [
+        <Access
+          key="edit-access"
+          accessible={hasPermission('system-manage:user-manage:edit')}
+        >
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => {
+              setEditingUser(user);
+              setUserFormOpen(true);
+            }}
+          >
+            {intl.formatMessage({
+              id: 'userManager.edit',
+              defaultMessage: '编辑用户',
+            })}
+          </Button>
+        </Access>,
         <Button
           key="authorize"
           type="primary"
@@ -346,7 +375,10 @@ const UserManage = () => {
             <Button
               key="create"
               type="primary"
-              onClick={() => setCreateOpen(true)}
+              onClick={() => {
+                setEditingUser(undefined);
+                setUserFormOpen(true);
+              }}
             >
               {intl.formatMessage({
                 id: 'userManager.create',
@@ -377,20 +409,22 @@ const UserManage = () => {
         options={false}
       />
       <ModalForm<User.CreateSysUser>
-        title={intl.formatMessage({
-          id: 'userManager.create',
-          defaultMessage: '新增用户',
-        })}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
+        key={editingUser?.id ?? 'create'}
+        title={userFormTitle}
+        open={userFormOpen}
+        onOpenChange={setUserFormOpen}
         modalProps={{ destroyOnHidden: true }}
-        initialValues={{ status: 1 }}
+        initialValues={
+          editingUser ? { ...editingUser, password: '88888888' } : { status: 1 }
+        }
         submitter={{
           searchConfig: {
-            submitText: intl.formatMessage({
-              id: 'userManager.create',
-              defaultMessage: '新增用户',
-            }),
+            submitText: editingUser
+              ? intl.formatMessage({
+                  id: 'userManager.save',
+                  defaultMessage: '保存',
+                })
+              : userFormTitle,
             resetText: intl.formatMessage({
               id: 'userManager.cancel',
               defaultMessage: '取消',
@@ -398,13 +432,27 @@ const UserManage = () => {
           },
         }}
         onFinish={async (values) => {
-          await createUser(values);
-          setCreateOpen(false);
+          if (editingUser) {
+            await editUser({
+              id: editingUser.id,
+              realName: values.realName ?? '',
+              mobile: values.mobile ?? '',
+              remark: values.remark ?? '',
+            });
+          } else {
+            await createUser(values);
+          }
+          setUserFormOpen(false);
           messageApi.success(
-            intl.formatMessage({
-              id: 'userManager.createSuccess',
-              defaultMessage: '用户创建成功',
-            }),
+            editingUser
+              ? intl.formatMessage({
+                  id: 'userManager.editSuccess',
+                  defaultMessage: '用户更新成功',
+                })
+              : intl.formatMessage({
+                  id: 'userManager.createSuccess',
+                  defaultMessage: '用户创建成功',
+                }),
           );
           void actionRef.current?.reload();
           return true;
@@ -412,6 +460,7 @@ const UserManage = () => {
       >
         <ProFormText
           name="username"
+          disabled={!!editingUser}
           label={intl.formatMessage({
             id: 'userManager.username',
             defaultMessage: '用户名',
@@ -429,6 +478,7 @@ const UserManage = () => {
         />
         <ProFormText.Password
           name="password"
+          disabled={!!editingUser}
           label={intl.formatMessage({
             id: 'userManager.password',
             defaultMessage: '密码',
@@ -446,6 +496,7 @@ const UserManage = () => {
         />
         <ProFormText
           name="realName"
+          fieldProps={{ maxLength: editingUser ? 64 : undefined }}
           label={intl.formatMessage({
             id: 'userManager.realName',
             defaultMessage: '昵称',
@@ -453,6 +504,7 @@ const UserManage = () => {
         />
         <ProFormText
           name="mobile"
+          fieldProps={{ maxLength: editingUser ? 32 : undefined }}
           label={intl.formatMessage({
             id: 'userManager.mobile',
             defaultMessage: '手机号',
@@ -460,6 +512,7 @@ const UserManage = () => {
         />
         <ProFormRadio.Group
           name="status"
+          disabled={!!editingUser}
           label={intl.formatMessage({
             id: 'userManager.status',
             defaultMessage: '状态',
@@ -483,6 +536,7 @@ const UserManage = () => {
         />
         <ProFormText
           name="remark"
+          fieldProps={{ maxLength: editingUser ? 128 : undefined }}
           label={intl.formatMessage({
             id: 'userManager.remark',
             defaultMessage: '备注',

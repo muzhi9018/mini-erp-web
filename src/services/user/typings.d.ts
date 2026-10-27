@@ -142,6 +142,8 @@ declare namespace User {
     remark?: string;
   };
 
+  type EditSysUser = Pick<SysUser, 'id' | 'realName' | 'mobile' | 'remark'>;
+
   type AuthorizeRole = {
     userId: string;
     roleIds: string[];
