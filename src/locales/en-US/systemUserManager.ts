@@ -19,16 +19,14 @@ export default {
   'userManager.passwordRequired': 'Enter a password',
   'userManager.createSuccess': 'User created successfully',
   'userManager.actions': 'Actions',
-  'userManager.authorizeRole': 'Assign Role',
-  'userManager.authorizeRoleTitle': 'Assign a role to {username}',
-  'userManager.authorizeSuccess': 'Role assigned successfully',
-  'userManager.selectRole': 'Role',
-  'userManager.selectRolePlaceholder': 'Select a role',
+  'userManager.authorizeRole': 'Assign Roles',
+  'userManager.authorizeRoleTitle': 'Assign roles to {username}',
+  'userManager.authorizeSuccess': 'Roles assigned successfully',
+  'userManager.selectRole': 'Roles',
+  'userManager.selectRolePlaceholder': 'Select roles',
   'userManager.noRoles': 'No roles available',
-  'userManager.allRolesAuthorized': 'All roles are already assigned',
-  'userManager.authorizedRolesDisabled':
-    'Assigned roles cannot be selected again',
-  'userManager.roleRequired': 'Select a role',
+  'userManager.roleLevelHint':
+    'Select multiple roles. Roles with permissions higher than or equal to your current role cannot be changed.',
   'userManager.resetPassword': 'Reset Password',
   'userManager.resetPasswordConfirmTitle': 'Reset this password?',
   'userManager.resetPasswordConfirmDescription':

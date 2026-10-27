@@ -9,7 +9,7 @@ import {
   ProFormText,
   ProTable,
 } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
+import { useIntl, useModel } from '@umijs/max';
 import { Button, Modal, message, Popconfirm, Switch, Typography } from 'antd';
 import { useRef, useState } from 'react';
 import { Access, useAccess } from 'umi';
@@ -26,6 +26,7 @@ import { useStyles } from './index.style';
 
 const UserManage = () => {
   const intl = useIntl();
+  const { initialState } = useModel('@@initialState');
   const { styles } = useStyles();
   const { hasPermission } = useAccess();
   const actionRef = useRef<ActionType>(undefined);
@@ -97,15 +98,17 @@ const UserManage = () => {
       setLoadingRolesFor(undefined);
     }
   };
-  const authorizedRoleIds = new Set(
-    authorizeUser?.roles?.map((role) => String(role.id)),
+  const currentRole = allRoles.find(
+    (role) =>
+      role.roleCode && role.roleCode === initialState?.currentUser?.roleCode,
   );
+  const currentRoleId = currentRole ? BigInt(currentRole.id) : undefined;
   const roleOptions = allRoles.map((role) => ({
     label: role.roleCode
       ? `${role.roleName} (${role.roleCode})`
       : role.roleName,
     value: String(role.id),
-    disabled: authorizedRoleIds.has(String(role.id)),
+    disabled: currentRoleId === undefined || BigInt(role.id) <= currentRoleId,
   }));
   const columns: ProColumns<User.SysUser>[] = [
     {
@@ -487,7 +490,7 @@ const UserManage = () => {
         />
       </ModalForm>
       {authorizeUser && (
-        <ModalForm<Pick<User.AuthorizeRole, 'roleId'>>
+        <ModalForm<Pick<User.AuthorizeRole, 'roleIds'>>
           key={authorizeUser.id}
           title={intl.formatMessage(
             {
@@ -497,6 +500,9 @@ const UserManage = () => {
             { username: authorizeUser.username || authorizeUser.id },
           )}
           open
+          initialValues={{
+            roleIds: authorizeUser.roles?.map((role) => String(role.id)) ?? [],
+          }}
           onOpenChange={(open) => {
             if (!open) setAuthorizeUser(undefined);
           }}
@@ -515,8 +521,11 @@ const UserManage = () => {
               disabled: !roleOptions.some((option) => !option.disabled),
             },
           }}
-          onFinish={async ({ roleId }) => {
-            await authorizeUserRole({ userId: authorizeUser.id, roleId });
+          onFinish={async ({ roleIds }) => {
+            await authorizeUserRole({
+              userId: authorizeUser.id,
+              roleIds: roleIds ?? [],
+            });
             setAuthorizeUser(undefined);
             messageApi.success(
               intl.formatMessage({
@@ -529,7 +538,8 @@ const UserManage = () => {
           }}
         >
           <ProFormSelect
-            name="roleId"
+            name="roleIds"
+            mode="multiple"
             label={intl.formatMessage({
               id: 'userManager.selectRole',
               defaultMessage: '选择角色',
@@ -540,34 +550,18 @@ const UserManage = () => {
             })}
             options={roleOptions}
             fieldProps={{
-              showSearch: true,
-              optionFilterProp: 'label',
+              allowClear: false,
+              showSearch: { optionFilterProp: 'label' },
               notFoundContent: intl.formatMessage({
                 id: 'userManager.noRoles',
                 defaultMessage: '暂无可用角色',
               }),
             }}
-            extra={
-              roleOptions.length > 0 &&
-              roleOptions.every((option) => option.disabled)
-                ? intl.formatMessage({
-                    id: 'userManager.allRolesAuthorized',
-                    defaultMessage: '所有角色均已授权',
-                  })
-                : intl.formatMessage({
-                    id: 'userManager.authorizedRolesDisabled',
-                    defaultMessage: '已授权的角色不可重复选择',
-                  })
-            }
-            rules={[
-              {
-                required: true,
-                message: intl.formatMessage({
-                  id: 'userManager.roleRequired',
-                  defaultMessage: '请选择角色',
-                }),
-              },
-            ]}
+            extra={intl.formatMessage({
+              id: 'userManager.roleLevelHint',
+              defaultMessage:
+                '可多选角色，权限高于或等于当前登录角色的选项不可修改。',
+            })}
           />
         </ModalForm>
       )}

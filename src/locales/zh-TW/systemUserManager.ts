@@ -25,9 +25,8 @@ export default {
   'userManager.selectRole': '選擇角色',
   'userManager.selectRolePlaceholder': '請選擇角色',
   'userManager.noRoles': '暫無可用角色',
-  'userManager.allRolesAuthorized': '所有角色均已授權',
-  'userManager.authorizedRolesDisabled': '已授權的角色不可重複選擇',
-  'userManager.roleRequired': '請選擇角色',
+  'userManager.roleLevelHint':
+    '可多選角色，權限高於或等於目前登入角色的選項不可修改。',
   'userManager.resetPassword': '重設密碼',
   'userManager.resetPasswordConfirmTitle': '確定重設密碼？',
   'userManager.resetPasswordConfirmDescription':

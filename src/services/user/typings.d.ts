@@ -144,7 +144,7 @@ declare namespace User {
 
   type AuthorizeRole = {
     userId: string;
-    roleId: string;
+    roleIds: string[];
   };
 
 }
