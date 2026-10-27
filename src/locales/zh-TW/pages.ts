@@ -1,9 +1,6 @@
 export default {
   'pages.layouts.userLayout.title':
     'Ant Design 是西湖區最具影響力的 Web 設計規範',
-  'pages.welcome.link': '歡迎使用',
-  'pages.welcome.celebrationTitle': '歡迎使用 Ant Design Pro {v6}',
-  'pages.welcome.alertMessage': '更快更強的重型組件，已經發布。',
   'pages.404.subTitle': '抱歉，您訪問的頁面不存在。',
   'pages.404.buttonText': '返回首頁',
   'pages.admin.subPage.title': '這個頁面只有 admin 權限才能查看',

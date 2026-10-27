@@ -39,3 +39,7 @@ export async function changeCurrentRole(roleCode: string): Promise<void> {
     currentRoleCode: roleCode,
   });
 }
+
+export async function changePassword(data: User.ChangePassword): Promise<boolean> {
+  return doPost('/system/user/changePassword', data);
+}

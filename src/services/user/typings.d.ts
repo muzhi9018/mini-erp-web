@@ -147,4 +147,9 @@ declare namespace User {
     roleIds: string[];
   };
 
+  type ChangePassword = {
+    oldPassword: string;
+    password: string;
+  };
+
 }

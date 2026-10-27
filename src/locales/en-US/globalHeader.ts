@@ -14,6 +14,23 @@ export default {
   'component.globalHeader.event.empty': 'You have viewed all events.',
   'component.globalHeader.language': 'Switch language',
   'component.globalHeader.themeSettings': 'Theme settings',
+  'component.globalHeader.changePassword': 'Change password',
+  'component.globalHeader.changePassword.oldPassword': 'Current password',
+  'component.globalHeader.changePassword.password': 'New password',
+  'component.globalHeader.changePassword.confirmPassword':
+    'Confirm new password',
+  'component.globalHeader.changePassword.oldPasswordRequired':
+    'Please enter your current password',
+  'component.globalHeader.changePassword.passwordRequired':
+    'Please enter a new password',
+  'component.globalHeader.changePassword.confirmPasswordRequired':
+    'Please enter the new password again',
+  'component.globalHeader.changePassword.passwordMismatch':
+    'The new passwords do not match',
+  'component.globalHeader.changePassword.success':
+    'Password changed successfully',
+  'component.globalHeader.changePassword.submit': 'Confirm',
+  'component.globalHeader.changePassword.cancel': 'Cancel',
   'component.globalHeader.switchRole': 'Switch role',
   'component.globalHeader.switchRole.confirm':
     'Switching to “{roleName}” requires signing out and signing in again to take effect. Continue?',

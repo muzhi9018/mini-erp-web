@@ -1,4 +1,5 @@
 import {
+  LockOutlined,
   LogoutOutlined,
   SettingOutlined,
   SkinOutlined,
@@ -7,10 +8,11 @@ import {
 import { history, useIntl, useModel } from '@umijs/max';
 import type { MenuProps } from 'antd';
 import { App, Spin } from 'antd';
-import React, { startTransition } from 'react';
+import React, { startTransition, useState } from 'react';
 import { logout } from '@/services/auth/auth';
 import { changeCurrentRole } from '@/services/user/user';
 import HeaderDropdown from '../HeaderDropdown';
+import ChangePasswordModal from './ChangePasswordModal';
 
 type GlobalHeaderRightProps = {
   children?: React.ReactNode;
@@ -41,6 +43,7 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
   const { initialState, setInitialState } = useModel('@@initialState');
   const intl = useIntl();
   const { modal, message } = App.useApp();
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   if (!initialState?.currentUser) {
     return <Spin size="small" />;
@@ -77,6 +80,14 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
       label: intl.formatMessage({
         id: 'menu.account.settings',
         defaultMessage: '个人设置',
+      }),
+    },
+    {
+      key: 'changePassword',
+      icon: <LockOutlined />,
+      label: intl.formatMessage({
+        id: 'component.globalHeader.changePassword',
+        defaultMessage: '修改密码',
       }),
     },
     {
@@ -152,21 +163,31 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
       setInitialState((s) => ({ ...s, settingDrawerOpen: true }));
       return;
     }
+    if (key === 'changePassword') {
+      setChangePasswordOpen(true);
+      return;
+    }
     history.push(`/account/${key}`);
   };
 
   return (
-    <HeaderDropdown
-      placement="bottomRight"
-      menu={{
-        selectedKeys: [],
-        triggerSubMenuAction: 'click',
-        onClick: onMenuClick,
-        items: menuItems,
-      }}
-      arrow
-    >
-      {children}
-    </HeaderDropdown>
+    <>
+      <HeaderDropdown
+        placement="bottomRight"
+        menu={{
+          selectedKeys: [],
+          triggerSubMenuAction: 'click',
+          onClick: onMenuClick,
+          items: menuItems,
+        }}
+        arrow
+      >
+        {children}
+      </HeaderDropdown>
+      <ChangePasswordModal
+        open={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+      />
+    </>
   );
 };

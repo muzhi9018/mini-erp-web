@@ -1,0 +1,3 @@
+[class~="ant-pro-layout-container"]:has(.background) {
+  min-height: 100dvh;
+}

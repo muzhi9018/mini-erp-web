@@ -13,6 +13,19 @@ export default {
   'component.globalHeader.event.empty': '妳已完成所有待辦',
   'component.globalHeader.language': '切換語言',
   'component.globalHeader.themeSettings': '主題設定',
+  'component.globalHeader.changePassword': '修改密碼',
+  'component.globalHeader.changePassword.oldPassword': '原密碼',
+  'component.globalHeader.changePassword.password': '新密碼',
+  'component.globalHeader.changePassword.confirmPassword': '確認新密碼',
+  'component.globalHeader.changePassword.oldPasswordRequired': '請輸入原密碼',
+  'component.globalHeader.changePassword.passwordRequired': '請輸入新密碼',
+  'component.globalHeader.changePassword.confirmPasswordRequired':
+    '請再次輸入新密碼',
+  'component.globalHeader.changePassword.passwordMismatch':
+    '兩次輸入的新密碼不一致',
+  'component.globalHeader.changePassword.success': '密碼修改成功',
+  'component.globalHeader.changePassword.submit': '確定',
+  'component.globalHeader.changePassword.cancel': '取消',
   'component.globalHeader.switchRole': '切換角色',
   'component.globalHeader.switchRole.confirm':
     '切換為「{roleName}」需要登出並重新登入後才會生效，是否確定？',
