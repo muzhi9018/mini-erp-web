@@ -62,10 +62,11 @@ export default {
   'vault.loadingMeta': 'Loading vault status…',
   'vault.metaUnavailable':
     'Vault status is unavailable. Use “Sync again” to retry.',
-  'vault.search': 'Search titles, usernames, websites and tags locally',
+  'vault.search': 'Search titles, usernames, domains and tags locally',
   'vault.itemTitle': 'Name',
-  'vault.website': 'Website',
-  'vault.urlRule': 'Use an http or https URL without embedded credentials',
+  'vault.website': 'Domain',
+  'vault.urlRule':
+    'Enter a valid domain such as example.com. No protocol is needed; omit paths, ports and credentials.',
   'vault.password': 'Password',
   'vault.notes': 'Notes',
   'vault.tags': 'Tags',
@@ -217,7 +218,7 @@ export default {
   'vault.backList': 'Back to passwords',
   'vault.loginAccount': 'Sign-in account',
   'vault.copyUsername': 'Copy username',
-  'vault.copyWebsite': 'Copy website',
+  'vault.copyWebsite': 'Copy domain',
   'vault.hideNow': 'Hide now',
   'vault.hideCountdown': 'Hidden in {seconds}s',
   'vault.notesHidden': 'Notes hidden',

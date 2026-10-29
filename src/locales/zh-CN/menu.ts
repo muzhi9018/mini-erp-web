@@ -1,6 +1,8 @@
 export default {
-  'menu.personal-vault': '个人密码库',
   'menu.welcome': '欢迎',
+  'menu.vault': '密码库',
+  'menu.vault.personal-vault': '个人密码库',
+  'menu.vault.vault-site': '密码库站点',
   'menu.more-blocks': '更多区块',
   'menu.home': '首页',
   'menu.admin': '管理页',

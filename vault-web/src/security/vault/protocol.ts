@@ -1,3 +1,4 @@
+import { isDomain } from './domain';
 import { normalizeTotp } from './totp';
 
 export const PROFILE = 'ARGON2ID_V19_M65536_T3_P4_L32';
@@ -196,12 +197,11 @@ export function parsePlain(value: unknown): Vault.PlainRecord {
       item.tags.every((tag) => typeof tag === 'string'),
   );
   if (item.website) {
-    const url = new URL(item.website as string);
-    assert(
-      ['https:', 'http:'].includes(url.protocol) &&
-        !url.username &&
-        !url.password,
-    );
+    const website = item.website as string;
+    if (/^https?:\/\//i.test(website)) {
+      const url = new URL(website);
+      assert(!url.username && !url.password);
+    } else assert(isDomain(website));
   }
   const normalized = {
     ...item,

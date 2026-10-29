@@ -1,6 +1,8 @@
 export default {
-  'menu.personal-vault': '個人密碼庫',
   'menu.welcome': '歡迎',
+  'menu.vault': '密碼庫',
+  'menu.vault.personal-vault': '個人密碼庫',
+  'menu.vault.vault-site': '密碼庫站点',
   'menu.more-blocks': '更多區塊',
   'menu.home': '首頁',
   'menu.admin': '权限',

@@ -13,7 +13,7 @@
 ## 实施范围及文件
 
 - `src/pages/vault/DeletedView.tsx`：同级已删除导航的独立列表／本地搜索、只读详情、恢复结果、准确期限及时区、永久删除确认、错误和未知结果交互；与 `Items.tsx`、`EntryDetail.tsx`、`ItemEditor.tsx`、`Entries.module.css` 复用原框架、字段和响应式布局。
-- `src/pages/vault/index.tsx`：正常／已删除同步、分页冲突重载、到期计数清理、前后台校时、会话代次、操作互斥和锁定。`Unlock.tsx` 支持同标签页保留 AK 后只输入主密码。
+- `../../src/pages/vault/personal-vault/index.tsx`：正常／已删除同步、分页冲突重载、到期计数清理、前后台校时、会话代次、操作互斥和锁定。`Unlock.tsx` 支持同标签页保留 AK 后只输入主密码。
 - `src/services/httpClient.ts` 和 `src/services/vault/{item,rotation,vault,typings.d}.ts`：生命周期 v2 协商及请求头、deleted 分页／详情、restore／purge、真实回执校验、DELETE_GROUP、SOURCE／STAGING 范围及完整保留集合。
 - `src/security/vault/{lifecycle,engine,messages,client,backup}.ts` 和 `src/workers/vault.worker.ts`：固定 720 小时校验、服务端校时与单调经过时间、正常／已删除私有索引、解密类型分流、临时字段、锁定丢弃迟到结果、用户备份排除已删除、轮换含原期限的完整集合。SOURCE 和 STAGING 分批传给 Worker，避免单条消息尺寸限制截断保留集合。
 - `src/pages/vault/management/Transition.tsx`、`completion.ts` 和 `shared.tsx`：start 后下载冻结 SOURCE；空库判断包含未到期删除项；轮换暂存验证及完成回执兼容超过 2,000 条和轮换期间自然到期。未改动正常容量上限。

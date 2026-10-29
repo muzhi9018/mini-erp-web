@@ -2,17 +2,22 @@ import { Button, Modal } from 'antd';
 import {
   ArrowLeft,
   Copy,
+  ExternalLink,
   Eye,
   EyeOff,
+  Globe,
+  PanelsTopLeft,
   Pencil,
   QrCode,
   ScanLine,
   Trash2,
 } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { normalizeDomain } from '@/security/vault/domain';
 import { totpTransferLabels } from '@/security/vault/totp';
 import { trapDialogTab } from './dialog';
 import styles from './Entries.module.css';
+import { matchSite, useSites } from './sites';
 import TotpTransferDialog from './TotpTransferDialog';
 import TotpView from './TotpView';
 import { useText } from './text';
@@ -43,6 +48,9 @@ export default function EntryDetail(
 ) {
   const t = useText();
   const { row } = props;
+  const sites = useSites();
+  const domain = normalizeDomain(row.website);
+  const site = matchSite(sites.data || [], row.website);
   const [now, setNow] = useState(Date.now());
   const [notes, setNotes] = useState<string>();
   const [notesError, setNotesError] = useState(false);
@@ -261,19 +269,65 @@ export default function EntryDetail(
           className={styles.secondaryColumn}
           aria-label={t('entries.otherInfo')}
         >
-          <div className={styles.valueField}>
-            <div className={styles.valueLabel}>{t('vault.website')}</div>
-            <div className={styles.valueRow}>
-              <span>{row.website || t('vault.notFilled')}</span>
-              <Button
-                type="text"
-                aria-label={t('vault.copyWebsite')}
-                disabled={!row.website || props.busy}
-                onClick={() => props.onCopyText(row.website)}
-                icon={<Copy size={17} />}
-              />
+          <section
+            className={styles.siteCard}
+            aria-label={t('entries.siteAndDomain')}
+          >
+            <div className={styles.valueField}>
+              <div className={styles.valueLabel}>{t('entries.site')}</div>
+              <div className={styles.valueRow}>
+                <span className={styles.siteIdentity}>
+                  {!sites.isError && !sites.isPending && site ? (
+                    <PanelsTopLeft size={16} aria-hidden />
+                  ) : (
+                    <Globe size={16} aria-hidden />
+                  )}
+                  {sites.isPending
+                    ? t('entries.sitesLoading')
+                    : sites.isError
+                      ? t('entries.sitesUnavailable')
+                      : site?.siteName || t('entries.otherSite')}
+                </span>
+              </div>
+              {sites.isError && (
+                <>
+                  <p className={styles.help}>
+                    {t('entries.sitesFailureDetail')}
+                  </p>
+                  <Button type="link" onClick={() => void sites.refetch()}>
+                    {t('entries.retrySites')}
+                  </Button>
+                </>
+              )}
             </div>
-          </div>
+            <div className={styles.valueField}>
+              <div className={styles.valueLabel}>{t('vault.website')}</div>
+              <div className={styles.valueRow}>
+                <span className={styles.domainText}>
+                  {domain || row.website || t('vault.notFilled')}
+                </span>
+                <Button
+                  type="text"
+                  aria-label={t('vault.copyWebsite')}
+                  disabled={!domain || props.busy}
+                  onClick={() => props.onCopyText(domain)}
+                  icon={<Copy size={17} />}
+                />
+              </div>
+              <Button
+                block
+                className={styles.openSite}
+                aria-label={t('entries.openSite')}
+                disabled={!domain || props.busy}
+                href={domain ? `https://${domain}` : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                icon={<ExternalLink size={17} />}
+              >
+                {t('entries.openSiteLabel')}
+              </Button>
+            </div>
+          </section>
           <div className={styles.valueField}>
             <div className={styles.valueLabel}>{t('vault.tags')}</div>
             <div className={styles.tags}>

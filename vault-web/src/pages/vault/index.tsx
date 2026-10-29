@@ -416,7 +416,7 @@ function VaultWorkspace() {
     };
     const visibility = () => {
       if (document.hidden) {
-        if (operationActive.current) hideDetail();
+        if (operationActive.current || editorRef.current) hideDetail();
         else conceal();
         hiddenAt.current = Date.now();
       } else {
@@ -426,6 +426,7 @@ function VaultWorkspace() {
           unlockedRef.current &&
           !inFlight.current &&
           !operationActive.current &&
+          !editorRef.current &&
           !deletionOpen.current &&
           !lifecyclePending.current
         )
@@ -439,6 +440,7 @@ function VaultWorkspace() {
       if (
         unlockedRef.current &&
         !operationActive.current &&
+        !editorRef.current &&
         !deletionOpen.current &&
         !lifecyclePending.current &&
         deletedClock.needsConfirmation()

@@ -38,10 +38,31 @@ export default [
     component: './Welcome',
   },
   {
-    path: '/personal-vault',
-    name: 'personal-vault',
+    // 密码库
+    path: '/vault',
+    name: 'vault',
     icon: 'SafetyCertificateOutlined',
-    component: './personal-vault',
+    access: 'vault',
+    routes: [
+      {
+        path: '/vault',
+        redirect: '/vault/personal-vault',
+      },
+      // 个人密码库
+      {
+        path: '/vault/personal-vault',
+        name: 'personal-vault',
+        component: './vault/personal-vault',
+        access: 'vault:personal-vault',
+      },
+      // 密码库站点
+      {
+        path: '/vault/vault-site',
+        name: 'vault-site',
+        component: './vault/vault-site',
+        access: 'vault:vault-site',
+      },
+    ],
   },
   {
     // 官网配置

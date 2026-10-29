@@ -117,6 +117,10 @@ declare namespace Vault {
     deletedAt?: string | null;
     purgeAt?: string | null;
   };
+  type Site = {
+    siteName: string;
+    siteDomain: string;
+  };
   type PlainItem = {
     itemSchemaVersion: 1;
     itemType: 'LOGIN';

@@ -8,6 +8,7 @@ import passwordVault from './zh-CN/passwordVault';
 import settingDrawer from './zh-CN/settingDrawer';
 import settings from './zh-CN/settings';
 import systemUserManager from './zh-CN/systemUserManager';
+import vaultSite from './zh-CN/vaultSite';
 import website from './zh-CN/website';
 import websiteCategoryManager from './zh-CN/websiteCategoryManager';
 import websiteProductManager from './zh-CN/websiteProductManager';
@@ -26,6 +27,7 @@ export default {
   ...settingDrawer,
   ...settings,
   ...systemUserManager,
+  ...vaultSite,
   ...network,
   ...component,
   ...website,

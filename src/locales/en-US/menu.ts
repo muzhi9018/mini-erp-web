@@ -1,6 +1,8 @@
 export default {
-  'menu.personal-vault': 'Personal vault',
   'menu.welcome': 'Welcome',
+  'menu.vault': 'Vault',
+  'menu.vault.personal-vault': 'Personal vault',
+  'menu.vault.vault-site': 'Vault site',
   'menu.more-blocks': 'More Blocks',
   'menu.home': 'Home',
   'menu.admin': 'Admin',

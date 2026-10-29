@@ -4,6 +4,9 @@ import {
   Check,
   Eye,
   EyeOff,
+  Globe,
+  LockKeyhole,
+  PanelsTopLeft,
   RefreshCw,
   Trash2,
   TriangleAlert,
@@ -11,9 +14,11 @@ import {
 } from 'lucide-react';
 import type { Ref } from 'react';
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { isDomain, normalizeDomain } from '@/security/vault/domain';
 import { ITEM_SCHEMA_VERSION, validatePlain } from '@/security/vault/protocol';
 import { trapDialogTab, useDialogBackground } from './dialog';
 import styles from './Entries.module.css';
+import { matchSite, OTHER_SITE, useSites } from './sites';
 import TotpEditor from './TotpEditor';
 import TotpImportWizard from './TotpImportWizard';
 import { useText } from './text';
@@ -45,6 +50,47 @@ export default function ItemEditor(props: {
   const [form] = Form.useForm<Vault.PlainItem>();
   const title = Form.useWatch('title', form);
   const username = Form.useWatch('username', form);
+  const website = Form.useWatch('website', form) || '';
+  const sites = useSites();
+  const [siteChoice, setSiteChoice] = useState<string>();
+  const [siteSearch, setSiteSearch] = useState('');
+  const [siteOpen, setSiteOpen] = useState(false);
+  const sitePicker = useRef<HTMLDivElement>(null);
+  const otherButton = useRef<HTMLButtonElement>(null);
+  const otherFocused = useRef(false);
+  const availableSites = sites.isError ? [] : sites.data || [];
+  const matchedSite = matchSite(availableSites, website);
+  const selectedSite =
+    siteChoice === OTHER_SITE
+      ? OTHER_SITE
+      : sites.isError || sites.isPending
+        ? undefined
+        : matchedSite
+          ? normalizeDomain(matchedSite.siteDomain)
+          : props.editor.itemId || siteChoice !== undefined
+            ? OTHER_SITE
+            : undefined;
+  const domainReadonly =
+    selectedSite !== OTHER_SITE &&
+    (!!matchedSite || (!props.editor.itemId && !sites.isError));
+  const filteredSites = availableSites.filter(
+    (site) =>
+      normalizeDomain(site.siteDomain) &&
+      [site.siteName, site.siteDomain].some((value) =>
+        value
+          .toLocaleLowerCase()
+          .includes(siteSearch.trim().toLocaleLowerCase()),
+      ),
+  );
+  const chooseSite = (value: string) => {
+    setSiteChoice(value);
+    setSiteOpen(false);
+    setSiteSearch('');
+    if (value !== OTHER_SITE) form.setFieldValue('website', value);
+    setDirty(true);
+    if (value === OTHER_SITE)
+      requestAnimationFrame(() => form.getFieldInstance('website')?.focus());
+  };
   const [totp, setTotp] = useState<Vault.Totp | null>(null);
   const [preserveTotp, setPreserveTotp] = useState(
     !!props.editor.hasTotp && props.editor.totpAction !== 'remove',
@@ -74,7 +120,15 @@ export default function ItemEditor(props: {
     });
   useEffect(() => {
     alive.current = true;
-    form.setFieldsValue(props.editor.plain);
+    form.setFieldsValue({
+      ...props.editor.plain,
+      website:
+        normalizeDomain(props.editor.plain.website) ||
+        props.editor.plain.website,
+    });
+    setSiteChoice(undefined);
+    setSiteOpen(false);
+    setSiteSearch('');
     setTotp(null);
     setPreserveTotp(
       !!props.editor.hasTotp && props.editor.totpAction !== 'remove',
@@ -101,7 +155,16 @@ export default function ItemEditor(props: {
   }, [visible]);
   useEffect(() => {
     const hide = () => {
-      if (document.hidden) setVisible(false);
+      if (document.hidden) {
+        setVisible(false);
+        setSiteOpen(false);
+        setWizard(false);
+        setConfirmation(undefined);
+        setDialogReady(false);
+        generation.current++;
+        generationPending.current = false;
+        setGenerating(false);
+      }
     };
     document.addEventListener('visibilitychange', hide);
     return () => document.removeEventListener('visibilitychange', hide);
@@ -176,7 +239,7 @@ export default function ItemEditor(props: {
               accountName: totp.accountName.trim() || values.username || '',
             }
           : null,
-        website: values.website || '',
+        website: normalizeDomain(values.website || ''),
         username: values.username || '',
         password: values.password || '',
         notes: values.notes || '',
@@ -246,51 +309,208 @@ export default function ItemEditor(props: {
           clearOnDestroy
           autoComplete="off"
           disabled={props.busy || props.uncertain || generating}
-          onValuesChange={() => setDirty(true)}
+          onValuesChange={(changed) => {
+            if (Object.hasOwn(changed, 'website')) setSiteChoice(OTHER_SITE);
+            setDirty(true);
+          }}
           onFinish={(values) => void save(values)}
         >
           <section className={styles.formSection}>
-            <h3>{t('entries.loginInfo')}</h3>
+            <Form.Item
+              name="title"
+              label={t('vault.itemTitle')}
+              rules={[
+                {
+                  required: true,
+                  whitespace: true,
+                  message: t('vault.required'),
+                },
+              ]}
+            >
+              <Input maxLength={256} />
+            </Form.Item>
             <div className={styles.formGrid}>
-              <Form.Item
-                name="title"
-                label={t('vault.itemTitle')}
-                rules={[
-                  {
-                    required: true,
-                    whitespace: true,
-                    message: t('vault.required'),
-                  },
-                ]}
-              >
-                <Input maxLength={256} />
+              <Form.Item label={t('entries.site')}>
+                <div ref={sitePicker}>
+                  <Select
+                    aria-label={t('entries.site')}
+                    aria-description={t('entries.siteSearch')}
+                    loading={sites.isFetching}
+                    value={selectedSite}
+                    placeholder={t(
+                      sites.isError
+                        ? 'entries.sitesUnavailable'
+                        : sites.isPending
+                          ? 'entries.sitesLoading'
+                          : 'entries.sitePlaceholder',
+                    )}
+                    prefix={
+                      selectedSite === OTHER_SITE ? (
+                        <Globe size={16} />
+                      ) : (
+                        <PanelsTopLeft size={16} />
+                      )
+                    }
+                    open={siteOpen}
+                    onOpenChange={(open) => {
+                      if (!open && otherFocused.current) return;
+                      setSiteOpen(open);
+                      if (!open) setSiteSearch('');
+                    }}
+                    listHeight={256}
+                    styles={{
+                      popup: { root: { background: 'var(--surface)' } },
+                    }}
+                    getPopupContainer={(trigger) =>
+                      trigger.closest('main') || document.body
+                    }
+                    options={filteredSites.map((site) => ({
+                      value: normalizeDomain(site.siteDomain),
+                      label: site.siteName,
+                      domain: site.siteDomain,
+                    }))}
+                    labelRender={() =>
+                      selectedSite === OTHER_SITE
+                        ? t('entries.otherSite')
+                        : matchedSite?.siteName
+                    }
+                    optionRender={(option) => (
+                      <span className={styles.siteOption}>
+                        <span className={styles.siteSymbol} aria-hidden>
+                          {Array.from(option.data.label)[0]}
+                        </span>
+                        <span className={styles.siteOptionCopy}>
+                          <strong>{option.data.label}</strong>
+                          <small>{option.data.domain}</small>
+                        </span>
+                        {selectedSite === option.value && (
+                          <Check size={16} aria-hidden />
+                        )}
+                      </span>
+                    )}
+                    showSearch={{
+                      filterOption: false,
+                      searchValue: siteSearch,
+                      onSearch: setSiteSearch,
+                    }}
+                    notFoundContent={t(
+                      sites.isPending
+                        ? 'entries.sitesLoading'
+                        : sites.isError
+                          ? 'entries.sitesUnavailable'
+                          : availableSites.length
+                            ? 'entries.sitesNoMatch'
+                            : 'entries.sitesEmpty',
+                    )}
+                    onInputKeyDown={(event) => {
+                      if (siteOpen && event.key === 'Tab' && !event.shiftKey) {
+                        event.preventDefault();
+                        otherFocused.current = true;
+                        otherButton.current?.focus();
+                      }
+                    }}
+                    popupRender={(menu) => (
+                      <div className={styles.sitePopup}>
+                        <p className={styles.siteSearchHint}>
+                          {t('entries.siteSearch')}
+                        </p>
+                        {menu}
+                        <button
+                          ref={otherButton}
+                          type="button"
+                          disabled={props.busy || props.uncertain || generating}
+                          className={styles.otherSite}
+                          aria-pressed={selectedSite === OTHER_SITE}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onBlur={() => {
+                            otherFocused.current = false;
+                            setSiteOpen(false);
+                          }}
+                          onKeyDown={(event) => {
+                            if (
+                              event.key === 'Escape' ||
+                              (event.key === 'Tab' && event.shiftKey)
+                            ) {
+                              event.preventDefault();
+                              otherFocused.current = false;
+                              sitePicker.current
+                                ?.querySelector('input')
+                                ?.focus();
+                              setSiteOpen(event.key !== 'Escape');
+                            }
+                          }}
+                          onClick={() => chooseSite(OTHER_SITE)}
+                        >
+                          <Globe size={17} aria-hidden />
+                          <span className={styles.siteOptionCopy}>
+                            <strong>{t('entries.otherSite')}</strong>
+                            <small>{t('entries.manualDomain')}</small>
+                          </span>
+                          {selectedSite === OTHER_SITE && (
+                            <Check size={16} aria-hidden />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    onChange={chooseSite}
+                  />
+                </div>
               </Form.Item>
               <Form.Item
                 name="website"
-                label={t('vault.website')}
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('vault.website')}{' '}
+                    <small className={styles.help}>
+                      ({t('entries.optional')})
+                    </small>
+                    {domainReadonly && <LockKeyhole size={14} aria-hidden />}
+                  </span>
+                }
+                extra={t(
+                  domainReadonly
+                    ? selectedSite
+                      ? 'entries.domainSelectedHelp'
+                      : 'entries.domainUnsetHelp'
+                    : 'entries.domainManualHelp',
+                )}
                 rules={[
                   {
                     validator: (_, value: string) => {
-                      try {
-                        if (value) {
-                          const url = new URL(value);
-                          if (
-                            !['https:', 'http:'].includes(url.protocol) ||
-                            url.username ||
-                            url.password
-                          )
-                            throw new Error();
-                        }
-                        return Promise.resolve();
-                      } catch {
-                        return Promise.reject(new Error(t('vault.urlRule')));
-                      }
+                      return isDomain(value || '')
+                        ? Promise.resolve()
+                        : Promise.reject(new Error(t('vault.urlRule')));
                     },
                   },
                 ]}
               >
-                <Input autoComplete="off" placeholder="https://example.com" />
+                <Input
+                  autoComplete="off"
+                  inputMode="url"
+                  aria-label={t('vault.website')}
+                  readOnly={domainReadonly}
+                  placeholder={t(
+                    domainReadonly
+                      ? 'entries.domainAutoFill'
+                      : 'entries.domainPlaceholder',
+                  )}
+                />
               </Form.Item>
+            </div>
+            {sites.isError && (
+              <div className={styles.siteFailure} role="alert">
+                <TriangleAlert size={16} aria-hidden />
+                <span>{t('entries.sitesFailed')}</span>
+                <Button
+                  type="link"
+                  loading={sites.isFetching}
+                  onClick={() => void sites.refetch()}
+                >
+                  {t('entries.retrySites')}
+                </Button>
+              </div>
+            )}
+            <div className={styles.formGrid}>
               <Form.Item name="username" label={t('vault.username')}>
                 <Input autoComplete="off" />
               </Form.Item>
@@ -383,23 +603,22 @@ export default function ItemEditor(props: {
             />
           </div>
           <section className={styles.formSection}>
-            <h3>
-              {t('entries.otherInfo')} <small>{t('entries.optional')}</small>
-            </h3>
-            <Form.Item name="tags" label={t('vault.tags')}>
-              <Select
-                mode="tags"
-                maxCount={20}
-                tokenSeparators={[',', '，']}
-                options={props.editor.plain.tags.map((tag) => ({
-                  value: tag,
-                  label: tag,
-                }))}
-              />
-            </Form.Item>
-            <Form.Item name="notes" label={t('vault.notes')}>
-              <Input.TextArea rows={4} />
-            </Form.Item>
+            <div className={styles.formGrid}>
+              <Form.Item name="notes" label={t('vault.notes')}>
+                <Input.TextArea rows={3} />
+              </Form.Item>
+              <Form.Item name="tags" label={t('vault.tags')}>
+                <Select
+                  mode="tags"
+                  maxCount={20}
+                  tokenSeparators={[',', '，']}
+                  options={props.editor.plain.tags.map((tag) => ({
+                    value: tag,
+                    label: tag,
+                  }))}
+                />
+              </Form.Item>
+            </div>
           </section>
         </Form>
         {props.uncertain && (
