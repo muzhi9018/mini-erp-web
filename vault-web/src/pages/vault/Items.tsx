@@ -77,6 +77,7 @@ export default function Items(props: Props) {
   const [desktop, setDesktop] = useState(
     () => window.matchMedia('(min-width: 621px)').matches,
   );
+  const searchContainer = useRef<HTMLDivElement>(null);
   const listButtons = useRef(new Map<string, HTMLButtonElement>());
   const dataset = useRef(props.allRows);
   useEffect(() => {
@@ -366,7 +367,7 @@ export default function Items(props: Props) {
                   icon={<Plus size={18} />}
                 />
               </div>
-              <div className={entry.search}>
+              <div className={entry.search} ref={searchContainer}>
                 <Input
                   value={props.query}
                   maxLength={1024}
@@ -581,6 +582,7 @@ export default function Items(props: Props) {
                 <EntryDetail
                   key={row.itemId}
                   row={row}
+                  preserveFocusWithin={searchContainer}
                   busy={blocked}
                   detail={props.detail}
                   revealUntil={props.revealUntil}

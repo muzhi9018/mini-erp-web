@@ -12,7 +12,13 @@ import {
   ScanLine,
   Trash2,
 } from 'lucide-react';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { normalizeDomain } from '@/security/vault/domain';
 import { totpTransferLabels } from '@/security/vault/totp';
 import { trapDialogTab } from './dialog';
@@ -39,6 +45,7 @@ export default function EntryDetail(
     readonly?: boolean;
     lifecycleHeader?: ReactNode;
     lifecycleActions?: ReactNode;
+    preserveFocusWithin?: RefObject<HTMLElement | null>;
     busy: boolean;
     detail?: Vault.PlainItem;
     revealUntil: number;
@@ -79,7 +86,9 @@ export default function EntryDetail(
     clearTimeout(noteTimer.current);
   };
   useEffect(() => {
-    heading.current?.focus({ preventScroll: true });
+    if (!props.preserveFocusWithin?.current?.contains(document.activeElement)) {
+      heading.current?.focus({ preventScroll: true });
+    }
     const hide = () => {
       if (document.hidden) {
         hideNotes();
