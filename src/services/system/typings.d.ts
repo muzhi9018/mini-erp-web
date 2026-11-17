@@ -21,7 +21,7 @@ declare namespace System {
     component?: string;
     icon?: string;
     permissionCode?: string;
-    sort?: number;
+    sortOrder?: number;
   };
 
   type MenuVO = Menu & {

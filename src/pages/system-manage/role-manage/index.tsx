@@ -517,7 +517,7 @@ const RoleManage: React.FC = () => {
         <ProFormText width="lg" name="remark" label="备注" />
         <ProFormDigit
           label="排序"
-          name="sort"
+          name="sortOrder"
           min={0}
           fieldProps={{ precision: 0 }}
         />

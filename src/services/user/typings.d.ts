@@ -88,7 +88,7 @@ declare namespace Role {
     gmtCreate?: number;
     gmtModified?: number;
     status?: number;
-    sort?: number;
+    sortOrder?: number;
     roleName?: string;
     roleCode?: string;
     remark?: string;
@@ -118,6 +118,7 @@ declare namespace User {
     realName?: string;
     mobile?: string;
     status?: number;
+    sortOrder?: number;
     remark?: string;
     gmtCreate?: string;
     roles?: { id: string; roleName?: string }[];

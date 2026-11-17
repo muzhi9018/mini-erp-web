@@ -7,7 +7,7 @@ export default {
   'vaultSite.status': 'Status',
   'vaultSite.enabled': 'Enabled',
   'vaultSite.disabled': 'Disabled',
-  'vaultSite.sort': 'Sort order',
+  'vaultSite.sortOrder': 'Sort order',
   'vaultSite.updatedAt': 'Updated at',
   'vaultSite.actions': 'Actions',
   'vaultSite.create': 'Add site',

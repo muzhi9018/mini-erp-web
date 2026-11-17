@@ -92,7 +92,7 @@ declare namespace Role {
     gmtCreate?: number;
     gmtModified?: number;
     status?: number;
-    sort?: number;
+    sortOrder?: number;
     roleName?: string;
     roleCode?: string;
     remark?: string;

@@ -7,7 +7,7 @@ export default {
   'vaultSite.status': '状态',
   'vaultSite.enabled': '正常',
   'vaultSite.disabled': '禁用',
-  'vaultSite.sort': '排序',
+  'vaultSite.sortOrder': '排序',
   'vaultSite.updatedAt': '更新时间',
   'vaultSite.actions': '操作',
   'vaultSite.create': '新增站点',

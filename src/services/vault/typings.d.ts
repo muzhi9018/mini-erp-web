@@ -5,13 +5,13 @@ declare namespace Vault {
     siteName: string;
     siteDomain: string;
     status?: SiteStatus;
-    sort?: number;
+    sortOrder?: number;
   };
 
   type Site = SiteValues & {
     id: number | string;
     status: SiteStatus;
-    sort: number;
+    sortOrder: number;
     gmtCreate?: string;
     gmtModified?: string;
   };

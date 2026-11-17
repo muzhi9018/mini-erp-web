@@ -244,7 +244,7 @@ const MenuManage: React.FC = () => {
       record.path === origin.path &&
       record.component === origin.component &&
       record.permissionCode === origin.permissionCode &&
-      record.sort === origin.sort
+      record.sortOrder === origin.sortOrder
     ) {
       setEditableKeys([]);
       return;
@@ -307,7 +307,7 @@ const MenuManage: React.FC = () => {
       title: '排序',
       width: 120,
       search: false,
-      dataIndex: 'sort',
+      dataIndex: 'sortOrder',
     },
     {
       title: '操作',
@@ -549,7 +549,7 @@ const MenuManage: React.FC = () => {
         />
         <ProFormDigit
           label="排序"
-          name="sort"
+          name="sortOrder"
           min={0}
           fieldProps={{ precision: 0 }}
         />

@@ -127,10 +127,10 @@ const VaultSite = () => {
     },
     {
       title: intl.formatMessage({
-        id: 'vaultSite.sort',
+        id: 'vaultSite.sortOrder',
         defaultMessage: '排序',
       }),
-      dataIndex: 'sort',
+      dataIndex: 'sortOrder',
       valueType: 'digit',
       fieldProps: { min: -2147483648, max: 2147483647, precision: 0 },
       search: false,
@@ -249,7 +249,7 @@ const VaultSite = () => {
               siteName: site.siteName.trim(),
               siteDomain: site.siteDomain.trim(),
               status: site.status,
-              sort: site.sort ?? undefined,
+              sortOrder: site.sortOrder ?? undefined,
             });
             messageApi.success(
               intl.formatMessage({
@@ -316,7 +316,7 @@ const VaultSite = () => {
           onOpenChange={setCreateOpen}
           width={520}
           modalProps={{ destroyOnHidden: true }}
-          initialValues={{ status: 1, sort: 0 }}
+          initialValues={{ status: 1, sortOrder: 0 }}
           submitter={{
             searchConfig: {
               submitText: intl.formatMessage({
@@ -334,7 +334,7 @@ const VaultSite = () => {
               siteName: values.siteName.trim(),
               siteDomain: values.siteDomain.trim(),
               status: values.status,
-              sort: values.sort ?? undefined,
+              sortOrder: values.sortOrder ?? undefined,
             };
             try {
               await createSite(data);
@@ -381,9 +381,9 @@ const VaultSite = () => {
             rules={statusRules}
           />
           <ProFormDigit
-            name="sort"
+            name="sortOrder"
             label={intl.formatMessage({
-              id: 'vaultSite.sort',
+              id: 'vaultSite.sortOrder',
               defaultMessage: '排序',
             })}
             min={-2147483648}
