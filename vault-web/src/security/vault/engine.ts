@@ -382,28 +382,15 @@ export class VaultEngine {
       this.index.values(),
       ({ summary }) => summary,
     ).filter((item): item is Vault.Summary => item.itemType === 'LOGIN');
-    const matched = new Set(
-      logins
-        .filter((item) =>
-          [
-            item.title,
-            item.username,
-            item.website,
-            item.platform || '',
-            ...item.tags,
-          ].some((text) => text.toLocaleLowerCase().includes(needle)),
-        )
-        .map((item) => item.itemId),
+    return logins.filter((item) =>
+      [
+        item.title,
+        item.username,
+        item.website,
+        item.platform || '',
+        ...item.tags,
+      ].some((text) => text.toLocaleLowerCase().includes(needle)),
     );
-    for (const group of this.groups()) {
-      if (
-        group.name.toLocaleLowerCase().includes(needle) ||
-        group.memberItemIds.some((id) => matched.has(id))
-      ) {
-        for (const id of group.memberItemIds) matched.add(id);
-      }
-    }
-    return logins.filter((item) => matched.has(item.itemId));
   }
 
   private async login(item: Vault.Item): Promise<Vault.PlainItem> {
