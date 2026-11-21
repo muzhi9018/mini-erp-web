@@ -37,11 +37,6 @@ declare namespace Product {
   };
 
   /**
-   * 分页响应中用于渲染列表的记录和总条数。
-   */
-  type Page<T> = { records: T[]; total: number };
-
-  /**
    * 分类树节点，叶节点的 children 为空数组。
    */
   type Category = {

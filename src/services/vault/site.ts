@@ -2,7 +2,7 @@ import { doGet, doPost } from '@/services/httpClient';
 
 export async function listSites(
   params: Vault.SiteListParams,
-): Promise<Vault.SitePage> {
+): Promise<Common.Page<Vault.Site>> {
   return doGet('/vaultSite/list', params);
 }
 

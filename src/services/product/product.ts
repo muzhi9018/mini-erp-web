@@ -8,7 +8,7 @@ import { doGet, doPost, doPostFrom } from '@/services/httpClient';
  */
 export const listProducts = (
   params: Product.Query,
-): Promise<Product.Page<Product.Item>> => doGet('/product/list', params);
+): Promise<Common.Page<Product.Item>> => doGet('/product/list', params);
 
 /**
  * 获取完整管理详情，包含商品图片、规格候选值和所属 SKU。
@@ -108,7 +108,7 @@ export const deleteSpecValue = (data: Product.VersionedId): Promise<void> =>
  */
 export function listSkus(
   params: Product.SkuQuery,
-): Promise<Product.Page<Product.Sku>> {
+): Promise<Common.Page<Product.Sku>> {
   const { specs, ...query } = params;
   const filters: Record<string, Product.Decimal> = {};
 

@@ -17,11 +17,6 @@ declare namespace Website {
     pageSize: number;
   };
 
-  type ProductPage = {
-    records: Product[];
-    total: number;
-  };
-
   type PublicProduct = Product & {
     categoryName?: string;
     subtitle?: string;
@@ -140,11 +135,6 @@ declare namespace Website {
 
   export type AddCategoryI18n = CategoryI18n & {
     websiteProductCategoryId: Category['id'];
-  };
-
-  type CategoryPage = {
-    records: Category[];
-    total: number;
   };
 
   type PublicCategory = Category & {

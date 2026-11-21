@@ -26,7 +26,7 @@ export async function updateMenu(data: System.Menu, options?: { [key: string]: a
 export async function findTopLevelMenu(
   params: any,
   options?: { [key: string]: any },
-): Promise<System.MenuPage> {
+): Promise<Common.Page<System.MenuVO>> {
   return doGet('/system/menu/findTopLevelMenu', params, options);
 }
 

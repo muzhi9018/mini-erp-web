@@ -29,7 +29,7 @@ const MenuManage: React.FC = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshNode, setRefreshNode] = useState<System.MenuVO>({});
-  const [page, setPage] = useState<Common.Page>({
+  const [page, setPage] = useState<Common.Pagination>({
     current: 1,
     pageSize: 15,
     total: 0,

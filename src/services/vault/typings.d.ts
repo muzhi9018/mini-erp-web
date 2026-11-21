@@ -23,8 +23,4 @@ declare namespace Vault {
     siteDomain?: string;
     status?: SiteStatus;
   };
-
-  type SitePage = Common.BasePage & {
-    records: Site[];
-  };
 }

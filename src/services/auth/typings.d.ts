@@ -100,11 +100,7 @@ declare namespace Role {
     menuIds?: string[]
   };
 
-  type RoleQuery = Common.Page & Role;
-
-  type RolePage = Common.BasePage & {
-    records: Role[]
-  }
+  type RoleQuery = Common.Pagination & Role;
 
 }
 

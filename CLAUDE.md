@@ -95,6 +95,13 @@ declare namespace System {
 }
 ```
 
+### 分页查询类型
+
+- 主应用中返回 `records`、`total` 的分页查询接口，统一使用 `src/services/typings.d.ts` 中的 `Common.Page<T>`，其中 `T` 为列表记录类型；`records: T[]` 和 `total: number` 均为必填字段。
+- 服务方法显式声明返回类型 `Promise<Common.Page<T>>`，例如 `Promise<Common.Page<Product.Item>>`。禁止在业务模块中重复定义 `ProductPage`、`RolePage` 等同结构的分页响应类型，也不再使用 `Common.BasePage & { records: T[] }` 或内联分页响应结构。
+- `Common.Page<T>` 仅用于分页响应。分页状态及使用 `current`、`pageSize` 的查询参数使用 `Common.Pagination`；使用 `pageNum`、`pageSize` 的接口继续在所属业务模块中定义查询参数，并保持与后端实际参数一致。
+- 本规则适用于主应用 `src/` 下的手写业务代码；自动生成的 `src/services/ant-design-pro/` 和独立子项目 `vault-web/` 不在本次统一范围内。
+
 ## 框架配置与运行机制
 
 ### 配置与约定文件

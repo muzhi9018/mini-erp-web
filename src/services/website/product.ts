@@ -1,10 +1,10 @@
 import { request } from '@umijs/max';
+import { doGet } from '@/services/httpClient';
 
-export async function listProducts(params: Website.ProductListParams) {
-  return request<Website.ProductPage>('/website/product/list', {
-    method: 'GET',
-    params,
-  });
+export async function listProducts(
+  params: Website.ProductListParams,
+): Promise<Common.Page<Website.Product>> {
+  return doGet('/website/product/list', params);
 }
 
 export async function listProductLocales(productId: Website.Product['id']) {

@@ -30,10 +30,6 @@ declare namespace System {
     selected?: boolean;
   };
 
-  type MenuPage = Common.BasePage & {
-    records: MenuVO[];
-  };
-
   type SystemLocale = {
     id: number;
     code: string;

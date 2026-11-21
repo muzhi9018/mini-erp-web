@@ -1,9 +1,16 @@
 declare namespace Common {
-  type BasePage = {
+  /**
+   * 分页响应中用于渲染列表的记录和总条数。
+   */
+  type Page<T> = {
+    records: T[];
     total: number;
   };
 
-  type Page = {
+  /**
+   * 分页状态及查询参数。
+   */
+  type Pagination = {
     current?: number;
     pageSize?: number;
     total?: number;

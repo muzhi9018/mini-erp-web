@@ -1,13 +1,11 @@
 import { request } from '@umijs/max';
+import { doGet } from '@/services/httpClient';
 
 export async function listCategories(params: {
   pageNum: number;
   pageSize: number;
-}) {
-  return request<Website.CategoryPage>('/website/product/category/list', {
-    method: 'GET',
-    params,
-  });
+}): Promise<Common.Page<Website.Category>> {
+  return doGet('/website/product/category/list', params);
 }
 
 export async function listWebsiteCategories() {

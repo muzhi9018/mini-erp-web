@@ -10,7 +10,7 @@ export async function currentUser(options?: { [key: string]: any }): Promise<Oau
 
 export async function findUsersByPage(
   params: User.SysUserQuery,
-): Promise<Common.BasePage & { records: User.SysUser[] }> {
+): Promise<Common.Page<User.SysUser>> {
   return doGet('/system/user/findByPage', params);
 }
 

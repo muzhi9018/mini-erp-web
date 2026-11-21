@@ -9,7 +9,7 @@ export async function listAllRoles(): Promise<Role.RoleSummary[]> {
  * @param params 查询参数
  * @param options options
  */
-export async function findByPage(params: Role.RoleQuery, options?: { [key: string]: any }): Promise<Role.RolePage> {
+export async function findByPage(params: Role.RoleQuery, options?: { [key: string]: any }): Promise<Common.Page<Role.Role>> {
   return doGet('/system/role/findByPage', params, options);
 }
 
