@@ -1,4 +1,11 @@
 export default {
+  'menu.product-manager': '商品管理',
+  'menu.product-manager.product': '商品檔案',
+  'menu.product-manager.product-category': '商品分類',
+  'menu.product-manager.product-unit': '計量單位',
+  'menu.product-manager.create': '新增商品',
+  'menu.product-manager.detail': '商品詳情',
+
   'menu.welcome': '歡迎',
   'menu.vault': '密碼庫',
   'menu.vault.personal-vault': '個人密碼庫',

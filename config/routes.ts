@@ -65,6 +65,53 @@ export default [
     ],
   },
   {
+    path: '/product-manager',
+    name: 'product-manager',
+    icon: 'AppstoreOutlined',
+    access: 'product-manager',
+    routes: [
+      {
+        path: '/product-manager',
+        component: './product-manager',
+        hideInMenu: true,
+      },
+      {
+        path: '/product-manager/product',
+        name: 'product',
+        component: './product-manager/product',
+        access: 'product-manager:product:query',
+      },
+      {
+        path: '/product-manager/product/create',
+        name: 'create',
+        component: './product-manager/product/create',
+        access: 'product-manager:product:create',
+        hideInMenu: true,
+        parentKeys: ['/product-manager/product'],
+      },
+      {
+        path: '/product-manager/product/:id',
+        name: 'detail',
+        component: './product-manager/product/detail',
+        access: 'product-manager:product:query',
+        hideInMenu: true,
+        parentKeys: ['/product-manager/product'],
+      },
+      {
+        path: '/product-manager/product-category',
+        name: 'product-category',
+        component: './product-manager/product-category',
+        access: 'product-manager:product-category:query',
+      },
+      {
+        path: '/product-manager/product-unit',
+        name: 'product-unit',
+        component: './product-manager/product-unit',
+        access: 'product-manager:product-unit:query',
+      },
+    ],
+  },
+  {
     // 官网配置
     path: '/website-config',
     name: 'website-config',

@@ -1,0 +1,23 @@
+export default {
+  'product.category.productCount': '关联商品（含下级）',
+  'product.category.title': '商品分类',
+  'product.category.subtitle': '按三级以内的分类树组织商品。',
+  'product.category.create': '新增顶级分类',
+  'product.category.addChild': '新增子分类',
+  'product.category.tree': '分类树',
+  'product.category.code': '分类编码',
+  'product.category.name': '分类名称',
+  'product.category.parent': '上级分类',
+  'product.category.root': '顶级分类',
+  'product.category.depth': '层级',
+  'product.category.depthValue': '第 {depth} 级',
+  'product.category.children': '下级分类数',
+  'product.category.remark': '备注',
+  'product.category.maxDepth': '已达到第三级，可将商品直接归入此分类。',
+  'product.category.fixedParent': '分类创建后不能更换父级或编码。',
+  'product.category.viewProducts': '查看分类商品',
+  'product.category.deleteConfirm':
+    '确认删除分类“{name}”？存在下级分类或商品时无法删除。',
+  'product.category.empty': '创建分类后即可组织商品档案。',
+  'product.category.edit': '编辑分类',
+};

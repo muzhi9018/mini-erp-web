@@ -1,0 +1,23 @@
+export default {
+  'product.category.productCount': '關聯商品（含下級）',
+  'product.category.title': '商品分類',
+  'product.category.subtitle': '依三級以內的分類樹組織商品。',
+  'product.category.create': '新增頂級分類',
+  'product.category.addChild': '新增子分類',
+  'product.category.tree': '分類樹',
+  'product.category.code': '分類編碼',
+  'product.category.name': '分類名稱',
+  'product.category.parent': '上級分類',
+  'product.category.root': '頂級分類',
+  'product.category.depth': '層級',
+  'product.category.depthValue': '第 {depth} 級',
+  'product.category.children': '下級分類數',
+  'product.category.remark': '備註',
+  'product.category.maxDepth': '已達到第三級，可將商品直接歸入此分類。',
+  'product.category.fixedParent': '分類建立後無法更換父級或編碼。',
+  'product.category.viewProducts': '查看分類商品',
+  'product.category.deleteConfirm':
+    '確認刪除分類「{name}」？有下級分類或商品時無法刪除。',
+  'product.category.empty': '建立分類後即可組織商品檔案。',
+  'product.category.edit': '編輯分類',
+};

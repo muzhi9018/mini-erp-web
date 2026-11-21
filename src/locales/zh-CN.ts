@@ -5,6 +5,9 @@ import menu from './zh-CN/menu';
 import network from './zh-CN/network';
 import pages from './zh-CN/pages';
 import passwordVault from './zh-CN/passwordVault';
+import productCatalog from './zh-CN/productCatalog';
+import productCategory from './zh-CN/productCategory';
+import productUnit from './zh-CN/productUnit';
 import settingDrawer from './zh-CN/settingDrawer';
 import settings from './zh-CN/settings';
 import systemUserManager from './zh-CN/systemUserManager';
@@ -14,6 +17,9 @@ import websiteCategoryManager from './zh-CN/websiteCategoryManager';
 import websiteProductManager from './zh-CN/websiteProductManager';
 
 export default {
+  ...productCatalog,
+  ...productCategory,
+  ...productUnit,
   ...passwordVault,
   'navBar.lang': '语言',
   'layout.user.link.help': '帮助',

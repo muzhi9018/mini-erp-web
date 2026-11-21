@@ -1,4 +1,11 @@
 export default {
+  'menu.product-manager': 'Product management',
+  'menu.product-manager.product': 'Product catalog',
+  'menu.product-manager.product-category': 'Product categories',
+  'menu.product-manager.product-unit': 'Units of measure',
+  'menu.product-manager.create': 'New product',
+  'menu.product-manager.detail': 'Product details',
+
   'menu.welcome': 'Welcome',
   'menu.vault': 'Vault',
   'menu.vault.personal-vault': 'Personal vault',

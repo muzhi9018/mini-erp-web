@@ -5,6 +5,9 @@ import menu from './en-US/menu';
 import network from './en-US/network';
 import pages from './en-US/pages';
 import passwordVault from './en-US/passwordVault';
+import productCatalog from './en-US/productCatalog';
+import productCategory from './en-US/productCategory';
+import productUnit from './en-US/productUnit';
 import settingDrawer from './en-US/settingDrawer';
 import settings from './en-US/settings';
 import systemUserManager from './en-US/systemUserManager';
@@ -14,6 +17,9 @@ import websiteCategoryManager from './en-US/websiteCategoryManager';
 import websiteProductManager from './en-US/websiteProductManager';
 
 export default {
+  ...productCatalog,
+  ...productCategory,
+  ...productUnit,
   ...passwordVault,
   'navBar.lang': 'Languages',
   'layout.user.link.help': 'Help',

@@ -1,4 +1,11 @@
 export default {
+  'menu.product-manager': '商品管理',
+  'menu.product-manager.product': '商品档案',
+  'menu.product-manager.product-category': '商品分类',
+  'menu.product-manager.product-unit': '计量单位',
+  'menu.product-manager.create': '新增商品',
+  'menu.product-manager.detail': '商品详情',
+
   'menu.welcome': '欢迎',
   'menu.vault': '密码库',
   'menu.vault.personal-vault': '个人密码库',
